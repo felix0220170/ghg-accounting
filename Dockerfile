@@ -1,5 +1,5 @@
 # 第一阶段：构建React应用
-FROM node:latest as build
+FROM alibaba-cloud-linux-3-registry.cn-hangzhou.cr.aliyuncs.com/alinux3/node:20.16 as build
 
 # 设置工作目录
 WORKDIR /app
