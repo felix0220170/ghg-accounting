@@ -385,7 +385,7 @@ export function ElectricityHeatEmission({ onEmissionChange, industry, useRegionF
         
         {/* 排放因子表格 */}
         <Paragraph>
-          <Text strong>{useRegionFactor ? '区域电力排放因子参考表：' : '电力排放因子参考表：'}</Text> // 替换isPaperIndustry为useRegionFactor
+          <Text strong>{useRegionFactor ? '区域电力排放因子参考表：' : '电力排放因子参考表：'}</Text>
         </Paragraph>
         <Table 
           columns={factorColumns} 
