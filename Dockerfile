@@ -1,5 +1,5 @@
 # 第一阶段：构建React应用
-FROM node:18-alpine AS build
+FROM node:latest as build
 
 # 设置工作目录
 WORKDIR /app
