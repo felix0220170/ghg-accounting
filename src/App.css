@@ -1,0 +1,259 @@
+#root {
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem;
+  height: 100vh;
+}
+
+.app {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+  background-color: #f5f5f5;
+}
+
+.app {
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.app-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.industry-selector {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.industry-selector select {
+  padding: 8px 12px;
+  font-size: 16px;
+  margin-left: 10px;
+}
+
+.industry-container {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 行业组件样式 */
+.industry-component .summary-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.industry-component .summary-section h2 {
+  margin-bottom: 20px;
+  color: #1890ff;
+}
+
+.emission-tabs {
+  margin-top: 20px;
+}
+
+.app-header h1 {
+  color: #333;
+  font-size: 28px;
+}
+
+/* 行业选择器样式 */
+.industry-selector {
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.industry-selector label {
+  font-weight: bold;
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+.industry-selector select {
+  padding: 8px 15px;
+  font-size: 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  min-width: 300px;
+}
+
+.industry-note {
+  color: #666;
+  font-size: 14px;
+  margin-top: 10px;
+  font-style: italic;
+}
+
+/* 内容区域布局 */
+.app-content {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* 表格区域样式 */
+.emission-section {
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.emission-section h2 {
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 22px;
+  border-bottom: 2px solid #4CAF50;
+  padding-bottom: 10px;
+}
+
+/* 表格样式 */
+.emission-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.emission-table th,
+.emission-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.emission-table th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+  color: #333;
+}
+
+.emission-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.emission-table input {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+
+/* 计算说明样式 */
+.calculation-description {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  border-left: 4px solid #4CAF50;
+}
+
+.calculation-description p {
+  margin: 5px 0;
+}
+
+/* 汇总表样式 */
+.paper-industry-summary {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+/* 总计行样式 */
+.ant-table-tbody .total-row {
+  background-color: #f5f5f5;
+  font-weight: bold;
+}
+
+/* 公式部分样式 */
+.formula-section {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.formula-section p {
+  margin: 8px 0;
+}
+
+/* 汇总部分样式 */
+.summary-section {
+  margin-bottom: 30px;
+}
+
+.summary-section h2 {
+  margin-bottom: 20px;
+  color: #1a1a1a;
+}
+
+/* 标签页部分样式 */
+.emission-tabs {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.summary-section {
+  border-top: 3px solid #4CAF50;
+}
+
+/* 响应式布局 */
+@media (max-width: 768px) {
+  .app {
+    padding: 10px;
+  }
+  
+  .industry-selector select {
+    min-width: 100%;
+    margin-top: 10px;
+  }
+  
+  .emission-table {
+    font-size: 14px;
+  }
+  
+  .emission-table th,
+  .emission-table td {
+    padding: 6px;
+  }
+}
+
+/* 添加Ant Design Tab容器样式 */
+.ant-tabs-container {
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+/* 保留其他样式... */
+
+/* 自定义Ant Design Tabs样式示例 */
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+.ant-tabs-ink-bar {
+  background-color: #4CAF50;
+}
+
+.ant-tabs-content-holder {
+  padding: 20px;
+}
