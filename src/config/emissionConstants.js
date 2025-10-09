@@ -63,3 +63,33 @@ export const REGIONS = regionEmissionFactors.map(item => item.region);
 
 // 省份列表
 export const PROVINCES = electricityEmissionFactors.map(item => item.province);
+
+// 温室气体全球变暖潜能值(GWP)常量
+export const GREENHOUSE_GAS_GWP = {
+  // HFCs系列
+  'HFC-23': 11700,
+  'HFC-32': 677,
+  'HFC-125': 3500,
+  'HFC-134a': 1430,
+  'HFC-143a': 4820,
+  'HFC-152a': 124,
+  'HFC-227ea': 3220,
+  'HFC-236fa': 9810,
+  'HFC-245fa': 1030,
+  // 其他温室气体
+  'SF6': 23500,
+  'CO2': 1,
+  'CH4': 21,
+  'N2O': 310
+};
+
+// 分子量常量
+export const MOLECULAR_WEIGHT = {
+  'HFC-23': 70,
+  'CO2': 44
+};
+
+// 排放相关的默认常量
+export const EMISSION_CONSTANTS = {
+  // 其他可能的排放常量
+};

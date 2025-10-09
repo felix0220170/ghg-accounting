@@ -8,8 +8,9 @@ import FoodIndustry from './components/industries/FoodIndustry'
 import NonFerrousMetalsIndustry from './components/industries/NonFerrousMetalsIndustry' 
 import LandTransportationIndustry from './components/industries/LandTransportationIndustry';
 import MiningIndustry from './components/industries/MiningIndustry';
-import MachineryManufacturingIndustry from './components/industries/MachineryManufacturingIndustry'; // 导入机械设备制造企业组件
-import PublicBuildingIndustry from './components/industries/PublicBuildingIndustry'; // 导入公共建筑运营单位组件
+import MachineryManufacturingIndustry from './components/industries/MachineryManufacturingIndustry';
+import PublicBuildingIndustry from './components/industries/PublicBuildingIndustry';
+import FluorineChemicalIndustry from './components/industries/FluorineChemicalIndustry'; // 导入氟化工企业组件
 import { INDUSTRY_TYPES } from './config/industryConfig' 
 
 function App() {
@@ -35,8 +36,10 @@ function App() {
         return <MiningIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.MACHINERY_MANUFACTURING:
         return <MachineryManufacturingIndustry industry={selectedIndustry} />;
-      case INDUSTRY_TYPES.PUBLIC_BUILDING: // 添加公共建筑运营单位
+      case INDUSTRY_TYPES.PUBLIC_BUILDING:
         return <PublicBuildingIndustry industry={selectedIndustry} />;
+      case INDUSTRY_TYPES.FLUORINE_CHEMICAL: // 添加氟化工企业
+        return <FluorineChemicalIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.OTHER:
       default:
         return <OtherIndustry industry={selectedIndustry} />;

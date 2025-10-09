@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { INDUSTRY_TYPES } from '../config/industryConfig';
 import { 
   DEFAULT_FUEL_TYPES, 
@@ -7,7 +7,8 @@ import {
   PAPER_MANUFACTURING_REQUIRED_FUELS,
   FOOD_BEVERAGE_REQUIRED_FUELS,
   NON_FERROUS_METALS_REQUIRED_FUELS,
-  PUBLIC_BUILDING_REQUIRED_FUELS, // 导入公共建筑行业燃料列表
+  PUBLIC_BUILDING_REQUIRED_FUELS,
+  FLUORINE_CHEMICAL_REQUIRED_FUELS, // 导入氟化工企业燃料列表
   CO2_CALCULATION_CONSTANTS 
 } from '../config/fossilFuelConstants';
 
@@ -39,6 +40,10 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange 
       return DEFAULT_FUEL_TYPES
         .filter(fuel => PUBLIC_BUILDING_REQUIRED_FUELS.includes(fuel.name))
         .sort((a, b) => PUBLIC_BUILDING_REQUIRED_FUELS.indexOf(a.name) - PUBLIC_BUILDING_REQUIRED_FUELS.indexOf(b.name));
+    } else if (industryName === '氟化工企业') {
+      return DEFAULT_FUEL_TYPES
+        .filter(fuel => FLUORINE_CHEMICAL_REQUIRED_FUELS.includes(fuel.name))
+        .sort((a, b) => FLUORINE_CHEMICAL_REQUIRED_FUELS.indexOf(a.name) - FLUORINE_CHEMICAL_REQUIRED_FUELS.indexOf(b.name));
     }
     
     return DEFAULT_FUEL_TYPES;
@@ -50,6 +55,8 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange 
   const [data, setData] = useState([]);
   // 存储用户自定义的燃料数据
   const [customFuels, setCustomFuels] = useState([]);
+  // 保存上一次的排放量，用于比较是否真正发生变化
+  const previousEmissionRef = useRef(null);
 
   // 初始化数据
   useEffect(() => {
@@ -72,6 +79,8 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange 
       };
     });
     setData(initialData);
+    // 重置previousEmissionRef
+    previousEmissionRef.current = null;
   }, [industry, getFuelTypesByIndustry]);
 
   // 计算含碳量和CO2排放量
@@ -134,7 +143,9 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange 
 
   // 当总排放量变化时，通知父组件
   useEffect(() => {
-    if (onEmissionChange) {
+    // 只有当排放量真正发生变化时，才通知父组件
+    if (onEmissionChange && previousEmissionRef.current !== totalEmission) {
+      previousEmissionRef.current = totalEmission;
       onEmissionChange(totalEmission);
     }
   }, [totalEmission, onEmissionChange]);

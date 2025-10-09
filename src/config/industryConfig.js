@@ -6,10 +6,15 @@ export const INDUSTRY_TYPES = {
   NON_FERROUS_METALS: '其他有色金属冶炼和压延加工业',
   LAND_TRANSPORTATION: '陆上交通运输行业',
   MINING: '矿山企业',
-  MACHINERY_MANUFACTURING: '机械设备制造企业', // 添加机械设备制造企业
-  PUBLIC_BUILDING: '公共建筑运营单位（企业）' // 新增公共建筑运营单位行业
+  MACHINERY_MANUFACTURING: '机械设备制造企业',
+  PUBLIC_BUILDING: '公共建筑运营单位（企业）',
+  FLUORINE_CHEMICAL: '氟化工企业' // 新增氟化工企业行业
 };
 
+// 在INDUSTRY_TYPES中确保氟化工企业存在
+// 已经存在：FLUORINE_CHEMICAL: '氟化工企业'
+
+// 更新氟化工企业的配置
 export const industryConfigs = {
   '造纸及纸制品业': {
     name: '造纸及纸制品业',
@@ -96,6 +101,15 @@ export const industryConfigs = {
       { key: 'fossilFuel', label: '化石燃料燃烧 CO2 排放', unit: '吨' },
       { key: 'electricalRefrigeration', label: '电气与制冷设备生产的过程排放', unit: '吨' },
       { key: 'weldingCO2', label: 'CO2作为保护气的焊接过程排放', unit: '吨' }, // 新增排放项
+      { key: 'electricityHeat', label: '净购入电力和热力隐含的 CO2 排放', unit: '吨' }
+    ]
+  },
+  // 新增氟化工企业的行业配置
+  '氟化工企业': {
+    name: '氟化工企业',
+    emissionItems: [
+      { key: 'fossilFuel', label: '化石燃料燃烧 CO2 排放', unit: '吨' },
+      { key: 'hcfc22Production', label: 'HCFC-22 生产过程 HFC-23 排放', unit: '吨' }, // 新增排放项
       { key: 'electricityHeat', label: '净购入电力和热力隐含的 CO2 排放', unit: '吨' }
     ]
   }
