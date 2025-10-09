@@ -181,7 +181,7 @@ function CO2RecyclingEmission({ onEmissionChange, industry }) {
                 },
                 {
                   validator: (_, value) => {
-                    // 验证范围从0-100%，更符合用户对百分比的理解
+                    // 验证范围从0-100%，更符合用户对百分比的易懂
                     if (value && (parseFloat(value) < 0 || parseFloat(value) > 100)) {
                       return Promise.reject('浓度取值范围为0-100%');
                     }
@@ -230,7 +230,7 @@ function CO2RecyclingEmission({ onEmissionChange, industry }) {
                 },
                 {
                   validator: (_, value) => {
-                    // 验证范围从0-100%，更符合用户对百分比的理解
+                    // 验证范围从0-100%，更符合用户对百分比的易懂
                     if (value && (parseFloat(value) < 0 || parseFloat(value) > 100)) {
                       return Promise.reject('浓度取值范围为0-100%');
                     }
@@ -244,36 +244,14 @@ function CO2RecyclingEmission({ onEmissionChange, industry }) {
           </Col>
         </Row>
         
-        {/* 计算说明和结果显示 */}
-        <Card title="计算说明" style={{ marginTop: 20 }}>
-          <Paragraph>
-            CO2回收和利用量（吨） = （CO2 回收外供量 * 外供气体 CO2 体积浓度百分比/100 + CO2 回收作原料量 * 原料气 CO2 体积浓度百分比/100） * 19.77
-          </Paragraph>
-          
-          <div style={{ marginTop: 20, padding: 16, backgroundColor: '#f0f2f5', borderRadius: 4 }}>
-            <Text strong>计算公式：</Text>
-            <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <Text>CO2回收和利用量</Text>
-                <DoubleRightOutlined style={{ margin: '0 10px' }} />
-                <Text>({`外供量 × (外供浓度%/100) + 原料量 × (原料浓度%/100)`}) × 19.77</Text>
-              </div>
-            </div>
-          </div>
-          
-          {/* 添加证明材料要求 */}
-          <div style={{ marginTop: 20 }}>
-            <Paragraph>
-              <Text strong>证明材料：</Text>
-            </Paragraph>
-            <Paragraph>
-              1、请企业提供台帐或统计报表来证明CO2气体回收外供量以及回收自用作生产原料的 CO2 量。
-            </Paragraph>
-            <Paragraph>
-              2、请企业提供台帐记录来证明CO2外供气体的CO2 气体的 CO2 体积浓度以及回收自用作生产原料的 CO2 气体的 CO2 体积浓度。
-            </Paragraph>
-          </div>
-        </Card>
+        {/* 计算说明和结果显示 - 修改为CarbonateEmission.jsx的样式 */}
+        <div className="calculation-description">
+          <p><strong>计算公式：</strong></p>
+          <p>CO2回收和利用量（吨） = （CO2 回收外供量 × 外供气体 CO2 体积浓度百分比/100 + CO2 回收作原料量 × 原料气 CO2 体积浓度百分比/100） × 19.77</p>
+          <p><strong>单位说明：</strong>CO2 回收外供量和回收作原料量单位为万 Nm³，浓度为百分比，19.77 为标准状况下 CO2 气体的密度（吨/万Nm³）。</p>
+          <p><strong>证明材料：</strong>1、请企业提供台帐或统计报表来证明CO2气体回收外供量以及回收自用作生产原料的 CO2 量。
+2、请企业提供台帐记录来证明CO2外供气体的CO2 气体的 CO2 体积浓度以及回收自用作生产原料的 CO2 气体的 CO2 体积浓度。</p>
+        </div>
       </Form>
     </Card>
   );

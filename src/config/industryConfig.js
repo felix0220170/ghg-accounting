@@ -4,7 +4,8 @@ export const INDUSTRY_TYPES = {
   PAPER: '造纸及纸制品业',
   FOOD: '食品、烟草及酒、饮料和精制茶行业',
   NON_FERROUS_METALS: '其他有色金属冶炼和压延加工业',
-  LAND_TRANSPORTATION: '陆上交通运输行业'
+  LAND_TRANSPORTATION: '陆上交通运输行业',
+  MINING: '矿山企业' // 添加矿山企业行业
 };
 
 export const industryConfigs = {
@@ -53,6 +54,16 @@ export const industryConfigs = {
     name: '陆上交通运输行业',
     emissionItems: [
       { key: 'fossilFuel', label: '化石燃料燃烧 CO2 排放', unit: '吨' },
+      { key: 'electricityHeat', label: '净购入电力和热力隐含的 CO2 排放', unit: '吨' }
+    ]
+  },
+  // 添加矿山企业的行业配置
+  '矿山企业': {
+    name: '矿山企业',
+    emissionItems: [
+      { key: 'fossilFuel', label: '化石燃料燃烧 CO2 排放', unit: '吨' },
+      { key: 'carbonate', label: '碳酸盐使用过程 CO2 排放', unit: '吨' },
+      { key: 'carbonationAbsorption', label: '碳化工艺吸收的 CO2 量', unit: '吨', isSubtraction: true },
       { key: 'electricityHeat', label: '净购入电力和热力隐含的 CO2 排放', unit: '吨' }
     ]
   }

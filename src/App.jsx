@@ -7,6 +7,7 @@ import PaperIndustry from './components/industries/PaperIndustry'
 import FoodIndustry from './components/industries/FoodIndustry' 
 import NonFerrousMetalsIndustry from './components/industries/NonFerrousMetalsIndustry' // 导入有色金属行业组件
 import LandTransportationIndustry from './components/industries/LandTransportationIndustry';
+import MiningIndustry from './components/industries/MiningIndustry'; // 导入矿山企业组件
 import { INDUSTRY_TYPES } from './config/industryConfig' 
 
 function App() {
@@ -28,6 +29,8 @@ function App() {
         return <NonFerrousMetalsIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.LAND_TRANSPORTATION: // 添加陆上交通运输行业
         return <LandTransportationIndustry industry={selectedIndustry} />;
+      case INDUSTRY_TYPES.MINING:
+        return <MiningIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.OTHER:
       default:
         return <OtherIndustry industry={selectedIndustry} />;
