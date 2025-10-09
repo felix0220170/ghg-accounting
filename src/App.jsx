@@ -5,9 +5,10 @@ import 'antd/dist/reset.css'
 import OtherIndustry from './components/industries/OtherIndustry'
 import PaperIndustry from './components/industries/PaperIndustry'
 import FoodIndustry from './components/industries/FoodIndustry' 
-import NonFerrousMetalsIndustry from './components/industries/NonFerrousMetalsIndustry' // 导入有色金属行业组件
+import NonFerrousMetalsIndustry from './components/industries/NonFerrousMetalsIndustry' 
 import LandTransportationIndustry from './components/industries/LandTransportationIndustry';
-import MiningIndustry from './components/industries/MiningIndustry'; // 导入矿山企业组件
+import MiningIndustry from './components/industries/MiningIndustry';
+import MachineryManufacturingIndustry from './components/industries/MachineryManufacturingIndustry'; // 导入机械设备制造企业组件
 import { INDUSTRY_TYPES } from './config/industryConfig' 
 
 function App() {
@@ -27,10 +28,12 @@ function App() {
         return <FoodIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.NON_FERROUS_METALS:
         return <NonFerrousMetalsIndustry industry={selectedIndustry} />;
-      case INDUSTRY_TYPES.LAND_TRANSPORTATION: // 添加陆上交通运输行业
+      case INDUSTRY_TYPES.LAND_TRANSPORTATION: 
         return <LandTransportationIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.MINING:
         return <MiningIndustry industry={selectedIndustry} />;
+      case INDUSTRY_TYPES.MACHINERY_MANUFACTURING: // 添加机械设备制造企业
+        return <MachineryManufacturingIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.OTHER:
       default:
         return <OtherIndustry industry={selectedIndustry} />;

@@ -5,7 +5,8 @@ export const INDUSTRY_TYPES = {
   FOOD: '食品、烟草及酒、饮料和精制茶行业',
   NON_FERROUS_METALS: '其他有色金属冶炼和压延加工业',
   LAND_TRANSPORTATION: '陆上交通运输行业',
-  MINING: '矿山企业' // 添加矿山企业行业
+  MINING: '矿山企业',
+  MACHINERY_MANUFACTURING: '机械设备制造企业' // 添加机械设备制造企业
 };
 
 export const industryConfigs = {
@@ -64,6 +65,16 @@ export const industryConfigs = {
       { key: 'fossilFuel', label: '化石燃料燃烧 CO2 排放', unit: '吨' },
       { key: 'carbonate', label: '碳酸盐使用过程 CO2 排放', unit: '吨' },
       { key: 'carbonationAbsorption', label: '碳化工艺吸收的 CO2 量', unit: '吨', isSubtraction: true },
+      { key: 'electricityHeat', label: '净购入电力和热力隐含的 CO2 排放', unit: '吨' }
+    ]
+  },
+  // 在机械设备制造企业的emissionItems中添加新的排放项
+  'MachineryManufacturingIndustry': {
+    name: '机械设备制造企业',
+    emissionItems: [
+      { key: 'fossilFuel', label: '化石燃料燃烧 CO2 排放', unit: '吨' },
+      { key: 'electricalRefrigeration', label: '电气与制冷设备生产的过程排放', unit: '吨' },
+      { key: 'weldingCO2', label: 'CO2作为保护气的焊接过程排放', unit: '吨' }, // 新增排放项
       { key: 'electricityHeat', label: '净购入电力和热力隐含的 CO2 排放', unit: '吨' }
     ]
   }
