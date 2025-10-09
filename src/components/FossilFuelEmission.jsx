@@ -7,6 +7,7 @@ import {
   PAPER_MANUFACTURING_REQUIRED_FUELS,
   FOOD_BEVERAGE_REQUIRED_FUELS,
   NON_FERROUS_METALS_REQUIRED_FUELS,
+  PUBLIC_BUILDING_REQUIRED_FUELS, // 导入公共建筑行业燃料列表
   CO2_CALCULATION_CONSTANTS 
 } from '../config/fossilFuelConstants';
 
@@ -34,6 +35,10 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange 
       return DEFAULT_FUEL_TYPES
         .filter(fuel => NON_FERROUS_METALS_REQUIRED_FUELS.includes(fuel.name))
         .sort((a, b) => NON_FERROUS_METALS_REQUIRED_FUELS.indexOf(a.name) - NON_FERROUS_METALS_REQUIRED_FUELS.indexOf(b.name));
+    } else if (industryName === '公共建筑运营单位（企业）') {
+      return DEFAULT_FUEL_TYPES
+        .filter(fuel => PUBLIC_BUILDING_REQUIRED_FUELS.includes(fuel.name))
+        .sort((a, b) => PUBLIC_BUILDING_REQUIRED_FUELS.indexOf(a.name) - PUBLIC_BUILDING_REQUIRED_FUELS.indexOf(b.name));
     }
     
     return DEFAULT_FUEL_TYPES;

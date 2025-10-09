@@ -74,3 +74,10 @@ export const CO2_CALCULATION_CONSTANTS = {
   // CO2与C的分子量比例
   CARBON_TO_CO2_RATIO: 44 / 12,
 };
+
+// 添加公共建筑行业需要的燃料列表
+export const PUBLIC_BUILDING_REQUIRED_FUELS = [
+  '无烟煤', '烟煤', '褐煤', '洗精煤', '其它洗煤', '其它煤制品', 
+  '焦炭', '原油', '燃料油', '汽油', '柴油', '一般煤油', 
+  '液化天然气', '液化石油气', '天然气', '炼厂干气', '城市煤气'
+];

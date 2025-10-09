@@ -9,6 +9,7 @@ import NonFerrousMetalsIndustry from './components/industries/NonFerrousMetalsIn
 import LandTransportationIndustry from './components/industries/LandTransportationIndustry';
 import MiningIndustry from './components/industries/MiningIndustry';
 import MachineryManufacturingIndustry from './components/industries/MachineryManufacturingIndustry'; // 导入机械设备制造企业组件
+import PublicBuildingIndustry from './components/industries/PublicBuildingIndustry'; // 导入公共建筑运营单位组件
 import { INDUSTRY_TYPES } from './config/industryConfig' 
 
 function App() {
@@ -32,8 +33,10 @@ function App() {
         return <LandTransportationIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.MINING:
         return <MiningIndustry industry={selectedIndustry} />;
-      case INDUSTRY_TYPES.MACHINERY_MANUFACTURING: // 添加机械设备制造企业
+      case INDUSTRY_TYPES.MACHINERY_MANUFACTURING:
         return <MachineryManufacturingIndustry industry={selectedIndustry} />;
+      case INDUSTRY_TYPES.PUBLIC_BUILDING: // 添加公共建筑运营单位
+        return <PublicBuildingIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.OTHER:
       default:
         return <OtherIndustry industry={selectedIndustry} />;
