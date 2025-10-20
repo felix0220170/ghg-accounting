@@ -1,5 +1,6 @@
 // 行业类型常量 - 通用常量
 export const INDUSTRY_TYPES = {
+  CEMENT: '水泥行业',
   OTHER: '其他行业',
   PAPER: '造纸及纸制品业',
   FOOD: '食品、烟草及酒、饮料和精制茶行业',
@@ -8,7 +9,7 @@ export const INDUSTRY_TYPES = {
   MINING: '矿山企业',
   MACHINERY_MANUFACTURING: '机械设备制造企业',
   PUBLIC_BUILDING: '公共建筑运营单位（企业）',
-  FLUORINE_CHEMICAL: '氟化工企业' // 新增氟化工企业行业
+  FLUORINE_CHEMICAL: '氟化工企业'
 };
 
 // 在INDUSTRY_TYPES中确保氟化工企业存在
@@ -110,6 +111,16 @@ export const industryConfigs = {
     emissionItems: [
       { key: 'fossilFuel', label: '化石燃料燃烧 CO2 排放', unit: '吨' },
       { key: 'hcfc22Production', label: 'HCFC-22 生产过程 HFC-23 排放', unit: '吨' }, // 新增排放项
+      { key: 'electricityHeat', label: '净购入电力和热力隐含的 CO2 排放', unit: '吨' }
+    ]
+  },
+  // 新增水泥行业的配置
+  '水泥行业': {
+    name: '水泥行业',
+    emissionItems: [
+      { key: 'fossilFuel', label: '化石燃料燃烧 CO2 排放', unit: '吨' },
+      { key: 'clinkerProduction', label: '熟料生产过程 CO2 排放', unit: '吨' },
+      { key: 'powerPlantOther', label: '发电设施及其他非水泥熟料生产设施排放量', unit: '吨' },
       { key: 'electricityHeat', label: '净购入电力和热力隐含的 CO2 排放', unit: '吨' }
     ]
   }
