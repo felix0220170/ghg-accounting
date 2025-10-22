@@ -68,13 +68,7 @@ const createInitialMonthlyData = () => {
 };
 
 // 化石燃料燃烧排放量组件
-function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange }) {
-  // 生产线数据
-  const [productionLines, setProductionLines] = useState([{
-    id: generateId(),
-    name: '生产线1',
-    fuelItems: []
-  }]);
+function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange, productionLines = [], onProductionLinesChange }) {
   
   // 自定义燃料列表
   const [customFuels, setCustomFuels] = useState([]);
@@ -82,30 +76,13 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange 
   // 保存上一次的排放量，用于比较是否真正发生变化
   const previousEmissionRef = useRef(null);
 
-  // 添加新的生产线
-  const addProductionLine = useCallback(() => {
-    const newLineName = `生产线${productionLines.length + 1}`;
-    setProductionLines([...productionLines, {
-      id: generateId(),
-      name: newLineName,
-      fuelItems: []
-    }]);
-  }, [productionLines]);
+  // 不再需要内部添加生产线功能，由父组件控制
 
-  // 删除生产线
-  const removeProductionLine = useCallback((lineId) => {
-    if (productionLines.length <= 1) return; // 至少保留一条生产线
-    setProductionLines(productionLines.filter(line => line.id !== lineId));
-  }, [productionLines]);
+  // 不再需要内部删除生产线功能，由父组件控制
 
-  // 修改生产线名称
-  const updateProductionLineName = useCallback((lineId, newName) => {
-    setProductionLines(productionLines.map(line => 
-      line.id === lineId ? { ...line, name: newName } : line
-    ));
-  }, [productionLines]);
+  // 不再需要updateProductionLineName函数，生产线名称完全由父组件管理
 
-  // 添加燃料到生产线
+  // 添加燃料到生产线，通过回调通知父组件
   const addFuelToLine = useCallback((lineId, fuelId) => {
     // 先在默认燃料中查找
     let fuel = ALL_FUELS.find(f => f.id === fuelId);
@@ -113,12 +90,13 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange 
     if (!fuel) {
       fuel = customFuels.find(f => f.id === fuelId);
     }
-    if (!fuel) return;
+    if (!fuel || !onProductionLinesChange || !Array.isArray(productionLines)) return;
 
-    setProductionLines(productionLines.map(line => {
+    const updatedLines = productionLines.map(line => {
       if (line.id === lineId) {
         // 检查是否已经添加了该燃料
-        const fuelExists = line.fuelItems.some(item => item.fuelId === fuelId);
+        const currentFuelItems = Array.isArray(line.fuelItems) ? line.fuelItems : [];
+        const fuelExists = currentFuelItems.some(item => item.fuelId === fuelId);
         if (fuelExists) return line;
 
         // 为不同类型的燃料设置默认氧化率
@@ -154,58 +132,67 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange 
 
         return {
           ...line,
-          fuelItems: [...line.fuelItems, newFuelItem]
+          fuelItems: [...currentFuelItems, newFuelItem]
         };
       }
       return line;
-    }));
-  }, [productionLines]);
+    });
 
-  // 从生产线移除燃料
+    // 通过回调通知父组件更新
+    onProductionLinesChange(updatedLines);
+  }, [productionLines, customFuels, onProductionLinesChange]);
+
+  // 从生产线移除燃料，通过回调通知父组件
   const removeFuelFromLine = useCallback((lineId, fuelItemId) => {
-    setProductionLines(productionLines.map(line => {
-      if (line.id === lineId) {
-        return {
-          ...line,
-          fuelItems: line.fuelItems.filter(item => item.id !== fuelItemId)
-        };
-      }
-      return line;
-    }));
-  }, [productionLines]);
+    if (onProductionLinesChange) {
+      const updatedLines = productionLines.map(line => {
+        if (line.id === lineId) {
+          return {
+            ...line,
+            fuelItems: line.fuelItems.filter(item => item.id !== fuelItemId)
+          };
+        }
+        return line;
+      });
+      onProductionLinesChange(updatedLines);
+    }
+  }, [productionLines, onProductionLinesChange]);
 
-  // 更新月度数据
+  // 更新月度数据，通过回调通知父组件
   const updateMonthlyData = useCallback((lineId, fuelItemId, monthIndex, field, value) => {
-    setProductionLines(productionLines.map(line => {
-      if (line.id === lineId) {
-        return {
-          ...line,
-          fuelItems: line.fuelItems.map(fuelItem => {
-            if (fuelItem.id === fuelItemId) {
-              const updatedMonthlyData = [...fuelItem.monthlyData];
-              updatedMonthlyData[monthIndex] = {
-                ...updatedMonthlyData[monthIndex],
-                [field]: value
-              };
-              return {
-                ...fuelItem,
-                monthlyData: updatedMonthlyData
-              };
-            }
-            return fuelItem;
-          })
-        };
-      }
-      return line;
-    }));
-  }, [productionLines]);
+    if (onProductionLinesChange) {
+      const updatedLines = productionLines.map(line => {
+        if (line.id === lineId) {
+          return {
+            ...line,
+            fuelItems: line.fuelItems.map(fuelItem => {
+              if (fuelItem.id === fuelItemId) {
+                const updatedMonthlyData = [...fuelItem.monthlyData];
+                updatedMonthlyData[monthIndex] = {
+                  ...updatedMonthlyData[monthIndex],
+                  [field]: value
+                };
+                return {
+                  ...fuelItem,
+                  monthlyData: updatedMonthlyData
+                };
+              }
+              return fuelItem;
+            })
+          };
+        }
+        return line;
+      });
+      onProductionLinesChange(updatedLines);
+    }
+  }, [productionLines, onProductionLinesChange]);
 
-  // 更新固体燃料的燃烧设备
+  // 更新固体燃料的燃烧设备，通过回调通知父组件
   const updateSolidFuelEquipment = useCallback((lineId, fuelItemId, equipmentId) => {
     const equipment = SOLID_FUEL_EQUIPMENTS.find(e => e.id === equipmentId);
-    if (!equipment) return;
+    if (!equipment || !onProductionLinesChange) return;
 
-    setProductionLines(productionLines.map(line => {
+    const updatedLines = productionLines.map(line => {
       if (line.id === lineId) {
         return {
           ...line,
@@ -227,8 +214,10 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange 
         };
       }
       return line;
-    }));
-  }, [productionLines]);
+    });
+
+    onProductionLinesChange(updatedLines);
+  }, [productionLines, onProductionLinesChange]);
 
   // 添加自定义燃料
   const addCustomFuel = useCallback((fuelData) => {
@@ -274,41 +263,53 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange 
     }, 0);
   }, [calculateMonthlyEmission]);
 
-  // 更新文件上传
+  // 更新文件上传，通过回调通知父组件
   const updateFile = useCallback((lineId, fuelItemId, fileType, file) => {
-    setProductionLines(productionLines.map(line => {
-      if (line.id === lineId) {
-        return {
-          ...line,
-          fuelItems: line.fuelItems.map(item => {
-            if (item.id === fuelItemId) {
-              return {
-                ...item,
-                files: {
-                  ...item.files,
-                  [fileType]: file
-                }
-              };
-            }
-            return item;
-          })
-        };
-      }
-      return line;
-    }));
-  }, [productionLines]);
+    if (onProductionLinesChange) {
+      const updatedLines = productionLines.map(line => {
+        if (line.id === lineId) {
+          return {
+            ...line,
+            fuelItems: line.fuelItems.map(item => {
+              if (item.id === fuelItemId) {
+                return {
+                  ...item,
+                  files: {
+                    ...item.files,
+                    [fileType]: file
+                  }
+                };
+              }
+              return item;
+            })
+          };
+        }
+        return line;
+      });
+      onProductionLinesChange(updatedLines);
+    }
+  }, [productionLines, onProductionLinesChange]);
 
   // 计算总排放量
   const totalEmission = useMemo(() => {
     let total = 0;
 
-    productionLines.forEach(line => {
-      line.fuelItems.forEach(fuelItem => {
-        fuelItem.monthlyData.forEach(monthData => {
-          total += calculateMonthlyEmission(monthData);
-        });
+    // 添加空值检查，确保productionLines是数组
+    if (Array.isArray(productionLines)) {
+      productionLines.forEach(line => {
+        // 添加空值检查，确保line和line.fuelItems存在且是数组
+        if (line && Array.isArray(line.fuelItems)) {
+          line.fuelItems.forEach(fuelItem => {
+            // 添加空值检查，确保fuelItem和fuelItem.monthlyData存在且是数组
+            if (fuelItem && Array.isArray(fuelItem.monthlyData)) {
+              fuelItem.monthlyData.forEach(monthData => {
+                total += calculateMonthlyEmission(monthData);
+              });
+            }
+          });
+        }
       });
-    });
+    }
 
     return total;
   }, [productionLines, calculateMonthlyEmission]);
@@ -337,11 +338,20 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange 
 
   // 获取可添加的燃料列表（排除已添加的）
   const getAvailableFuels = (lineId) => {
+    // 先确保productionLines是数组
+    if (!Array.isArray(productionLines)) return ALL_FUELS; // 返回所有燃料
+    
     const line = productionLines.find(l => l.id === lineId);
-    if (!line) return [];
+    // 如果找不到生产线或生产线没有fuelItems，返回所有燃料
+    if (!line || !Array.isArray(line.fuelItems)) return ALL_FUELS;
 
     const addedFuelIds = line.fuelItems.map(item => item.fuelId);
-    return [...ALL_FUELS, ...customFuels].filter(fuel => !addedFuelIds.includes(fuel.id));
+    // 确保customFuels是数组
+    const safeCustomFuels = Array.isArray(customFuels) ? customFuels : [];
+    const availableFuels = [...ALL_FUELS, ...safeCustomFuels].filter(fuel => !addedFuelIds.includes(fuel.id));
+    
+    // 返回所有可用燃料
+    return availableFuels;
   };
 
   return (
@@ -361,31 +371,11 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange 
       </div>
 
       {/* 生产线管理 */}
-      {productionLines.map((line, lineIndex) => (
+      {Array.isArray(productionLines) && productionLines.map((line, lineIndex) => (
         <div key={line.id} className="production-line" style={{ marginBottom: '30px', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
           <div className="line-header" style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-            <input
-              type="text"
-              value={line.name}
-              onChange={(e) => updateProductionLineName(line.id, e.target.value)}
-              style={{ width: '200px', padding: '5px' }}
-            />
-            <button
-              onClick={() => removeProductionLine(line.id)}
-              disabled={productionLines.length <= 1}
-              style={{
-                marginLeft: '10px',
-                padding: '5px 10px',
-                background: 'red',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: productionLines.length > 1 ? 'pointer' : 'not-allowed',
-                opacity: productionLines.length > 1 ? 1 : 0.5
-              }}
-            >
-              删除生产线
-            </button>
+            <h3 style={{ margin: '10px 0' }}>{line.name}</h3>
+            {/* 不再显示删除生产线按钮，由父组件控制生产线的添加和删除 */}
           </div>
 
           {/* 添加燃料 */}
@@ -408,8 +398,7 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange 
             </select>
           </div>
 
-          {/* 列式数据表格 */}
-          {line.fuelItems.length > 0 && (
+          {line.fuelItems && Array.isArray(line.fuelItems) && line.fuelItems.length > 0 && (
             <div className="column-data-table" style={{ marginBottom: '20px', overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
@@ -617,21 +606,7 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange 
         </div>
       ))}
 
-      {/* 添加生产线按钮 */}
-      <button
-        onClick={addProductionLine}
-        style={{
-          padding: '10px 20px',
-          background: '#4CAF50',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          marginBottom: '20px'
-        }}
-      >
-        添加生产线
-      </button>
+      {/* 不再显示添加生产线按钮，由父组件控制生产线的添加和删除 */}
 
       {/* 自定义燃料添加区域 */}
       <div className="custom-fuel-section" style={{ marginTop: '30px', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>

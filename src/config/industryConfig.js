@@ -121,7 +121,7 @@ export const industryConfigs = {
       { key: 'fossilFuel', label: '化石燃料燃烧 CO2 排放', unit: '吨' },
       { key: 'clinkerProduction', label: '熟料生产过程 CO2 排放', unit: '吨' },
       { key: 'powerPlantOther', label: '发电设施及其他非水泥熟料生产设施排放量', unit: '吨' },
-      { key: 'electricityHeat', label: '净购入电力和热力隐含的 CO2 排放', unit: '吨' }
+      { key: 'netElectricityHeat', label: '购入净电和净热 CO2 排放', unit: '吨' }
     ]
   }
 };

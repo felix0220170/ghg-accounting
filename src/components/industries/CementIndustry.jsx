@@ -3,8 +3,9 @@ import { Card, Tabs, Typography, Divider } from 'antd';
 import FossilFuelEmission from '../FossilFuelEmission';
 import ClinkerProductionEmission from '../ClinkerProductionEmission';
 import PowerPlantOtherEmission from '../PowerPlantOtherEmission';
-import ElectricityHeatEmission from '../ElectricityHeatEmission';
+import NetElectricityHeatEmission from '../NetElectricityHeatEmission';
 import CementIndustrySummary from './CementIndustrySummary';
+import ProductionLineManagement from '../ProductionLineManagement';
 import { INDUSTRY_TYPES } from '../../config/industryConfig';
 
 const { Title, Paragraph } = Typography;
@@ -15,8 +16,24 @@ function CementIndustry({ onEmissionChange }) {
     fossilFuel: 0,
     clinkerProduction: 0,
     powerPlantOther: 0,
-    electricityHeat: 0
+    netElectricityHeat: 0
   });
+  
+  // 生产线状态管理
+  const [productionLines, setProductionLines] = useState([]);
+  
+  // 处理生产线变化
+  const handleProductionLinesChange = (updatedLines) => {
+    setProductionLines(updatedLines);
+    // 通知父组件生产线信息变化
+    if (onEmissionChange) {
+      onEmissionChange({
+        emissionData,
+        totalEmission: calculateTotalEmission(),
+        productionLines: updatedLines
+      });
+    }
+  };
 
   // 处理各组件排放量变化
   const handleEmissionChange = (key, value) => {
@@ -32,7 +49,8 @@ function CementIndustry({ onEmissionChange }) {
     if (onEmissionChange) {
       onEmissionChange({
         emissionData,
-        totalEmission: total
+        totalEmission: total,
+        productionLines // 同时传递生产线信息
       });
     }
     return total;
@@ -43,7 +61,7 @@ function CementIndustry({ onEmissionChange }) {
     fossilFuelEmission: emissionData.fossilFuel,
     clinkerProductionEmission: emissionData.clinkerProduction,
     powerPlantOtherEmission: emissionData.powerPlantOther,
-    electricityHeatEmission: emissionData.electricityHeat
+    netElectricityHeatEmission: emissionData.netElectricityHeat
   });
 
   return (
@@ -61,32 +79,43 @@ function CementIndustry({ onEmissionChange }) {
       </Card>
 
       <Tabs defaultActiveKey="summary" onChange={() => calculateTotalEmission()}>
-        <TabPane tab="1. 排放汇总" key="summary">
+        <TabPane tab="排放汇总" key="summary">
           <CementIndustrySummary emissionData={prepareSummaryData()} />
         </TabPane>
-        <TabPane tab="2. 化石燃料燃烧 CO2 排放" key="fossilFuel">
+        <TabPane tab="生产线管理" key="productionLineManagement">
+          <ProductionLineManagement 
+            productionLines={productionLines}
+            onProductionLinesChange={handleProductionLinesChange}
+          />
+        </TabPane>
+        <TabPane tab="化石燃料燃烧 CO2 排放" key="fossilFuel">
           <FossilFuelEmission 
             industry={INDUSTRY_TYPES.CEMENT}
             onEmissionChange={(value) => handleEmissionChange('fossilFuel', value)}
+            productionLines={productionLines} // 传递生产线信息给子组件
+            onProductionLinesChange={handleProductionLinesChange} // 添加生产线变化回调
           />
         </TabPane>
         
-        <TabPane tab="3. 熟料生产过程 CO2 排放" key="clinkerProduction">
+        <TabPane tab="熟料生产过程 CO2 排放" key="clinkerProduction">
           <ClinkerProductionEmission 
             onEmissionChange={(value) => handleEmissionChange('clinkerProduction', value)}
+            productionLines={productionLines} // 传递生产线信息给子组件
+            onProductionLinesChange={handleProductionLinesChange} // 添加生产线变化回调
           />
         </TabPane>
         
-        <TabPane tab="4. 发电设施及其他非熟料生产设施排放" key="powerPlantOther">
+        <TabPane tab="发电设施及其他非熟料生产设施排放" key="powerPlantOther">
           <PowerPlantOtherEmission 
             onEmissionChange={(value) => handleEmissionChange('powerPlantOther', value)}
+            productionLines={productionLines} // 传递生产线信息给子组件
           />
         </TabPane>
         
-        <TabPane tab="5. 净购入电力和热力隐含的 CO2 排放" key="electricityHeat">
-          <ElectricityHeatEmission 
-            industry={INDUSTRY_TYPES.CEMENT}
-            onEmissionChange={(value) => handleEmissionChange('electricityHeat', value)}
+
+        <TabPane tab="购入净电和净热" key="netElectricityHeat">
+          <NetElectricityHeatEmission 
+            onEmissionChange={(value) => handleEmissionChange('netElectricityHeat', value)}
           />
         </TabPane>
       </Tabs>

@@ -6,15 +6,23 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 const { Dragger } = Upload;
 
-function ClinkerProductionEmission({ onEmissionChange }) {
-  // 基础熟料数据
-  const BASE_LINKER_DATA = [
-    { id: 1, name: '硅酸盐水泥熟料', emissionFactor: 0.535 },
-    { id: 2, name: '白色硅酸盐水泥熟料', emissionFactor: 0.550 },
-    { id: 3, name: '硫（铁）铝酸盐水泥熟料', emissionFactor: 0.413 },
-    { id: 4, name: '铝酸盐水泥熟料（有过程排放）', emissionFactor: 0.292 }
+function ClinkerProductionEmission({ onEmissionChange, productionLines, onProductionLinesChange }) {
+   
+  // 基础熟料类别数据
+  const BASE_CLINKER_TYPES = [
+    { value: '硅酸盐水泥熟料', label: '硅酸盐水泥熟料', emissionFactor: 0.535 },
+    { value: '白色硅酸盐水泥熟料', label: '白色硅酸盐水泥熟料', emissionFactor: 0.550 },
+    { value: '硫（铁）铝酸盐水泥熟料', label: '硫（铁）铝酸盐水泥熟料', emissionFactor: 0.413 },
+    { value: '铝酸盐水泥熟料', label: '铝酸盐水泥熟料', emissionFactor: 0.292 }
   ];
-
+  
+  // 根据熟料类别获取排放因子
+  const getEmissionFactorByType = (clinkerType) => {
+    if (!clinkerType) return 0;
+    const typeData = BASE_CLINKER_TYPES.find(type => type.value === clinkerType);
+    return typeData ? typeData.emissionFactor : 0;
+  };
+    
   // 基础非碳酸盐替代原料数据
   const BASE_NON_CARBONATE_ALTERNATIVE_MATERIALS = [
     { id: 1, name: '脱硫粉剂（氢氧化钙）', deductionFactor: 0.600 },
@@ -64,39 +72,54 @@ function ClinkerProductionEmission({ onEmissionChange }) {
   const initMonthData = () => {
     const monthData = {};
     MONTHS.forEach(month => {
-      monthData[month] = '';
+      monthData[month] = 0;
     });
     return monthData;
   };
 
-  // 状态管理
-  const [productionLines, setProductionLines] = useState([{
-    id: 1,
-    name: '生产线1',
-    clinker: null,
-    clinkerProductionData: initMonthData(),
-    clinkerFactorData: {},
-    alternativeMaterials: [],
-    materialConsumptionData: {},
-    materialFactorData: {}
-  }]);
+  // 确保productionLines是数组
+  const safeProductionLines = Array.isArray(productionLines) ? productionLines : [];
+  
+  // 确保所有关联熟料的生产线都有默认排放因子
+  useEffect(() => {
+    if (!onProductionLinesChange || !safeProductionLines.length) return;
+    
+    const updatedLines = safeProductionLines.map(line => {
+      // 只处理有关联熟料但没有排放因子数据的生产线
+      if (line.clinkerType && (!line.clinkerFactorData || Object.keys(line.clinkerFactorData).length === 0)) {
+        const defaultFactor = getEmissionFactorByType(line.clinkerType);
+        const initialFactorData = {};
+        MONTHS.forEach(month => {
+          initialFactorData[month] = defaultFactor;
+        });
+        return {
+          ...line,
+          clinkerFactorData: initialFactorData
+        };
+      }
+      return line;
+    });
+    
+    // 检查是否有生产线需要更新
+    const hasChanges = updatedLines.some((line, index) => 
+      line.clinkerFactorData !== safeProductionLines[index].clinkerFactorData
+    );
+    
+    if (hasChanges) {
+      onProductionLinesChange(updatedLines);
+    }
+  }, [safeProductionLines, onProductionLinesChange, getEmissionFactorByType, MONTHS]);
   
   // 全局自定义物料状态
-  const [customClinkers, setCustomClinkers] = useState([]);
   const [customMaterials, setCustomMaterials] = useState([]);
   
   // 弹窗状态
-  const [customClinkerModalVisible, setCustomClinkerModalVisible] = useState(false);
   const [customMaterialModalVisible, setCustomMaterialModalVisible] = useState(false);
   
   // 自定义物料表单数据
-  const [customClinkerForm] = Form.useForm();
   const [customMaterialForm] = Form.useForm();
   
-  // 组合所有熟料数据（基础 + 自定义）
-  const CLINKER_DATA = useMemo(() => {
-    return [...BASE_LINKER_DATA, ...customClinkers];
-  }, [customClinkers]);
+  // 移除自定义熟料相关的组合数据
   
   // 组合所有替代原料数据（基础 + 自定义）
   const NON_CARBONATE_ALTERNATIVE_MATERIALS = useMemo(() => {
@@ -107,18 +130,19 @@ function ClinkerProductionEmission({ onEmissionChange }) {
   const lastEmissionRef = useRef(0);
 
   // 计算表格数据
-  const calculateTableData = useMemo(() => {
+  const { tableData, totalEmission } = useMemo(() => {
     let tableData = [];
     let totalEmission = 0;
 
-    productionLines.forEach(line => {
+    safeProductionLines.forEach(line => {
       // 处理熟料数据
-      if (line.clinker) {
+      if (line.clinkerType) {
         // 初始化月度数据（如果尚未初始化）
         if (!line.clinkerFactorData || Object.keys(line.clinkerFactorData).length === 0) {
           const initialFactorData = {};
+          const emissionFactor = getEmissionFactorByType(line.clinkerType);
           MONTHS.forEach(month => {
-            initialFactorData[month] = line.clinker.emissionFactor;
+            initialFactorData[month] = emissionFactor;
           });
           // 这里不直接修改状态，而是在selectClinker中处理
         }
@@ -128,7 +152,7 @@ function ClinkerProductionEmission({ onEmissionChange }) {
           key: `clinker-production-${line.id}`,
           生产线: line.name,
           信息项: '熟料产量',
-          原料名称: line.clinker?.name || '',
+          原料名称: line.clinkerType || '',
           单位: 't',
           ...line.clinkerProductionData,
           全年值: 0,
@@ -142,7 +166,7 @@ function ClinkerProductionEmission({ onEmissionChange }) {
           key: `clinker-factor-${line.id}`,
           生产线: '',
           信息项: '熟料的过程排放因子',
-          原料名称: line.clinker?.name || '',
+          原料名称: line.clinkerType || '',
           单位: 'tCO2/t',
           ...line.clinkerFactorData,
           全年值: 0,
@@ -159,25 +183,30 @@ function ClinkerProductionEmission({ onEmissionChange }) {
         tableData.push(clinkerProductionRow, clinkerFactorRow);
 
         // 处理替代原料数据
-        line.alternativeMaterials.forEach((material, materialIndex) => {
+        (line.alternativeMaterials || []).forEach((material, materialIndex) => {
           // 初始化月度数据（如果尚未初始化）
           const materialKey = `${line.id}-${materialIndex}`;
-          if (!line.materialFactorData[materialKey]) {
-            const initialFactorData = {};
-            MONTHS.forEach(month => {
-              initialFactorData[month] = material.deductionFactor;
-            });
+          if (!line.materialFactorData || !line.materialFactorData[materialKey]) {
             // 这里不直接修改状态，而是在addAlternativeMaterial中处理
           }
 
-          // 替代原料消耗量行
+          // 替代原料消耗量行 - 确保所有月份数据都有数字类型的初始值
+          const existingData = (line.materialConsumptionData || {})[materialKey] || {};
+          const monthData = initMonthData();
+          // 合并现有数据，确保所有月份都有值（数字类型）
+          MONTHS.forEach(month => {
+            if (existingData[month] !== undefined && existingData[month] !== null) {
+              monthData[month] = parseFloat(existingData[month]) || 0;
+            }
+          });
+          
           const materialConsumptionRow = {
             key: `material-consumption-${line.id}-${materialIndex}`,
             生产线: '',
             信息项: '非碳酸盐替代原料消耗量',
             原料名称: material.name,
             单位: 't',
-            ...(line.materialConsumptionData[materialKey] || initMonthData()),
+            ...monthData,
             全年值: 0,
             获取方式: '',
             数据来源: '',
@@ -191,7 +220,7 @@ function ClinkerProductionEmission({ onEmissionChange }) {
             信息项: '非碳酸盐替代原料的扣减系数',
             原料名称: material.name,
             单位: 'tCO2/t',
-            ...(line.materialFactorData[materialKey] || {}),
+            ...((line.materialFactorData || {})[materialKey] || {}),
             全年值: 0,
             获取方式: 'DEFAULT',
             数据来源: '',
@@ -222,14 +251,14 @@ function ClinkerProductionEmission({ onEmissionChange }) {
         };
         
         MONTHS.forEach(month => {
-          const production = parseFloat(line.clinkerProductionData[month]) || 0;
-          const factor = parseFloat(line.clinkerFactorData[month]) || 0;
+          const production = parseFloat((line.clinkerProductionData || {})[month]) || 0;
+          const factor = parseFloat((line.clinkerFactorData || {})[month]) || 0;
           
           let totalDeduction = 0;
-          line.alternativeMaterials.forEach((material, materialIndex) => {
+          (line.alternativeMaterials || []).forEach((material, materialIndex) => {
             const materialKey = `${line.id}-${materialIndex}`;
-            const consumption = parseFloat(line.materialConsumptionData[materialKey]?.[month]) || 0;
-            const deductionFactor = parseFloat(line.materialFactorData[materialKey]?.[month]) || 0;
+            const consumption = parseFloat((line.materialConsumptionData || {})[materialKey]?.[month]) || 0;
+            const deductionFactor = parseFloat((line.materialFactorData || {})[materialKey]?.[month]) || 0;
             totalDeduction += consumption * deductionFactor;
           });
           
@@ -245,67 +274,26 @@ function ClinkerProductionEmission({ onEmissionChange }) {
       }
     });
 
-    // 更新父组件的总排放量
+    return { tableData, totalEmission };
+  }, [safeProductionLines]);
+  
+  // 使用useEffect更新父组件的总排放量，避免在渲染过程中触发状态更新
+  useEffect(() => {
     if (onEmissionChange && totalEmission !== lastEmissionRef.current) {
       lastEmissionRef.current = totalEmission;
       onEmissionChange(totalEmission);
     }
+  }, [totalEmission, onEmissionChange]);
 
-    return { tableData, totalEmission };
-  }, [productionLines, onEmissionChange]);
+  // 移除本地的生产线管理函数，由父组件控制
 
-  // 添加生产线
-  const addProductionLine = useCallback(() => {
-    setProductionLines(prev => [...prev, {
-      id: Date.now(),
-      name: `生产线${prev.length + 1}`,
-      clinker: null,
-      clinkerProductionData: initMonthData(),
-      clinkerFactorData: {},
-      alternativeMaterials: [],
-      materialConsumptionData: {},
-      materialFactorData: {}
-    }]);
-  }, []);
+  // 移除熟料选择函数，熟料由生产线本身控制
 
-  // 删除生产线
-  const removeProductionLine = useCallback((lineId) => {
-    setProductionLines(prev => prev.filter(line => line.id !== lineId));
-  }, []);
-
-  // 选择熟料
-  const selectClinker = useCallback((lineId, clinkerId) => {
-    setProductionLines(prev => prev.map(line => {
-      if (line.id === lineId) {
-        // 在组合的熟料列表中查找所选熟料
-        const selectedClinker = CLINKER_DATA.find(c => c.id === clinkerId);
-        
-        // 检查熟料是否找到
-        if (!selectedClinker) {
-          console.error(`未找到ID为${clinkerId}的熟料`);
-          return line;
-        }
-        
-        // 初始化排放因子的月度数据（安全地获取emissionFactor）
-        const initialFactorData = {};
-        const emissionFactor = selectedClinker.emissionFactor || 0;
-        MONTHS.forEach(month => {
-          initialFactorData[month] = emissionFactor;
-        });
-        
-        return { 
-          ...line, 
-          clinker: selectedClinker,
-          clinkerFactorData: initialFactorData
-        };
-      }
-      return line;
-    }));
-  }, [CLINKER_DATA]); // 添加依赖项，确保函数能获取到最新的熟料列表
-
-  // 添加替代原料
+  // 添加替代原料，通过回调通知父组件
   const addAlternativeMaterial = useCallback((lineId, materialId) => {
-    setProductionLines(prev => prev.map(line => {
+    if (!onProductionLinesChange) return;
+    
+    onProductionLinesChange(safeProductionLines.map(line => {
       if (line.id === lineId) {
         // 在组合的物料列表中查找所选物料
         const selectedMaterial = NON_CARBONATE_ALTERNATIVE_MATERIALS.find(m => m.id === materialId);
@@ -316,7 +304,7 @@ function ClinkerProductionEmission({ onEmissionChange }) {
           return line;
         }
         
-        const newAlternativeMaterials = [...line.alternativeMaterials, selectedMaterial];
+        const newAlternativeMaterials = [...(line.alternativeMaterials || []), selectedMaterial];
         const materialIndex = newAlternativeMaterials.length - 1;
         const materialKey = `${lineId}-${materialIndex}`;
         
@@ -334,24 +322,27 @@ function ClinkerProductionEmission({ onEmissionChange }) {
           ...line,
           alternativeMaterials: newAlternativeMaterials,
           materialConsumptionData: {
-            ...line.materialConsumptionData,
+            ...(line.materialConsumptionData || {}),
             [materialKey]: initialConsumptionData
           },
           materialFactorData: {
-            ...line.materialFactorData,
+            ...(line.materialFactorData || {}),
             [materialKey]: initialFactorData
           }
         };
       }
       return line;
     }));
-  }, [NON_CARBONATE_ALTERNATIVE_MATERIALS]); // 添加依赖项，确保函数能获取到最新的物料列表
+  }, [NON_CARBONATE_ALTERNATIVE_MATERIALS, safeProductionLines, onProductionLinesChange]); // 更新依赖项
 
-  // 删除替代原料
+  // 删除替代原料，通过回调通知父组件
   const removeAlternativeMaterial = useCallback((lineId, materialIndex) => {
-    setProductionLines(prev => prev.map(line => {
+    if (!onProductionLinesChange) return;
+    
+    onProductionLinesChange(safeProductionLines.map(line => {
       if (line.id === lineId) {
-        const newAlternativeMaterials = line.alternativeMaterials.filter((_, index) => index !== materialIndex);
+        const currentMaterials = line.alternativeMaterials || [];
+        const newAlternativeMaterials = currentMaterials.filter((_, index) => index !== materialIndex);
         
         // 更新其他原料的索引和数据
         const newMaterialConsumptionData = {};
@@ -361,11 +352,11 @@ function ClinkerProductionEmission({ onEmissionChange }) {
           const oldKey = `${lineId}-${newIndex >= materialIndex ? newIndex + 1 : newIndex}`;
           const newKey = `${lineId}-${newIndex}`;
           
-          if (line.materialConsumptionData[oldKey]) {
-            newMaterialConsumptionData[newKey] = line.materialConsumptionData[oldKey];
+          if ((line.materialConsumptionData || {})[oldKey]) {
+            newMaterialConsumptionData[newKey] = (line.materialConsumptionData || {})[oldKey];
           }
-          if (line.materialFactorData[oldKey]) {
-            newMaterialFactorData[newKey] = line.materialFactorData[oldKey];
+          if ((line.materialFactorData || {})[oldKey]) {
+            newMaterialFactorData[newKey] = (line.materialFactorData || {})[oldKey];
           }
         });
         
@@ -378,31 +369,33 @@ function ClinkerProductionEmission({ onEmissionChange }) {
       }
       return line;
     }));
-  }, []);
+  }, [safeProductionLines, onProductionLinesChange, initMonthData]); // 更新依赖项，添加initMonthData
 
-  // 更新表格数据
+  // 更新表格数据，通过回调通知父组件
   const updateTableData = useCallback((key, field, value) => {
+    if (!onProductionLinesChange) return;
+    
     // 提取行信息
     const parts = key.split('-');
     
-    setProductionLines(prev => prev.map(line => {
+    onProductionLinesChange(safeProductionLines.map(line => {
       // 处理熟料产量
-      if (parts[0] === 'clinker' && parts[1] === 'production' && parts[2] === line.id.toString()) {
+      if (parts[0] === 'clinker' && parts[1] === 'production' && parseInt(parts[2]) === parseInt(line.id)) {
         return {
           ...line,
           clinkerProductionData: {
-            ...line.clinkerProductionData,
+            ...(line.clinkerProductionData || {}),
             [field]: value
           }
         };
       }
       
       // 处理熟料排放因子
-      if (parts[0] === 'clinker' && parts[1] === 'factor' && parts[2] === line.id.toString()) {
+      if (parts[0] === 'clinker' && parts[1] === 'factor' && parseInt(parts[2]) === parseInt(line.id)) {
         return {
           ...line,
           clinkerFactorData: {
-            ...line.clinkerFactorData,
+            ...(line.clinkerFactorData || {}),
             [field]: value
           }
         };
@@ -413,18 +406,20 @@ function ClinkerProductionEmission({ onEmissionChange }) {
         const lineId = parseInt(parts[2]);
         const materialIndex = parseInt(parts[3]);
         
-        if (lineId === line.id && materialIndex >= 0 && materialIndex < line.alternativeMaterials.length) {
+        if (lineId === parseInt(line.id) && materialIndex >= 0 && materialIndex < ((line.alternativeMaterials || []).length || 0)) {
           const materialKey = `${lineId}-${materialIndex}`;
           
           // 处理替代原料消耗量
           if (parts[1] === 'consumption') {
+            // 确保value是数字类型，避免非数字值导致问题
+            const numericValue = value === undefined || value === null || value === '' ? 0 : parseFloat(value) || 0;
             return {
               ...line,
               materialConsumptionData: {
-                ...line.materialConsumptionData,
+                ...(line.materialConsumptionData || {}),
                 [materialKey]: {
-                  ...(line.materialConsumptionData[materialKey] || initMonthData()),
-                  [field]: value
+                  ...((line.materialConsumptionData || {})[materialKey] || {}), // 不使用initMonthData避免覆盖已有数据
+                  [field]: numericValue
                 }
               }
             };
@@ -435,9 +430,9 @@ function ClinkerProductionEmission({ onEmissionChange }) {
             return {
               ...line,
               materialFactorData: {
-                ...line.materialFactorData,
+                ...(line.materialFactorData || {}),
                 [materialKey]: {
-                  ...(line.materialFactorData[materialKey] || {}),
+                  ...((line.materialFactorData || {})[materialKey] || {}),
                   [field]: value
                 }
               }
@@ -448,7 +443,7 @@ function ClinkerProductionEmission({ onEmissionChange }) {
       
       return line;
     }));
-  }, []);
+  }, [safeProductionLines, onProductionLinesChange]); // 更新依赖项
 
   // 定义表格列
   const columns = [
@@ -562,53 +557,41 @@ function ClinkerProductionEmission({ onEmissionChange }) {
 
   return (
     <Card title="熟料生产过程排放量">
-      {/* 生产线管理区域 */}
+      <div style={{ marginBottom: 20, padding: 15, border: '1px solid #ddd', borderRadius: 8, backgroundColor: '#f9f9f9' }}>
+        <p><strong>计算公式：</strong></p>
+        <p>CO2排放量 = 熟料产量 × 熟料基准排放因子 - Σ(替代原料消耗量 × 替代原料扣减系数)</p>
+        <p><strong>单位说明：</strong></p>
+        <p>- 熟料产量：t</p>
+        <p>- 熟料基准排放因子：tCO2/t熟料</p>
+        <p>- 替代原料消耗量：t</p>
+        <p>- 替代原料扣减系数：tCO2/t</p>
+      </div>
+      
+      {/* 生产线信息区域 */}
       <div style={{ marginBottom: 20 }}>
         <Title level={5}>生产线配置</Title>
-        {productionLines.map((line, index) => (
+        {safeProductionLines.map((line) => (
           <div key={line.id} style={{ marginBottom: 20, padding: 10, border: '1px solid #d9d9d9', borderRadius: 4 }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
-              <Input
-                value={line.name}
-                onChange={(e) => setProductionLines(prev => prev.map(l => l.id === line.id ? { ...l, name: e.target.value } : l))}
-                style={{ width: 150, marginRight: 10 }}
-              />
+              <div style={{ marginRight: 10, fontWeight: 'bold' }}>
+                {line.name}
+              </div>
               
-              {/* 选择熟料 */}
-              <span style={{ marginRight: 10 }}>选择熟料：</span>
-              <Select
-                style={{ width: 200, marginRight: 10 }}
-                placeholder="请选择熟料类型"
-                value={line.clinker?.id}
-                onChange={(value) => selectClinker(line.id, value)}
-              >
-                {CLINKER_DATA.map(clinker => (
-                  <Option key={clinker.id} value={clinker.id}>
-                    {clinker.name} {clinker.emissionFactor && `(排放因子: ${clinker.emissionFactor})`}
-                  </Option>
-                ))}
-              </Select>
-              
-              {/* 添加自定义熟料按钮 */}
-              <Button 
-                type="primary" 
-                size="small" 
-                style={{ marginRight: 10 }}
-                onClick={() => setCustomClinkerModalVisible(true)}
-              >
-                添加自定义熟料
-              </Button>
-              
-              {/* 只允许删除非最后一条生产线 */}
-              {productionLines.length > 1 && (
-                <Button danger size="small" onClick={() => removeProductionLine(line.id)}>
-                  删除生产线
-                </Button>
+              {/* 显示生产线关联的熟料信息 */}
+              {line.clinkerType && (
+                <div style={{ marginRight: 20, color: '#1890ff' }}>
+                  关联熟料: {line.clinkerType} {line.clinkerVariety && `(${line.clinkerVariety})`} (排放因子: {getEmissionFactorByType(line.clinkerType)})
+                </div>
+              )}
+              {!line.clinkerType && (
+                <div style={{ marginRight: 20, color: '#ff4d4f' }}>
+                  未关联熟料
+                </div>
               )}
             </div>
             
             {/* 替代原料配置 */}
-            {line.clinker && (
+            {line.clinkerType && (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
                   <span style={{ marginRight: 10 }}>添加替代原料：</span>
@@ -618,10 +601,10 @@ function ClinkerProductionEmission({ onEmissionChange }) {
                     onChange={(value) => addAlternativeMaterial(line.id, value)}
                   >
                     {NON_CARBONATE_ALTERNATIVE_MATERIALS.map(material => (
-                    <Option key={material.id} value={material.id}>
-                      {material.name} {material.deductionFactor && `(扣减系数: ${material.deductionFactor})`}
-                    </Option>
-                  ))}
+                      <Option key={material.id} value={material.id}>
+                        {material.name} {material.deductionFactor && `(扣减系数: ${material.deductionFactor})`}
+                      </Option>
+                    ))}
                   </Select>
                   <Button 
                     type="primary" 
@@ -633,7 +616,7 @@ function ClinkerProductionEmission({ onEmissionChange }) {
                 </div>
                 
                 {/* 已添加的替代原料 */}
-                {line.alternativeMaterials.length > 0 && (
+                {line.alternativeMaterials && line.alternativeMaterials.length > 0 && (
                   <div>
                     <span>已添加的替代原料：</span>
                     {line.alternativeMaterials.map((material, materialIndex) => (
@@ -656,76 +639,10 @@ function ClinkerProductionEmission({ onEmissionChange }) {
           </div>
         ))}
         
-        {/* 添加生产线按钮 */}
-        <Button type="primary" onClick={addProductionLine}>
-          <PlusOutlined /> 添加生产线
-        </Button>
+        {/* 移除添加生产线按钮，由父组件管理生产线添加和删除 */}
       </div>
       
-      {/* 自定义熟料添加弹窗 */}
-      <Modal
-        title="添加自定义熟料"
-        open={customClinkerModalVisible}
-        onCancel={() => {
-          setCustomClinkerModalVisible(false);
-          customClinkerForm.resetFields();
-        }}
-        footer={[
-          <Button key="cancel" onClick={() => {
-            setCustomClinkerModalVisible(false);
-            customClinkerForm.resetFields();
-          }}>
-            取消
-          </Button>,
-          <Button 
-            key="submit" 
-            type="primary" 
-            onClick={() => {
-              customClinkerForm.validateFields()
-                .then(values => {
-                  const newClinker = {
-                    id: Date.now(), // 使用时间戳作为唯一ID
-                    name: values.name,
-                    emissionFactor: parseFloat(values.emissionFactor)
-                  };
-                  setCustomClinkers(prev => [...prev, newClinker]);
-                  setCustomClinkerModalVisible(false);
-                  customClinkerForm.resetFields();
-                })
-                .catch(info => {
-                  console.log('表单验证失败:', info);
-                });
-            }}
-          >
-            确定
-          </Button>
-        ]}
-      >
-        <Form form={customClinkerForm} layout="vertical">
-          <Form.Item 
-            label="熟料名称" 
-            name="name" 
-            rules={[{ required: true, message: '请输入熟料名称' }]}
-          >
-            <Input placeholder="请输入熟料名称" />
-          </Form.Item>
-          <Form.Item 
-            label="过程排放因子 (tCO2/t)" 
-            name="emissionFactor" 
-            rules={[
-              { required: true, message: '请输入排放因子' },
-              { type: 'number', min: 0, message: '排放因子必须大于等于0' }
-            ]}
-          >
-            <InputNumber 
-              style={{ width: '100%' }} 
-              placeholder="请输入排放因子" 
-              step={0.001} 
-              min={0}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
+      {/* 移除自定义熟料添加弹窗 */}
       
       {/* 自定义替代原料添加弹窗 */}
       <Modal
@@ -798,7 +715,7 @@ function ClinkerProductionEmission({ onEmissionChange }) {
       <Title level={5}>数据表格</Title>
       <Table
         columns={columns}
-        dataSource={calculateTableData.tableData}
+        dataSource={tableData}
         pagination={false}
         rowKey="key"
         scroll={{ x: 'max-content' }}
@@ -809,7 +726,7 @@ function ClinkerProductionEmission({ onEmissionChange }) {
       {/* 总排放量显示 */}
       <div style={{ textAlign: 'right', marginTop: 16 }}>
         <Text strong style={{ fontSize: 18 }}>
-          熟料生产过程总CO2排放量: {calculateTableData.totalEmission.toFixed(3)} tCO2
+          熟料生产过程总CO2排放量: {totalEmission.toFixed(3)} tCO2
         </Text>
       </div>
     </Card>
