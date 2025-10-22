@@ -16,6 +16,7 @@ import { INDUSTRY_TYPES } from './config/industryConfig'
 
 function App() {
   // 使用INDUSTRY_TYPES中的默认值作为初始选择
+  // add some logs
   const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.CEMENT);
 
   // 从INDUSTRY_TYPES常量生成行业列表
