@@ -6,6 +6,7 @@ import PowerPlantOtherEmission from '../PowerPlantOtherEmission';
 import NetElectricityHeatEmission from '../NetElectricityHeatEmission';
 import CementIndustrySummary from './CementIndustrySummary';
 import ProductionLineManagement from '../ProductionLineManagement';
+import CementCarbonInventory from './CementCarbonInventory';
 import { INDUSTRY_TYPES } from '../../config/industryConfig';
 
 const { Title, Paragraph } = Typography;
@@ -21,6 +22,8 @@ function CementIndustry({ onEmissionChange }) {
   
   // 生产线状态管理
   const [productionLines, setProductionLines] = useState([]);
+  
+
   
   // 处理生产线变化
   const handleProductionLinesChange = (updatedLines) => {
@@ -56,6 +59,8 @@ function CementIndustry({ onEmissionChange }) {
     return total;
   };
 
+
+  
   // 准备传递给Summary组件的数据格式
   const prepareSummaryData = () => ({
     fossilFuelEmission: emissionData.fossilFuel,
@@ -77,6 +82,8 @@ function CementIndustry({ onEmissionChange }) {
           净购入电力和热力隐含的排放等。
         </Paragraph>
       </Card>
+      
+
 
       <Tabs defaultActiveKey="summary" onChange={() => calculateTotalEmission()}>
         <TabPane tab="排放汇总" key="summary">
@@ -113,10 +120,14 @@ function CementIndustry({ onEmissionChange }) {
         </TabPane>
         
 
-        <TabPane tab="购入净电和净热" key="netElectricityHeat">
+        <TabPane tab="购入净电（化石）和净热" key="netElectricityHeat">
           <NetElectricityHeatEmission 
             onEmissionChange={(value) => handleEmissionChange('netElectricityHeat', value)}
           />
+        </TabPane>
+        
+        <TabPane tab="碳排查材料清单" key="carbonInventory">
+          <CementCarbonInventory />
         </TabPane>
       </Tabs>
     </div>

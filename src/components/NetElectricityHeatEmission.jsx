@@ -4,8 +4,9 @@ import { Card, Table, InputNumber, Input, Upload, Button } from 'antd';
 // 月份数组
 const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
 
-// 电力排放因子默认值
+// 排放因子默认值
 const DEFAULT_ELECTRICITY_EMISSION_FACTOR = 0.5366;
+const DEFAULT_HEAT_EMISSION_FACTOR = 0.11;
 
 // 初始化月度数据的简单函数
 const initMonthData = () => {
@@ -20,26 +21,35 @@ const initMonthData = () => {
 const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
   // 简单状态管理 - 为排放因子也使用月度数据结构
   const [electricityPurchase, setElectricityPurchase] = useState(initialData.electricityNetPurchase || initMonthData());
-  // 初始化月度电力排放因子，默认都使用DEFAULT_ELECTRICITY_EMISSION_FACTOR
-  const initElectricityFactorData = () => {
+  // 系统级排放因子设置
+  const [systemElectricityFactor, setSystemElectricityFactor] = useState(
+    initialData.systemElectricityFactor || DEFAULT_ELECTRICITY_EMISSION_FACTOR
+  );
+  
+  const [systemHeatFactor, setSystemHeatFactor] = useState(
+    initialData.systemHeatFactor || DEFAULT_HEAT_EMISSION_FACTOR
+  );
+  
+  // 生成电力排放因子的月度数据（全部使用系统设置值）
+  const getElectricityFactorData = () => {
     const data = {};
     MONTHS.forEach(month => {
-      data[month] = initialData.electricityEmissionFactor || DEFAULT_ELECTRICITY_EMISSION_FACTOR;
+      data[month] = systemElectricityFactor;
     });
     return data;
   };
-  const [electricityFactor, setElectricityFactor] = useState(initElectricityFactorData());
+  
+  // 生成热力排放因子的月度数据（全部使用系统设置值）
+  const getHeatFactorData = () => {
+    const data = {};
+    MONTHS.forEach(month => {
+      data[month] = systemHeatFactor;
+    });
+    return data;
+  };
   
   const [heatPurchase, setHeatPurchase] = useState(initialData.heatNetPurchase || initMonthData());
-  // 初始化月度热力排放因子
-  const initHeatFactorData = () => {
-    const data = {};
-    MONTHS.forEach(month => {
-      data[month] = initialData.heatEmissionFactor || '';
-    });
-    return data;
-  };
-  const [heatFactor, setHeatFactor] = useState(initHeatFactorData());
+  // 热力排放因子直接使用系统设置值，不再需要月度状态管理
   
   const [electricitySource, setElectricitySource] = useState(initialData.electricityDataSource || '');
   const [heatSource, setHeatSource] = useState(initialData.heatDataSource || '');
@@ -58,10 +68,11 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
     updateParentComponent(newData, electricityFactor, heatPurchase, heatFactor);
   };
 
-  const handleElectricityFactorChange = (month, value) => {
-    const newData = { ...electricityFactor, [month]: value };
-    setElectricityFactor(newData);
-    updateParentComponent(electricityPurchase, newData, heatPurchase, heatFactor);
+  // 处理系统电力排放因子变化
+  const handleSystemElectricityFactorChange = (value) => {
+    setSystemElectricityFactor(value);
+    // 更新父组件
+    updateParentComponent(electricityPurchase, getElectricityFactorData(), heatPurchase, heatFactor);
   };
 
   const handleHeatPurchaseChange = (month, value) => {
@@ -70,10 +81,11 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
     updateParentComponent(electricityPurchase, electricityFactor, newData, heatFactor);
   };
 
-  const handleHeatFactorChange = (month, value) => {
-    const newData = { ...heatFactor, [month]: value };
-    setHeatFactor(newData);
-    updateParentComponent(electricityPurchase, electricityFactor, heatPurchase, newData);
+  // 处理系统热力排放因子变化
+  const handleSystemHeatFactorChange = (value) => {
+    setSystemHeatFactor(value);
+    // 更新父组件
+    updateParentComponent(electricityPurchase, getElectricityFactorData(), getHeatFactorData(), heatFactor);
   };
 
   // 计算汇总数据的简单函数 - 每次调用时重新计算，避免缓存依赖问题
@@ -90,17 +102,17 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
       return sum + value;
     }, 0);
 
-    // 计算电力排放量（使用月度排放因子）
+    // 计算电力排放量（使用系统设置的排放因子）
     const electricityEmission = MONTHS.reduce((sum, month) => {
       const purchase = parseFloat(electricityPurchase[month]) || 0;
-      const factor = parseFloat(electricityFactor[month]) || 0;
+      const factor = parseFloat(systemElectricityFactor) || 0;
       return sum + (purchase * factor / 1000);
     }, 0);
 
-    // 计算热力排放量（使用月度排放因子）
+    // 计算热力排放量（使用系统设置的排放因子）
     const heatEmission = MONTHS.reduce((sum, month) => {
       const purchase = parseFloat(heatPurchase[month]) || 0;
-      const factor = parseFloat(heatFactor[month] || 0);
+      const factor = parseFloat(systemHeatFactor) || 0;
       return sum + (purchase * factor / 1000);
     }, 0);
 
@@ -123,17 +135,17 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
       const electricityTotal = MONTHS.reduce((sum, month) => sum + (parseFloat(elecPurchase[month]) || 0), 0);
       const heatTotal = MONTHS.reduce((sum, month) => sum + (parseFloat(heatPur[month]) || 0), 0);
       
-      // 计算电力排放量（使用月度排放因子）
+      // 计算电力排放量（使用系统设置的排放因子）
       const electricityEmission = MONTHS.reduce((sum, month) => {
         const purchase = parseFloat(elecPurchase[month]) || 0;
-        const factor = parseFloat(elecFactor[month]) || 0;
+        const factor = parseFloat(systemElectricityFactor) || 0;
         return sum + (purchase * factor / 1000);
       }, 0);
       
-      // 计算热力排放量（使用月度排放因子）
+      // 计算热力排放量（使用系统设置的排放因子）
       const heatEmission = MONTHS.reduce((sum, month) => {
         const purchase = parseFloat(heatPur[month]) || 0;
-        const factor = parseFloat(heatFac[month] || 0);
+        const factor = parseFloat(systemHeatFactor) || 0;
         return sum + (purchase * factor / 1000);
       }, 0);
       
@@ -141,11 +153,11 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
       
       onEmissionChange({
         electricityNetPurchase: elecPurchase,
-        electricityEmissionFactor: elecFactor,
+        systemElectricityFactor: systemElectricityFactor,
         electricityTotalAmount: electricityTotal,
         electricityEmission: electricityEmission,
         heatNetPurchase: heatPur,
-        heatEmissionFactor: heatFac,
+        systemHeatFactor: systemHeatFactor,
         heatTotalAmount: heatTotal,
         heatEmission: heatEmission,
         electricityDataSource: electricitySource,
@@ -166,15 +178,7 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
     fileList: electricityPurchaseFiles
   });
 
-  const getUploadPropsForElectricityFactor = () => ({
-    name: 'file',
-    multiple: true,
-    action: 'https://www.mocky.io/v2/5cc8019d300000980a055e76',
-    onChange({ fileList }) {
-      setElectricityFactorFiles(fileList);
-    },
-    fileList: electricityFactorFiles
-  });
+  // 移除电力排放因子上传功能，因为现在是系统设置
 
   const getUploadPropsForHeatPurchase = () => ({
     name: 'file',
@@ -186,15 +190,7 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
     fileList: heatPurchaseFiles
   });
 
-  const getUploadPropsForHeatFactor = () => ({
-    name: 'file',
-    multiple: true,
-    action: 'https://www.mocky.io/v2/5cc8019d300000980a055e76',
-    onChange({ fileList }) {
-      setHeatFactorFiles(fileList);
-    },
-    fileList: heatFactorFiles
-  });
+  // 移除热力排放因子上传功能，因为现在是系统设置
 
   // 获取汇总数据
   const summary = calculateSummary();
@@ -202,27 +198,17 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
   // 格式化排放量显示
   const formatEmission = (value) => value.toFixed(2);
 
-  // 计算电力排放因子的平均值作为全年值
-  const getAverageElectricityFactor = () => {
-    const validFactors = MONTHS.map(month => parseFloat(electricityFactor[month]) || 0)
-      .filter(factor => factor > 0);
-    if (validFactors.length === 0) return 0;
-    return validFactors.reduce((sum, factor) => sum + factor, 0) / validFactors.length;
-  };
+  // 系统设置的电力排放因子全年值就是系统设置值
+  const getSystemElectricityFactor = () => systemElectricityFactor;
   
-  // 计算热力排放因子的平均值作为全年值
-  const getAverageHeatFactor = () => {
-    const validFactors = MONTHS.map(month => parseFloat(heatFactor[month]) || 0)
-      .filter(factor => factor > 0);
-    if (validFactors.length === 0) return '';
-    return validFactors.reduce((sum, factor) => sum + factor, 0) / validFactors.length;
-  };
+  // 系统设置的热力排放因子全年值就是系统设置值
+  const getSystemHeatFactor = () => systemHeatFactor;
 
   // 简单的表格数据构建
   const tableData = [
     {
       key: 'electricity-purchase',
-      信息项: '净电净购入量',
+      信息项: '净电（化石）净购入量',
       单位: 'KWH',
       ...electricityPurchase,
       全年值: summary.electricityTotal,
@@ -234,15 +220,6 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
           placeholder="请输入数据来源"
         />
       )
-    },
-    {
-      key: 'electricity-factor',
-      信息项: '电力排放因子',
-      单位: 'kgCO2/KWH',
-      ...electricityFactor,
-      全年值: getAverageElectricityFactor(),
-      获取方式: '计算值',
-      数据来源: '默认值，可修改'
     },
     {
       key: 'heat-purchase',
@@ -259,15 +236,7 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
         />
       )
     },
-    {
-      key: 'heat-factor',
-      信息项: '热力排放因子',
-      单位: 'kgCO2/GJ',
-      ...heatFactor,
-      全年值: getAverageHeatFactor(),
-      获取方式: '计算值',
-      数据来源: '用户输入'
-    },
+    // 热力排放因子已移至系统设置区域，不再需要表格行
     {
       key: 'electricity-emission',
       信息项: '电力CO2排放量',
@@ -311,44 +280,23 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
         // 处理排放量行 - 直接计算并显示
         if (record.key === 'electricity-emission') {
           const monthlyValue = parseFloat(electricityPurchase[month]) || 0;
-          const monthlyFactor = parseFloat(electricityFactor[month]) || 0;
-          return ((monthlyValue * monthlyFactor) / 1000).toFixed(2);
+          const systemFactor = parseFloat(systemElectricityFactor) || 0;
+          return ((monthlyValue * systemFactor) / 1000).toFixed(2);
         } else if (record.key === 'heat-emission') {
           const monthlyValue = parseFloat(heatPurchase[month]) || 0;
-          const monthlyFactor = parseFloat(heatFactor[month]) || 0;
-          return ((monthlyValue * monthlyFactor) / 1000).toFixed(2);
+          const systemFactor = parseFloat(systemHeatFactor) || 0;
+          return ((monthlyValue * systemFactor) / 1000).toFixed(2);
         } else if (record.key === 'total-emission') {
           const elecValue = parseFloat(electricityPurchase[month]) || 0;
           const heatValue = parseFloat(heatPurchase[month]) || 0;
-          const elecFactor = parseFloat(electricityFactor[month]) || 0;
-          const heatFac = parseFloat(heatFactor[month]) || 0;
-          const elecEmission = elecValue * elecFactor / 1000;
-          const heatEmission = heatValue * heatFac / 1000;
+          const systemElecFactor = parseFloat(systemElectricityFactor) || 0;
+          const systemHeatFac = parseFloat(systemHeatFactor) || 0;
+          const elecEmission = elecValue * systemElecFactor / 1000;
+          const heatEmission = heatValue * systemHeatFac / 1000;
           return (elecEmission + heatEmission).toFixed(2);
         }
         
-        // 处理排放因子行 - 为每个月显示输入框
-        if (record.key === 'electricity-factor') {
-          return (
-            <InputNumber
-              min={0}
-              step={0.0001}
-              value={text}
-              onChange={(value) => handleElectricityFactorChange(month, value)}
-              style={{ width: '100%' }}
-            />
-          );
-        } else if (record.key === 'heat-factor') {
-          return (
-            <InputNumber
-              min={0}
-              step={0.01}
-              value={text}
-              onChange={(value) => handleHeatFactorChange(month, value)}
-              style={{ width: '100%' }}
-            />
-          );
-        }
+        // 热力排放因子已移至系统设置，不再需要月度输入框
         
         // 处理数据输入行
         if (record.key === 'electricity-purchase') {
@@ -398,12 +346,8 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
         // 为特定行显示上传组件
         if (record.key === 'electricity-purchase') {
           return <Upload {...getUploadPropsForElectricityPurchase()}><Button>上传</Button></Upload>;
-        } else if (record.key === 'electricity-factor') {
-          return <Upload {...getUploadPropsForElectricityFactor()}><Button>上传</Button></Upload>;
         } else if (record.key === 'heat-purchase') {
           return <Upload {...getUploadPropsForHeatPurchase()}><Button>上传</Button></Upload>;
-        } else if (record.key === 'heat-factor') {
-          return <Upload {...getUploadPropsForHeatFactor()}><Button>上传</Button></Upload>;
         }
         return null;
       }
@@ -412,7 +356,35 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
 
   return (
     <div className="net-electricity-heat-emission">
-      <Card title="购入净电和净热" style={{ marginBottom: 20 }}>
+      <Card title="购入净电（化石）和净热" style={{ marginBottom: 20 }}>
+        {/* 系统级排放因子设置 */}
+        <div style={{ marginBottom: 20, padding: 15, backgroundColor: '#f0f5ff', borderRadius: 4 }}>
+          <h4 style={{ marginBottom: 10 }}>系统设置：排放因子</h4>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 15 }}>
+            <span>电力排放因子（kgCO2/KWH）：</span>
+            <InputNumber
+              min={0}
+              step={0.0001}
+              value={systemElectricityFactor}
+              onChange={handleSystemElectricityFactorChange}
+              style={{ width: 150 }}
+              placeholder="请输入排放因子"
+            />
+            <span style={{ color: '#888', fontSize: '12px' }}>（系统级别设置，默认值：0.5366 kgCO2/KWH）</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span>热力排放因子（kgCO2/GJ）：</span>
+            <InputNumber
+              min={0}
+              step={0.0001}
+              value={systemHeatFactor}
+              onChange={handleSystemHeatFactorChange}
+              style={{ width: 150 }}
+              placeholder="请输入排放因子"
+            />
+            <span style={{ color: '#888', fontSize: '12px' }}>（系统级别设置，默认值：0.11 kgCO2/GJ）</span>
+          </div>
+        </div>
         <Table 
           columns={columns} 
           dataSource={tableData} 
@@ -424,11 +396,11 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
         <div style={{ marginTop: 20, padding: 15, backgroundColor: '#e6f7ff', borderRadius: 4 }}>
           <h4>计算说明：</h4>
           <ul>
-            <li>净电CO2排放量 = 净电净购入量 × 电力排放因子 / 1000</li>
-            <li>净热CO2排放量 = 净热净购入量 × 热力排放因子 / 1000</li>
-            <li>电力排放因子默认值为 0.5366 kgCO2/KWH，用户可修改</li>
-            <li>热力排放因子需要用户手动输入</li>
-            <li>全年值为各月份数据的合计</li>
+            <li>净电（化石）CO2排放量 = 净电（化石）净购入量 × 电力排放因子 / 1000</li>
+          <li>净热CO2排放量 = 净热净购入量 × 热力排放因子 / 1000</li>
+          <li>电力排放因子通过系统设置，默认值为 0.5366 kgCO2/KWH</li>
+          <li>热力排放因子通过系统设置，默认值为 0.11 kgCO2/GJ</li>
+          <li>全年值为各月份数据的合计</li>
           </ul>
         </div>
       </Card>

@@ -38,7 +38,7 @@ const CementIndustrySummary = ({ emissionData }) => {
 
     {
       key: 'net-electricity-heat',
-      排放来源: '购入净电和净热 CO2 排放',
+      排放来源: '购入净电（化石）和净热 CO2 排放',
       排放量: (emissionData.netElectricityHeatEmission || 0).toFixed(2),
       单位: 'tCO2',
       占比: totalEmission > 0 ? ((emissionData.netElectricityHeatEmission || 0) / totalEmission * 100).toFixed(2) : '0.00'
@@ -90,7 +90,7 @@ const CementIndustrySummary = ({ emissionData }) => {
       
       <Title level={5}>排放核算公式说明</Title>
       <Paragraph>
-        总排放量(E总) = 化石燃料燃烧排放量(Ec_燃烧) + 熟料生产过程排放量(Ec_过程) + 发电设施排放量(E发电设施) + 其他排放量(E其他) + 购入净电和净热排放量(E净电净热)
+        总排放量(E总) = 化石燃料燃烧排放量(Ec_燃烧) + 熟料生产过程排放量(Ec_过程) + 发电设施排放量(E发电设施) + 其他排放量(E其他) + 购入净电（化石）和净热排放量(E净电净热)
       </Paragraph>
       
       <Paragraph>
@@ -104,7 +104,7 @@ const CementIndustrySummary = ({ emissionData }) => {
       </Paragraph>
 
       <Paragraph>
-        - 购入净电和净热排放量：通过购入净电和净热组件计算得出
+        - 购入净电（化石）和净热排放量：通过购入净电（化石）和净热组件计算得出
       </Paragraph>
       
       <style jsx>{`
