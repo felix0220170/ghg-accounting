@@ -313,6 +313,13 @@ function ClinkerProductionEmission({ onEmissionChange, productionLines, onProduc
           return line;
         }
         
+        // 检查是否已经添加了相同ID的替代原料
+        const existingMaterialIndex = (line.alternativeMaterials || []).findIndex(m => m.id === materialId);
+        if (existingMaterialIndex !== -1) {
+          console.warn(`替代原料"${selectedMaterial.name}"已经添加到该生产线中`);
+          return line;
+        }
+        
         const newAlternativeMaterials = [...(line.alternativeMaterials || []), selectedMaterial];
         const materialIndex = newAlternativeMaterials.length - 1;
         const materialKey = `${lineId}-${materialIndex}`;
@@ -650,7 +657,10 @@ function ClinkerProductionEmission({ onEmissionChange, productionLines, onProduc
                   placeholder="请选择替代原料"
                   onChange={(value) => addAlternativeMaterial(line.id, value)}
                 >
-                  {NON_CARBONATE_ALTERNATIVE_MATERIALS.map(material => (
+                  {NON_CARBONATE_ALTERNATIVE_MATERIALS.filter(material => {
+                    // 过滤掉已经添加到当前生产线的替代原料
+                    return !(line.alternativeMaterials || []).some(m => m.id === material.id);
+                  }).map(material => (
                     <Option key={material.id} value={material.id}>
                       {material.name} {material.deductionFactor && `(扣减系数: ${material.deductionFactor})`}
                     </Option>
