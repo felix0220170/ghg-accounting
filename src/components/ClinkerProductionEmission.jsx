@@ -110,14 +110,23 @@ function ClinkerProductionEmission({ onEmissionChange, productionLines, onProduc
     }
   }, [safeProductionLines, onProductionLinesChange, getEmissionFactorByType, MONTHS]);
   
-  // 全局自定义物料状态
+  // 自定义替代原料相关状态
   const [customMaterials, setCustomMaterials] = useState([]);
   
-  // 弹窗状态
-  const [customMaterialModalVisible, setCustomMaterialModalVisible] = useState(false);
-  
-  // 自定义物料表单数据
-  const [customMaterialForm] = Form.useForm();
+  // 添加自定义替代原料
+  const addCustomMaterial = useCallback((materialData) => {
+    const newMaterial = {
+      id: Date.now(), // 使用时间戳作为唯一ID
+      name: materialData.name,
+      deductionFactor: parseFloat(materialData.deductionFactor)
+    };
+    setCustomMaterials(prev => [...prev, newMaterial]);
+  }, []);
+
+  // 移除自定义替代原料
+  const removeCustomMaterial = useCallback((materialId) => {
+    setCustomMaterials(customMaterials.filter(material => material.id !== materialId));
+  }, [customMaterials]);
   
   // 移除自定义熟料相关的组合数据
   
@@ -448,12 +457,6 @@ function ClinkerProductionEmission({ onEmissionChange, productionLines, onProduc
   // 定义表格列
   const columns = [
     {
-      title: '生产线',
-      dataIndex: '生产线',
-      key: '生产线',
-      width: 100
-    },
-    {
       title: '信息项',
       dataIndex: '信息项',
       key: '信息项',
@@ -559,177 +562,290 @@ function ClinkerProductionEmission({ onEmissionChange, productionLines, onProduc
     <Card title="熟料生产过程排放量">
       <div style={{ marginBottom: 20, padding: 15, border: '1px solid #ddd', borderRadius: 8, backgroundColor: '#f9f9f9' }}>
         <p><strong>计算公式：</strong></p>
-        <p>CO2排放量 = 熟料产量 × 熟料基准排放因子 - Σ(替代原料消耗量 × 替代原料扣减系数)</p>
-        <p><strong>单位说明：</strong></p>
-        <p>- 熟料产量：t</p>
-        <p>- 熟料基准排放因子：tCO2/t熟料</p>
-        <p>- 替代原料消耗量：t</p>
-        <p>- 替代原料扣减系数：tCO2/t</p>
+        <p>单条生产线CO2排放量 = 熟料产量 × 熟料基准排放因子 - Σ(替代原料消耗量 × 替代原料扣减系数)</p>
+        <p style={{ marginTop: '10px' }}>总CO2排放量 = Σ(所有生产线的单条CO2排放量)</p>
       </div>
       
       {/* 生产线信息区域 */}
-      <div style={{ marginBottom: 20 }}>
-        <Title level={5}>生产线配置</Title>
-        {safeProductionLines.map((line) => (
-          <div key={line.id} style={{ marginBottom: 20, padding: 10, border: '1px solid #d9d9d9', borderRadius: 4 }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
-              <div style={{ marginRight: 10, fontWeight: 'bold' }}>
-                {line.name}
-              </div>
-              
-              {/* 显示生产线关联的熟料信息 */}
-              {line.clinkerType && (
-                <div style={{ marginRight: 20, color: '#1890ff' }}>
-                  关联熟料: {line.clinkerType} {line.clinkerVariety && `(${line.clinkerVariety})`} (排放因子: {getEmissionFactorByType(line.clinkerType)})
-                </div>
-              )}
-              {!line.clinkerType && (
-                <div style={{ marginRight: 20, color: '#ff4d4f' }}>
-                  未关联熟料
-                </div>
-              )}
-            </div>
-            
-            {/* 替代原料配置 */}
-            {line.clinkerType && (
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
-                  <span style={{ marginRight: 10 }}>添加替代原料：</span>
-                  <Select
-                    style={{ width: 300, marginRight: 10 }}
-                    placeholder="请选择替代原料"
-                    onChange={(value) => addAlternativeMaterial(line.id, value)}
-                  >
-                    {NON_CARBONATE_ALTERNATIVE_MATERIALS.map(material => (
-                      <Option key={material.id} value={material.id}>
-                        {material.name} {material.deductionFactor && `(扣减系数: ${material.deductionFactor})`}
-                      </Option>
-                    ))}
-                  </Select>
-                  <Button 
-                    type="primary" 
-                    size="small"
-                    onClick={() => setCustomMaterialModalVisible(true)}
-                  >
-                    添加自定义替代原料
-                  </Button>
-                </div>
-                
-                {/* 已添加的替代原料 */}
-                {line.alternativeMaterials && line.alternativeMaterials.length > 0 && (
-                  <div>
-                    <span>已添加的替代原料：</span>
-                    {line.alternativeMaterials.map((material, materialIndex) => (
-                      <span key={materialIndex} style={{ marginRight: 10 }}>
-                        {material.name}
-                        <Button
-                          type="text"
-                          danger
-                          size="small"
-                          onClick={() => removeAlternativeMaterial(line.id, materialIndex)}
-                        >
-                          删除
-                        </Button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
-        
-        {/* 移除添加生产线按钮，由父组件管理生产线添加和删除 */}
-      </div>
+      {/* 生产线配置已在单独的生产线卡片中实现，此处移除重复内容 */}
       
       {/* 移除自定义熟料添加弹窗 */}
       
-      {/* 自定义替代原料添加弹窗 */}
-      <Modal
-        title="添加自定义替代原料"
-        open={customMaterialModalVisible}
-        onCancel={() => {
-          setCustomMaterialModalVisible(false);
-          customMaterialForm.resetFields();
-        }}
-        footer={[
-          <Button key="cancel" onClick={() => {
-            setCustomMaterialModalVisible(false);
-            customMaterialForm.resetFields();
-          }}>
-            取消
-          </Button>,
-          <Button 
-            key="submit" 
-            type="primary" 
-            onClick={() => {
-              customMaterialForm.validateFields()
-                .then(values => {
-                  const newMaterial = {
-                    id: Date.now(), // 使用时间戳作为唯一ID
-                    name: values.name,
-                    deductionFactor: parseFloat(values.deductionFactor)
-                  };
-                  setCustomMaterials(prev => [...prev, newMaterial]);
-                  setCustomMaterialModalVisible(false);
-                  customMaterialForm.resetFields();
-                })
-                .catch(info => {
-                  console.log('表单验证失败:', info);
-                });
-            }}
-          >
-            确定
-          </Button>
-        ]}
-      >
-        <Form form={customMaterialForm} layout="vertical">
-          <Form.Item 
-            label="替代原料名称" 
-            name="name" 
-            rules={[{ required: true, message: '请输入替代原料名称' }]}
-          >
-            <Input placeholder="请输入替代原料名称" />
-          </Form.Item>
-          <Form.Item 
-            label="扣减系数 (tCO2/t)" 
-            name="deductionFactor" 
-            rules={[
-              { required: true, message: '请输入扣减系数' },
-              { type: 'number', min: 0, message: '扣减系数必须大于等于0' }
-            ]}
-          >
-            <InputNumber 
-              style={{ width: '100%' }} 
-              placeholder="请输入扣减系数" 
-              step={0.001} 
-              min={0}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
+      {/* 自定义替代原料表单组件 */}
+      <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #e8e8e8', borderRadius: '4px' }}>
+        <h3 style={{ marginBottom: '15px', color: '#1890ff' }}>添加自定义替代原料</h3>
+        <CustomMaterialForm onAdd={addCustomMaterial} />
+        
+        {/* 已添加的自定义替代原料列表 */}
+        {customMaterials.length > 0 && (
+          <div style={{ marginTop: '15px' }}>
+            <h4 style={{ marginBottom: '10px', color: '#595959' }}>已添加的自定义替代原料：</h4>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+              {customMaterials.map(material => (
+                <div 
+                  key={material.id} 
+                  style={{
+                    padding: '8px 12px', 
+                    backgroundColor: '#f0f0f0', 
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <span>{material.name} (扣减系数: {material.deductionFactor})</span>
+                  <Button
+                    size="small"
+                    danger
+                    onClick={() => removeCustomMaterial(material.id)}
+                    type="text"
+                  >
+                    删除
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        <p style={{ marginTop: '8px', color: '#666', fontSize: '14px' }}>添加后可在所有生产线中使用</p>
+      </div>
       
       <Divider />
       
-      {/* 数据表格 */}
-      <Title level={5}>数据表格</Title>
-      <Table
-        columns={columns}
-        dataSource={tableData}
-        pagination={false}
-        rowKey="key"
-        scroll={{ x: 'max-content' }}
-      />
+      {/* 按生产线分隔的数据表格 */}
+      {safeProductionLines.map((line) => (
+        <div 
+          key={line.id} 
+          style={{
+            marginBottom: '30px',
+            padding: '20px',
+            border: '2px solid #4CAF50',
+            borderRadius: '8px',
+            backgroundColor: '#f9fff9'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ margin: '10px 0', color: '#2e7d32', marginRight: '20px' }}>{line.name}</h3>
+            
+            {/* 显示生产线关联的熟料信息 */}
+            {line.clinkerType && (
+              <div style={{ marginRight: '20px', color: '#1890ff' }}>
+                关联熟料: {line.clinkerType} {line.clinkerVariety && `(${line.clinkerVariety})`} (排放因子: {getEmissionFactorByType(line.clinkerType)})
+              </div>
+            )}
+            {!line.clinkerType && (
+              <div style={{ marginRight: '20px', color: '#ff4d4f' }}>
+                未关联熟料
+              </div>
+            )}
+          </div>
+          
+          {/* 替代原料管理 */}
+          {line.clinkerType && (
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ marginBottom: '10px' }}>
+                <span style={{ fontWeight: 'bold' }}>替代原料：</span>
+                <Select
+                  style={{ width: '250px', marginLeft: '10px' }}
+                  placeholder="请选择替代原料"
+                  onChange={(value) => addAlternativeMaterial(line.id, value)}
+                >
+                  {NON_CARBONATE_ALTERNATIVE_MATERIALS.map(material => (
+                    <Option key={material.id} value={material.id}>
+                      {material.name} {material.deductionFactor && `(扣减系数: ${material.deductionFactor})`}
+                    </Option>
+                  ))}
+                </Select>
+                {/* 移除重复的添加自定义替代原料按钮，使用公共按钮 */}
+              </div>
+              
+              {/* 已添加的替代原料 */}
+              {line.alternativeMaterials && line.alternativeMaterials.length > 0 && (
+                <div>
+                  <span>已添加的替代原料：</span>
+                  {line.alternativeMaterials.map((material, materialIndex) => (
+                    <span key={materialIndex} style={{ marginRight: 10 }}>
+                      {material.name}
+                      <Button
+                        type="text"
+                        danger
+                        size="small"
+                        onClick={() => removeAlternativeMaterial(line.id, materialIndex)}
+                      >
+                        删除
+                      </Button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* 本生产线的数据表格 - 分为熟料部分和替代原料部分 */}
+          {line.clinkerType && (
+            <>
+              {/* 熟料相关数据 */}
+              <div style={{ marginBottom: '20px' }}>
+                <h4 style={{ marginBottom: '15px', color: '#1890ff', borderBottom: '2px solid #1890ff', paddingBottom: '5px' }}>
+                  熟料相关数据
+                </h4>
+                <Table
+                  columns={columns}
+                  dataSource={tableData.filter(row => {
+                    // 过滤出当前生产线的熟料数据
+                    const parts = row.key.split('-');
+                    if (parts[0] === 'clinker' && parts[2] === line.id.toString()) {
+                      return true;
+                    }
+                    return false;
+                  })}
+                  pagination={false}
+                  rowKey="key"
+                  scroll={{ x: 'max-content' }}
+                />
+              </div>
+              
+              {/* 明显的分隔线 */}
+              <Divider style={{ margin: '30px 0', borderColor: '#91d5ff', borderWidth: '2px' }} />
+              
+              {/* 替代原料相关数据 */}
+              <div style={{ marginBottom: '20px' }}>
+                <h4 style={{ marginBottom: '15px', color: '#52c41a', borderBottom: '2px solid #52c41a', paddingBottom: '5px' }}>
+                  替代原料相关数据
+                </h4>
+                <Table
+                  columns={columns}
+                  dataSource={tableData.filter(row => {
+                    // 过滤出当前生产线的替代原料数据
+                    const parts = row.key.split('-');
+                    if (parts[0] === 'material' && parts[2] === line.id.toString()) {
+                      return true;
+                    }
+                    return false;
+                  })}
+                  pagination={false}
+                  rowKey="key"
+                  scroll={{ x: 'max-content' }}
+                />
+              </div>
+              
+              {/* 明显的分隔线 */}
+              <Divider style={{ margin: '30px 0', borderColor: '#faad14', borderWidth: '2px' }} />
+              
+              {/* 过程排放量独立显示 */}
+              <div style={{ marginBottom: '20px' }}>
+                <h4 style={{ marginBottom: '15px', color: '#faad14', borderBottom: '2px solid #faad14', paddingBottom: '5px' }}>
+                  过程排放量
+                </h4>
+                <Table
+                  columns={columns}
+                  dataSource={tableData.filter(row => {
+                    // 过滤出当前生产线的过程排放量数据
+                    const parts = row.key.split('-');
+                    if (parts[0] === 'line' && parts[2] === line.id.toString()) {
+                      return true;
+                    }
+                    return false;
+                  })}
+                  pagination={false}
+                  rowKey="key"
+                  scroll={{ x: 'max-content' }}
+                />
+              </div>
+            </>
+          )}
+        </div>
+      ))}
       
       <Divider />
       
       {/* 总排放量显示 */}
-      <div style={{ textAlign: 'right', marginTop: 16 }}>
-        <Text strong style={{ fontSize: 18 }}>
-          熟料生产过程总CO2排放量: {totalEmission.toFixed(3)} tCO2
-        </Text>
+      <div className="total-emission" style={{ marginTop: '30px', padding: '20px', border: '2px solid #4CAF50', borderRadius: '8px', textAlign: 'center' }}>
+        <h3>总排放量</h3>
+        <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#4CAF50' }}>
+          熟料生产过程总CO2排放量: {totalEmission.toFixed(2)} tCO2
+        </p>
+      </div>
+      
+      <div className="detailed-description" style={{ marginTop: '30px', padding: '15px', border: '1px solid #e0e0e0', borderRadius: '6px', backgroundColor: '#f9f9f9' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '30px' }}>
+          <div style={{ flex: 1, minWidth: '300px' }}>
+            <p><strong>单位说明：</strong></p>
+            <p>- 熟料产量：t</p>
+            <p>- 熟料基准排放因子：tCO2/t熟料</p>
+            <p>- 替代原料消耗量：t</p>
+            <p>- 替代原料扣减系数：tCO2/t</p>
+          </div>
+          <div style={{ flex: 1, minWidth: '300px' }}>
+            <p><strong>小数位数说明：</strong></p>
+            <p>- 熟料产量保留到小数点后两位</p>
+            <p>- 非碳酸盐替代原料消耗量保留到小数点后两位</p>
+            <p>- 过程排放量保留到小数点后两位</p>
+          </div>
+        </div>
       </div>
     </Card>
+  );
+}
+
+// 自定义替代原料表单组件
+function CustomMaterialForm({ onAdd }) {
+  const [formData, setFormData] = useState({
+    name: '',
+    deductionFactor: ''
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (formData.name && formData.deductionFactor) {
+      onAdd(formData);
+      setFormData({
+        name: '',
+        deductionFactor: ''
+      });
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'end' }}>
+      <div>
+        <label style={{ marginRight: '8px' }}>替代原料名称：</label>
+        <input
+          type="text"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          required
+          style={{ padding: '5px 8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+          placeholder="请输入替代原料名称"
+        />
+      </div>
+      <div>
+        <label style={{ marginRight: '8px' }}>扣减系数 (tCO2/t)：</label>
+        <input
+          type="number"
+          value={formData.deductionFactor}
+          onChange={(e) => setFormData({ ...formData, deductionFactor: e.target.value })}
+          required
+          min="0"
+          step="0.001"
+          style={{ padding: '5px 8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+          placeholder="请输入扣减系数"
+        />
+      </div>
+      <button
+        type="submit"
+        style={{
+          padding: '6px 16px',
+          backgroundColor: '#1890ff',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer'
+        }}
+      >
+        添加
+      </button>
+    </form>
   );
 }
 

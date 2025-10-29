@@ -20,8 +20,40 @@ function CementIndustry({ onEmissionChange }) {
     netElectricityHeat: 0
   });
   
-  // 生产线状态管理
-  const [productionLines, setProductionLines] = useState([]);
+  // 预设两条生产线数据，用于demo演示
+  const defaultProductionLines = [
+    {
+      id: '1',
+      name: '1#生产线(Demo)',
+      designCapacity: '3000',
+      kilnSpec: '4.8×70',
+      clinkerType: '硅酸盐水泥熟料',
+      clinkerVariety: '通用水泥熟料',
+      isCalciumCarbideSludgeMainMaterial: false,
+      alternativeFuelCapacity: '10万t/a',
+      alternativeFuelTypes: '生活垃圾, 工业固废',
+      coordinatedDisposalCapacity: '50万t/a',
+      coordinatedDisposalTypes: '生活垃圾, 工业固废',
+      supportingMaterials: {}
+    },
+    {
+      id: '2',
+      name: '2#生产线(Demo)',
+      designCapacity: '5000',
+      kilnSpec: '5.0×80',
+      clinkerType: '白色硅酸盐水泥熟料',
+      clinkerVariety: '白色硅酸盐水泥熟料',
+      isCalciumCarbideSludgeMainMaterial: true,
+      alternativeFuelCapacity: '15万t/a',
+      alternativeFuelTypes: '污泥, 废轮胎',
+      coordinatedDisposalCapacity: '60万t/a',
+      coordinatedDisposalTypes: '污泥, 废轮胎',
+      supportingMaterials: {}
+    }
+  ];
+
+  // 生产线状态管理，使用默认生产线数据作为初始值
+  const [productionLines, setProductionLines] = useState(defaultProductionLines);
   
 
   

@@ -468,9 +468,11 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange,
       
       <div className="calculation-description" style={{ marginBottom: '20px', padding: '15px', border: '1px solid #e0e0e0', borderRadius: '6px', backgroundColor: '#fafafa' }}>
         <p><strong>企业级化石燃料燃烧排放：</strong></p>
-        <p>化石燃料在各种类型的固定燃烧设备（生产线） 和其他（移动燃烧设备）中燃烧产生的二氧化碳排放。</p>
+        <p>化石燃料在各种类型的固定燃烧设备（生产线）和其他（移动燃烧设备）中燃烧产生的二氧化碳排放。</p>
         <p><strong>计算公式：</strong></p>
-        <p>CO2排放量 = 化石燃料消耗量 × 化石燃料收到基低位发热量 × 化石燃料单位热值含碳量 × 化石燃料碳氧化率 × 44/12</p>
+        <p>1. 单条生产线的CO2排放量 = Σ(该生产线各化石燃料消耗量 × 化石燃料收到基低位发热量 × 化石燃料单位热值含碳量 × 化石燃料碳氧化率 × 44/12)</p>
+        <p>2. 其他部分（移动燃烧设备）的CO2排放量 = Σ(其他部分各化石燃料消耗量 × 化石燃料收到基低位发热量 × 化石燃料单位热值含碳量 × 化石燃料碳氧化率 × 44/12)</p>
+        <p>3. 企业总CO2排放量 = 所有生产线CO2排放量之和 + 其他部分CO2排放量</p>
         <p>其中：44/12 是二氧化碳与碳的相对分子质量之比</p>
       </div>
 
@@ -961,23 +963,32 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange,
       </div>
 
       {/* 自定义燃料添加区域 */}
-      <div className="custom-fuel-section" style={{ marginTop: '30px', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
-        <h3>添加自定义燃料</h3>
+      <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #e8e8e8', borderRadius: '4px' }}>
+        <h3 style={{ marginBottom: '15px', color: '#1890ff' }}>添加自定义燃料</h3>
         <CustomFuelForm onAdd={addCustomFuel} />
         
         {customFuels.length > 0 && (
-          <div className="custom-fuels-list">
-            <h4>已添加的自定义燃料：</h4>
-            <ul>
+          <div style={{ marginTop: '15px' }}>
+            <h4 style={{ marginBottom: '10px', color: '#595959' }}>已添加的自定义燃料：</h4>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
               {customFuels.map(fuel => (
-                <li key={fuel.id} style={{ display: 'flex', alignItems: 'center', margin: '5px 0' }}>
-                  {fuel.name} ({fuel.type === 'solid' ? '固体' : fuel.type === 'liquid' ? '液体' : '气体'})
+                <div 
+                  key={fuel.id} 
+                  style={{
+                    padding: '8px 12px', 
+                    backgroundColor: '#f0f0f0', 
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <span>{fuel.name} ({fuel.type === 'solid' ? '固体' : fuel.type === 'liquid' ? '液体' : '气体'})</span>
                   <button
                     onClick={() => removeCustomFuel(fuel.id)}
                     style={{
-                      marginLeft: '10px',
                       padding: '2px 6px',
-                      background: 'red',
+                      backgroundColor: '#ff4d4f',
                       color: 'white',
                       border: 'none',
                       borderRadius: '3px',
@@ -986,9 +997,9 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange,
                   >
                     删除
                   </button>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
       </div>

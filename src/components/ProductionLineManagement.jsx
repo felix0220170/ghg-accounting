@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Card, Table, Button, Input, Select, Upload, Form, Space, message } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Card, Table, Button, Input, Select, Upload, Form, Space, message, Modal } from 'antd';
 import { PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { InboxOutlined } from '@ant-design/icons';
 
@@ -64,6 +64,16 @@ const ProductionLineManagement = ({ productionLines, onProductionLinesChange }) 
   const [isAddingCustomType, setIsAddingCustomType] = useState(false);
   const [newCustomTypeName, setNewCustomTypeName] = useState('');
   const [newCustomTypeEmissionFactor, setNewCustomTypeEmissionFactor] = useState('');
+  
+  // 直接使用从父组件传入的生产线数据
+  const [currentProductionLines, setCurrentProductionLines] = useState(productionLines || []);
+
+  // 当父组件传入的productionLines属性变化时，更新组件内部状态
+  useEffect(() => {
+    if (productionLines) {
+      setCurrentProductionLines(productionLines);
+    }
+  }, [productionLines]);
 
   // 获取所有熟料类别（包含自定义）
   const getAllClinkerTypes = () => {
@@ -103,9 +113,12 @@ const ProductionLineManagement = ({ productionLines, onProductionLinesChange }) 
 
   // 删除生产线
   const handleDeleteProductionLine = (id) => {
-    const updatedLines = productionLines.filter(line => line.id !== id);
-    onProductionLinesChange(updatedLines);
-    alert('生产线删除成功');
+    if (window.confirm('确定要删除这条生产线吗？')) {
+      const updatedLines = currentProductionLines.filter(line => line.id !== id);
+      setCurrentProductionLines(updatedLines);
+      onProductionLinesChange(updatedLines);
+      message.success('生产线已删除');
+    }
   };
 
   // 保存生产线
@@ -140,14 +153,14 @@ const ProductionLineManagement = ({ productionLines, onProductionLinesChange }) 
           };
 
       let updatedLines;
-      if (productionLines.some(line => line.id === editingLine.id)) {
+      if (currentProductionLines.some(line => line.id === editingLine.id)) {
         // 更新现有生产线
-        updatedLines = productionLines.map(line => 
+        updatedLines = currentProductionLines.map(line => 
           line.id === editingLine.id ? updatedLine : line
         );
       } else {
         // 添加新生产线
-        updatedLines = [...productionLines, updatedLine];
+        updatedLines = [...currentProductionLines, updatedLine];
       }
 
       onProductionLinesChange(updatedLines);
@@ -256,8 +269,7 @@ const ProductionLineManagement = ({ productionLines, onProductionLinesChange }) 
       dataIndex: 'alternativeFuelCapacity',
       key: 'alternativeFuelCapacity',
     },
-    {
-      title: '操作',
+    {title: '操作',
       key: 'action',
       render: (_, record) => (
         <Space size="middle">
@@ -488,7 +500,7 @@ const ProductionLineManagement = ({ productionLines, onProductionLinesChange }) 
   return (
     <Card title="生产线管理" extra={<Button type="primary" icon={<PlusOutlined />} onClick={handleAddProductionLine}>添加生产线</Button>}>
       {renderProductionLineForm()}
-      <Table columns={columns} dataSource={productionLines} rowKey="id" style={{ marginTop: 20 }} />
+      <Table columns={columns} dataSource={currentProductionLines} rowKey="id" style={{ marginTop: 20 }} />
     </Card>
   );
 };
