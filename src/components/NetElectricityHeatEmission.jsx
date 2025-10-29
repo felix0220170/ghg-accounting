@@ -60,32 +60,50 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
   const [heatPurchaseFiles, setHeatPurchaseFiles] = useState([]);
   const [heatFactorFiles, setHeatFactorFiles] = useState([]);
 
+  // 添加防抖函数
+  const debounce = (func, wait) => {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  };
+
+  // 创建防抖版的updateParentComponent
+  const debouncedUpdateParentComponent = debounce((elecPurchase, elecFactor, heatPur, heatFac) => {
+    updateParentComponent(elecPurchase, elecFactor, heatPur, heatFac);
+  }, 300); // 300毫秒延迟
+
   // 简单的事件处理函数
   const handleElectricityPurchaseChange = (month, value) => {
     const newData = { ...electricityPurchase, [month]: value };
     setElectricityPurchase(newData);
-    // 直接更新父组件
-    updateParentComponent(newData, electricityFactor, heatPurchase, heatFactor);
+    // 使用防抖函数更新父组件
+    debouncedUpdateParentComponent(newData, getElectricityFactorData(), heatPurchase, getHeatFactorData());
   };
 
   // 处理系统电力排放因子变化
   const handleSystemElectricityFactorChange = (value) => {
     setSystemElectricityFactor(value);
-    // 更新父组件
-    updateParentComponent(electricityPurchase, getElectricityFactorData(), heatPurchase, heatFactor);
+    // 使用防抖函数更新父组件
+    debouncedUpdateParentComponent(electricityPurchase, getElectricityFactorData(), heatPurchase, getHeatFactorData());
   };
 
   const handleHeatPurchaseChange = (month, value) => {
     const newData = { ...heatPurchase, [month]: value };
     setHeatPurchase(newData);
-    updateParentComponent(electricityPurchase, electricityFactor, newData, heatFactor);
+    debouncedUpdateParentComponent(electricityPurchase, getElectricityFactorData(), newData, getHeatFactorData());
   };
 
   // 处理系统热力排放因子变化
   const handleSystemHeatFactorChange = (value) => {
     setSystemHeatFactor(value);
-    // 更新父组件
-    updateParentComponent(electricityPurchase, getElectricityFactorData(), getHeatFactorData(), heatFactor);
+    // 使用防抖函数更新父组件
+    debouncedUpdateParentComponent(electricityPurchase, getElectricityFactorData(), heatPurchase, getHeatFactorData());
   };
 
   // 计算汇总数据的简单函数 - 每次调用时重新计算，避免缓存依赖问题
@@ -131,23 +149,23 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
   // 直接更新父组件的函数，避免useEffect依赖问题
   const updateParentComponent = (elecPurchase, elecFactor, heatPur, heatFac) => {
     if (onEmissionChange) {
-      // 计算汇总数据
-      const electricityTotal = MONTHS.reduce((sum, month) => sum + (parseFloat(elecPurchase[month]) || 0), 0);
-      const heatTotal = MONTHS.reduce((sum, month) => sum + (parseFloat(heatPur[month]) || 0), 0);
+      // 优化计算，避免重复的reduce操作
+      let electricityTotal = 0;
+      let heatTotal = 0;
+      let electricityEmission = 0;
+      let heatEmission = 0;
       
-      // 计算电力排放量（使用系统设置的排放因子）
-      const electricityEmission = MONTHS.reduce((sum, month) => {
-        const purchase = parseFloat(elecPurchase[month]) || 0;
-        const factor = parseFloat(systemElectricityFactor) || 0;
-        return sum + (purchase * factor / 1000);
-      }, 0);
-      
-      // 计算热力排放量（使用系统设置的排放因子）
-      const heatEmission = MONTHS.reduce((sum, month) => {
-        const purchase = parseFloat(heatPur[month]) || 0;
-        const factor = parseFloat(systemHeatFactor) || 0;
-        return sum + (purchase * factor / 1000);
-      }, 0);
+      // 单次遍历计算所有需要的值，减少计算次数
+      MONTHS.forEach(month => {
+        const elecValue = parseFloat(elecPurchase[month]) || 0;
+        const heatVal = parseFloat(heatPur[month]) || 0;
+        
+        electricityTotal += elecValue;
+        heatTotal += heatVal;
+        
+        electricityEmission += (elecValue * parseFloat(systemElectricityFactor) || 0) / 1000;
+        heatEmission += (heatVal * parseFloat(systemHeatFactor) || 0) / 1000;
+      });
       
       const totalEmission = electricityEmission + heatEmission;
       
@@ -162,10 +180,17 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
         heatEmission: heatEmission,
         electricityDataSource: electricitySource,
         heatDataSource: heatSource,
-        totalEmission: totalEmission
+        totalEmission: totalEmission,
+        value: totalEmission
       });
     }
   };
+  
+  // 组件挂载时立即更新父组件，确保初始数据正确传递
+  React.useEffect(() => {
+    // 初始加载时直接更新，不使用防抖
+    updateParentComponent(electricityPurchase, getElectricityFactorData(), heatPurchase, getHeatFactorData());
+  }, []);
 
   // 简单的上传配置函数 - 避免复杂的闭包和依赖
   const getUploadPropsForElectricityPurchase = () => ({
