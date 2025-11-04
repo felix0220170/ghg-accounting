@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Modal, Radio, Button } from 'antd';
+import PowerPlantIndustry from '../powerPlant/PowerPlantIndustry';
 
 // 发电设施及其他非水泥熟料生产设施排放量组件
 function PowerPlantOtherEmission({ onEmissionChange }) {
@@ -15,7 +17,9 @@ function PowerPlantOtherEmission({ onEmissionChange }) {
       yearlyTotal: 0,
       acquisitionMethod: '计算值',
       dataSource: '',
-      supportingMaterial: null
+      supportingMaterial: null,
+      hasDetailedAccounting: false, // 是否已做过详细碳核算
+      detailedData: null // 存储详细数据
     },
     {
       id: 2,
@@ -28,6 +32,12 @@ function PowerPlantOtherEmission({ onEmissionChange }) {
       supportingMaterial: null
     }
   ]);
+  
+  // 弹窗状态
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedPowerPlantId, setSelectedPowerPlantId] = useState(null);
+  const [detailedEmissionData, setDetailedEmissionData] = useState(null);
+  const powerPlantRef = React.useRef(null);
 
   // 计算全年合计值（内部函数移到handleMonthChange内，减少依赖）
   const handleMonthChange = useCallback((id, monthIndex, value) => {
@@ -61,6 +71,95 @@ function PowerPlantOtherEmission({ onEmissionChange }) {
       });
     });
   }, []);
+  
+  // 处理核算方式选择
+  const handleAccountingMethodChange = useCallback((id, value) => {
+    setEmissionData(prevData => {
+      return prevData.map(item => {
+        if (item.id === id) {
+          return { ...item, hasDetailedAccounting: value === 1 };
+        }
+        return item;
+      });
+    });
+  }, []);
+  
+  // 打开详细填写弹窗
+  const openDetailedModal = useCallback((id) => {
+    setSelectedPowerPlantId(id);
+    setIsModalVisible(true);
+  }, []);
+  
+  // 关闭弹窗
+  const closeModal = useCallback(() => {
+    setIsModalVisible(false);
+    setSelectedPowerPlantId(null);
+  }, []);
+  
+  // 处理详细排放数据变化
+  const handleDetailedEmissionChange = useCallback((data) => {
+    setDetailedEmissionData(data);
+  }, []);
+  
+  // 应用详细计算结果
+  const applyDetailedResults = useCallback(() => {
+    if (selectedPowerPlantId && powerPlantRef.current) {
+      try {
+        // 直接通过ref调用PowerPlantIndustry暴露的方法获取最新的月度排放数据
+        const powerPlantData = powerPlantRef.current.getMonthlyEmissionData();
+        
+        // 计算月度排放量
+        const monthlyEmissions = Array(12).fill(0);
+        
+        if (powerPlantData && powerPlantData.monthlyUnitEmissions) {
+          const { fuel, electricity } = powerPlantData.monthlyUnitEmissions;
+          
+          // 处理燃料排放数据
+          if (fuel && Array.isArray(fuel)) {
+            fuel.forEach(unitData => {
+              for (let i = 0; i < 12; i++) {
+                const month = `${i + 1}月`;
+                if (unitData[month]) {
+                  monthlyEmissions[i] += parseFloat((parseFloat(unitData[month]) || 0).toFixed(2));
+                }
+              }
+            });
+          }
+          
+          // 处理电力排放数据
+          if (electricity && Array.isArray(electricity)) {
+            electricity.forEach(unitData => {
+              for (let i = 0; i < 12; i++) {
+                const month = `${i + 1}月`;
+                if (unitData[month]) {
+                  monthlyEmissions[i] += parseFloat(unitData[month]) || 0;
+                }
+              }
+            });
+          }
+        }
+        
+        // 更新主表数据
+        setEmissionData(prevData => {
+          return prevData.map(item => {
+            if (item.id === selectedPowerPlantId) {
+              const yearlyTotal = monthlyEmissions.reduce((total, val) => total + val, 0);
+              return {
+                ...item,
+                months: monthlyEmissions.map(String),
+                yearlyTotal,
+                detailedData: powerPlantData || null
+              };
+            }
+            return item;
+          });
+        });
+      } catch (error) {
+        console.error('获取详细排放数据失败:', error);
+      }
+    }
+    closeModal();
+  }, [selectedPowerPlantId, closeModal]);
 
   // 处理文件上传
   const handleFileUpload = useCallback((id, file) => {
@@ -123,7 +222,30 @@ function PowerPlantOtherEmission({ onEmissionChange }) {
         <tbody>
           {emissionData.map((item) => (
             <tr key={item.id}>
-              <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>{item.name}</td>
+              <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>
+              {item.name}
+              {item.id === 1 && (
+                <div style={{ marginTop: '8px' }}>
+                  <Radio.Group 
+                    value={item.hasDetailedAccounting ? 1 : 0} 
+                    onChange={(e) => handleAccountingMethodChange(item.id, e.target.value)}
+                  >
+                    <Radio value={1}>已做详细碳核算</Radio>
+                    <Radio value={0}>未做详细碳核算</Radio>
+                  </Radio.Group>
+                  {!item.hasDetailedAccounting && (
+                    <Button 
+                      type="primary" 
+                      size="small" 
+                      onClick={() => openDetailedModal(item.id)}
+                      style={{ marginTop: '8px' }}
+                    >
+                      填写详细数据
+                    </Button>
+                  )}
+                </div>
+              )}
+            </td>
               <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>{item.unit}</td>
               {/* 月度输入框 */}
               {item.months.map((monthValue, monthIndex) => (
@@ -186,6 +308,31 @@ function PowerPlantOtherEmission({ onEmissionChange }) {
           {Math.round(totalEmission)} 吨CO2当量
         </p>
       </div>
+      
+      {/* 详细填写弹窗 */}
+        <Modal
+          title="发电设施详细碳核算"
+          open={isModalVisible}
+          onCancel={closeModal}
+          footer={[
+            <Button key="cancel" onClick={closeModal}>
+              取消
+            </Button>,
+            <Button key="apply" type="primary" onClick={applyDetailedResults}>
+              应用结果
+            </Button>
+          ]}
+          width={1200}
+          style={{ maxHeight: '90vh' }}
+        >
+          <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+            <PowerPlantIndustry 
+              industry={{}} 
+              ref={powerPlantRef}
+              onEmissionChange={handleDetailedEmissionChange}
+            />
+          </div>
+        </Modal>
     </div>
   );
 }

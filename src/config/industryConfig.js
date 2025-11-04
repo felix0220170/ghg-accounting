@@ -9,7 +9,8 @@ export const INDUSTRY_TYPES = {
   MINING: '矿山企业',
   MACHINERY_MANUFACTURING: '机械设备制造企业',
   PUBLIC_BUILDING: '公共建筑运营单位（企业）',
-  FLUORINE_CHEMICAL: '氟化工企业'
+  FLUORINE_CHEMICAL: '氟化工企业',
+  POWER_PLANT: '发电设施'
 };
 
 // 在INDUSTRY_TYPES中确保氟化工企业存在
@@ -122,6 +123,14 @@ export const industryConfigs = {
       { key: 'clinkerProduction', label: '熟料生产过程 CO2 排放', unit: '吨' },
       { key: 'powerPlantOther', label: '发电设施及其他非水泥熟料生产设施排放量', unit: '吨' },
       { key: 'netElectricityHeat', label: '购入净电和净热 CO2 排放', unit: '吨' }
+    ]
+  },
+  // 新增发电设施的配置
+  '发电设施': {
+    name: '发电设施',
+    emissionItems: [
+      { key: 'powerPlantFuel', label: '发电设施化石燃料燃烧 CO2 排放', unit: '吨' },
+      { key: 'powerPlantElectricity', label: '发电设施购入使用电力排放', unit: '吨' }
     ]
   }
 };

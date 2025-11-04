@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Card, Tabs, Typography, Divider } from 'antd';
-import FossilFuelEmission from '../FossilFuelEmission';
-import ClinkerProductionEmission from '../ClinkerProductionEmission';
-import PowerPlantOtherEmission from '../PowerPlantOtherEmission';
-import NetElectricityHeatEmission from '../NetElectricityHeatEmission';
+import FossilFuelEmission from '../../FossilFuelEmission';
+import ClinkerProductionEmission from './ClinkerProductionEmission';
+import PowerPlantOtherEmission from './PowerPlantOtherEmission';
+import NetElectricityHeatEmission from './NetElectricityHeatEmission';
 import CementIndustrySummary from './CementIndustrySummary';
-import ProductionLineManagement from '../ProductionLineManagement';
+import ProductionLineManagement from './ProductionLineManagement';
 import CementCarbonInventory from './CementCarbonInventory';
-import { INDUSTRY_TYPES } from '../../config/industryConfig';
+import { INDUSTRY_TYPES } from '../../../config/industryConfig';
 
 const { Title, Paragraph } = Typography;
 const { TabPane } = Tabs;
