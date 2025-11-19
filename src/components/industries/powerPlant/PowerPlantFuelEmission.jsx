@@ -69,6 +69,12 @@ const PowerPlantFuelEmission = ({ units = [], onEmissionChange, initialData = {}
               MONTHS.forEach(month => {
                 initialCarbonContent[month] = fuelInfo.carbonContent || 0;
               });
+
+              // 初始化月度碳含量数据
+              const initialOxidationRate = {};
+              MONTHS.forEach(month => {
+                initialOxidationRate[month] = fuelInfo.oxidationRate || (fuelInfo.type === 'gas' ? 99 : 98);
+              });
               
               newEmissionData[unit.id].fuels.push({
                 id: generateId(),
@@ -80,7 +86,7 @@ const PowerPlantFuelEmission = ({ units = [], onEmissionChange, initialData = {}
                 calorificValue: initialCalorificValue, // 改为月度数据对象
                 carbonContent: initialCarbonContent, // 改为月度数据对象
                 receivedBaseCarbonContent: fuelInfo.receivedBaseCarbonContent, // 添加收到基碳含量
-                oxidationRate: fuelInfo.oxidationRate || (fuelInfo.type === 'gas' ? 99 : 98), // 添加氧化率
+                oxidationRate: initialOxidationRate, // 添加氧化率, 改为月度数据对象
                 emissionFactor: fuelInfo.carbonContent ? fuelInfo.carbonContent * 3.67 : 0 // 根据碳含量计算排放因子
               });
             }
