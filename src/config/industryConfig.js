@@ -10,7 +10,8 @@ export const INDUSTRY_TYPES = {
   MACHINERY_MANUFACTURING: '机械设备制造企业',
   PUBLIC_BUILDING: '公共建筑运营单位（企业）',
   FLUORINE_CHEMICAL: '氟化工企业',
-  POWER_PLANT: '发电设施'
+  POWER_PLANT: '发电设施',
+  IRON_AND_STEEL: '钢铁生产行业'
 };
 
 // 在INDUSTRY_TYPES中确保氟化工企业存在
