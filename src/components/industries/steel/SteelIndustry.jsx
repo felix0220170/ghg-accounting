@@ -59,6 +59,7 @@ import SteelIndustrySummary from './SteelIndustrySummary';
 import ProcessManagement from './ProcessManagement';
 import CarbonSequestrationProductEmission from './CarbonSequestrationProductEmission';
 import SteelOtherEmission from './SteelOtherEmission';
+import SteelCarbonInventory from './SteelCarbonInventory';
 import { INDUSTRY_TYPES } from '../../../config/industryConfig';
 
 const { Title, Paragraph } = Typography;
@@ -220,6 +221,13 @@ function SteelIndustry({ onEmissionChange }) {
         <TabPane tab="发电设施及其他排放" key="otherEmission">
           <SteelOtherEmission 
             onEmissionChange={(value) => handleEmissionChange('otherEmission', value)}
+          />
+        </TabPane>
+        <TabPane tab="碳排查材料清单" key="carbonInventory">
+          <SteelCarbonInventory 
+            onEmissionChange={(value) => handleEmissionChange('carbonInventory', value)}
+            productionLines={processes} 
+            onProductionLinesChange={handleProcessesChange}
           />
         </TabPane>
       </Tabs>

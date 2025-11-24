@@ -14,16 +14,17 @@ import FluorineChemicalIndustry from './components/industries/FluorineChemicalIn
 import CementIndustry from './components/industries/cement/CementIndustry'; // 导入水泥行业组件
 import PowerPlantIndustry from './components/industries/powerPlant/PowerPlantIndustry';
 import SteelIndustry from './components/industries/steel/SteelIndustry';
+import AluminumIndustryPage from './components/industries/aluminum/AluminumIndustryPage';
 import { INDUSTRY_TYPES } from './config/industryConfig' 
 
 function App() {
   // 使用INDUSTRY_TYPES中的默认值作为初始选择
   // add some logs
-  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.IRON_AND_STEEL);
+  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.ALUMINUM_SMELTING);
 
   // 从INDUSTRY_TYPES常量生成行业列表
   //const industries = Object.values(INDUSTRY_TYPES);
-  const industries = [INDUSTRY_TYPES.CEMENT, INDUSTRY_TYPES.POWER_PLANT, INDUSTRY_TYPES.IRON_AND_STEEL];
+  const industries = [INDUSTRY_TYPES.CEMENT, INDUSTRY_TYPES.POWER_PLANT, INDUSTRY_TYPES.IRON_AND_STEEL, INDUSTRY_TYPES.ALUMINUM_SMELTING];
 
   // 根据选择的行业动态加载相应的组件
   // 渲染行业组件的函数
@@ -52,6 +53,8 @@ function App() {
         return <PowerPlantIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.IRON_AND_STEEL: // 添加钢铁行业
         return <SteelIndustry industry={selectedIndustry} />;
+      case INDUSTRY_TYPES.ALUMINUM_SMELTING: // 添加铝冶炼行业
+        return <AluminumIndustryPage industry={selectedIndustry} />;
       case INDUSTRY_TYPES.OTHER:
       default:
         return <OtherIndustry industry={selectedIndustry} />;

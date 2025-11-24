@@ -18,7 +18,7 @@ const initMonthData = () => {
 };
 
 // 简化版组件 - 完全避免复杂的hooks依赖和无限更新循环
-const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
+const AluminumNetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
   // 简单状态管理 - 为排放因子也使用月度数据结构
   const [electricityPurchase, setElectricityPurchase] = useState(initialData.electricityNetPurchase || initMonthData());
   // 系统级排放因子设置
@@ -449,4 +449,4 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
   );
 };
 
-export default NetElectricityHeatEmission;
+export default AluminumNetElectricityHeatEmission;
