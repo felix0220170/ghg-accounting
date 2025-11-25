@@ -233,6 +233,11 @@ const AluminumProcessManagement = ({ processes = [], onProcessesChange = () => {
       key: 'productionCapacity',
     },
     {
+      title: '整流器（套）',
+      dataIndex: 'rectifierCount',
+      key: 'rectifierCount',
+    },
+    {
       title: '操作',
       key: 'action',
       render: (_, record) => (
@@ -252,6 +257,7 @@ const AluminumProcessManagement = ({ processes = [], onProcessesChange = () => {
         <li>设计电流：填写电解槽的设计电流，单位为kA。</li>
         <li>设计电压：填写电解槽的设计电压，单位为V。</li>
         <li>电解槽数量：填写电解槽的数量，单位为个。</li>
+        <li>整流器数量：填写整流器的数量，单位为套。</li>
         <li>产能：填写工序的产能，单位为万吨/年。</li>
         <li>支撑材料：上传与工序相关的支撑材料证明文件（如产能批复文件、设施参数证明等）。</li>
       </ul>
@@ -342,6 +348,25 @@ const AluminumProcessManagement = ({ processes = [], onProcessesChange = () => {
               placeholder="请输入电解槽数量" 
               value={editingProcess.cellCount}
               onChange={(e) => handleProcessFieldChange('cellCount', e.target.value)}
+              type="number"
+              step="1"
+            />
+          </Form.Item>
+
+          <Form.Item label={
+            <Space>
+              整流器数量（套）
+              <Tooltip title="填写整流器的数量，单位为套">
+                <QuestionCircleOutlined />
+              </Tooltip>
+            </Space>
+          }
+          required
+          >
+            <Input 
+              placeholder="请输入整流器数量" 
+              value={editingProcess.rectifierCount}
+              onChange={(e) => handleProcessFieldChange('rectifierCount', e.target.value)}
               type="number"
               step="1"
             />

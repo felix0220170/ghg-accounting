@@ -4,59 +4,64 @@ import { DEFAULT_HEAT_EMISSION_FACTOR } from '../../../config/emissionConstants'
 // 月份列表
 const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
 
-// 阳极效应温室气体排放相关配置
-const DEFAULT_CF4_EMISSION_FACTOR = 0.02; // kgCF4/tAl，阳极效应的CF4排放因子缺省值
-const DEFAULT_C2F6_EMISSION_FACTOR = 0.0011; // kgC2F6/tAl，阳极效应的C2F6排放因子缺省值
-const CF4_GWP = 6630; // 四氟化碳（CF4）的全球变暖潜势
-const C2F6_GWP = 11100; // 六氟化二碳（C2F6）全球变暖潜势
+// 炭阳极相关配置
+const DEFAULT_CARBON_ANODE_RATE = 0.411; // tC/tAl，吨铝炭阳极净耗量推荐值
+const DEFAULT_SULFUR_CONTENT = 2; // %，炭阳极平均含硫量缺省值
+const DEFAULT_ASH_CONTENT = 0.4; // %，炭阳极平均灰分含量缺省值
+const DEFAULT_ANODE_LOSS_RATE = 15.18; // %，阳极损失率固定值
 
-// 阳极效应温室气体排放计算指标
+// 炭阳极排放计算指标
 const HEAT_INDICATORS = [
   {
-    key: 'aluminumProduction',
-    name: '铝液产量',
+    key: 'carbonAnodeConsumption',
+    name: '阳极消耗量',
     unit: 't',
     isCalculated: false,
     precision: 2 // 四舍五入保留到小数点后两位
   },
   {
-    key: 'cf4EmissionFactor',
-    name: '阳极效应的CF4排放因子',
-    unit: 'kgCF4/tAl',
+    key: 'anodeLossRate',
+    name: '阳极损失率',
+    unit: '%',
     isCalculated: false,
-    defaultValue: DEFAULT_CF4_EMISSION_FACTOR,
-    precision: 3 // 四舍五入保留到小数点后三位
+    defaultValue: DEFAULT_ANODE_LOSS_RATE,
+    precision: 2 // 四舍五入保留到小数点后两位
   },
   {
-    key: 'c2f6EmissionFactor',
-    name: '阳极效应的C2F6排放因子',
-    unit: 'kgC2F6/tAl',
+    key: 'carbonAnodeNetConsumption',
+    name: '阳极净耗量',
+    unit: 't',
+    isCalculated: true,
+    precision: 2, // 四舍五入保留到小数点后两位
+    calculation: (data) => (data.carbonAnodeConsumption || 0) * (1 - (data.anodeLossRate || 0) / 100)
+  },
+  {
+    key: 'sulfurContent',
+    name: '阳极平均含硫量',
+    unit: '%',
     isCalculated: false,
-    defaultValue: DEFAULT_C2F6_EMISSION_FACTOR,
-    precision: 4 // 四舍五入保留到小数点后四位
+    defaultValue: DEFAULT_SULFUR_CONTENT,
+    precision: 2 // 四舍五入保留到小数点后两位
   },
   {
-    key: 'cf4Gwp',
-    name: '四氟化碳（CF4）的全球变暖潜势',
-    unit: '',
-    isCalculated: true,
-    fixedValue: 6630,
-    precision: 0 // 整数
-  },
-  {
-    key: 'c2f6Gwp',
-    name: '六氟化二碳（C2F6）全球变暖潜势',
-    unit: '',
-    isCalculated: true,
-    fixedValue: 11100,
-    precision: 0 // 整数
+    key: 'ashContent',
+    name: '阳极平均灰分含量',
+    unit: '%',
+    isCalculated: false,
+    defaultValue: DEFAULT_ASH_CONTENT,
+    precision: 2 // 四舍五入保留到小数点后两位
   },
   {
     key: 'emissionAmount',
-    name: '阳极效应温室气体排放量',
-    unit: 'tCO2',
+    name: '碳排放量',
+    unit: 'tCO₂',
     isCalculated: true,
-    precision: 2 // 四舍五入保留到小数点后两位
+    precision: 2, // 四舍五入保留到小数点后两位
+    calculation: (data) => {
+      const netConsumption = (data.carbonAnodeConsumption || 0) * (1 - (data.anodeLossRate || 0) / 100);
+      const carbonContent = 1 - (data.sulfurContent || 0) / 100 - (data.ashContent || 0) / 100;
+      return netConsumption * carbonContent * (44/12);
+    }
   }
 ];
 
@@ -65,24 +70,22 @@ const createInitialIndicatorData = (indicator) => {
   return MONTHS.map((month, index) => ({
     month: index + 1,
     monthName: month,
-    value: indicator.fixedValue !== undefined ? indicator.fixedValue : (indicator.defaultValue !== undefined ? indicator.defaultValue : 0),
+    value: indicator.defaultValue !== undefined ? indicator.defaultValue : 0,
     unit: indicator.unit,
   }));
 };
 
-// 为工序初始化阳极效应排放数据
-const initializeAnodeEffectDataForProcess = (process) => {
-  const anodeEffectData = {};
+// 为工序初始化炭阳极数据
+const initializeHeatDataForProcess = (process) => {
+  const heatData = {};
   
   HEAT_INDICATORS.forEach(indicator => {
-    anodeEffectData[indicator.key] = createInitialIndicatorData(indicator);
+    heatData[indicator.key] = createInitialIndicatorData(indicator);
   });
-  
-  // CF4和C2F6排放因子已在createInitialIndicatorData中通过defaultValue正确初始化
   
   return {
     ...process,
-    anodeEffectData,
+    heatData,
     files: process.files || {} // 初始化files对象用于存储支撑材料
   };
 };
@@ -97,14 +100,14 @@ const formatValueByPrecision = (value, indicator) => {
   return parseFloat(numValue.toFixed(indicator.precision));
 };
 
-function AluminumAnodeEffectEmission({ onEmissionChange, productionLines = [], onProductionLinesChange }) {
+function AluminumCarbonAnodeEmission({ onEmissionChange, productionLines = [], onProductionLinesChange }) {
   // 将productionLines重命名为processes以符合工序驱动的概念
   const processes = productionLines;
   
   // 保存上一次的排放量，用于比较是否真正发生变化
   const previousEmissionRef = useRef(null);
   
-  // 初始化工序的阳极效应数据 - 仅在组件首次挂载时执行一次，避免无限循环
+  // 初始化工序的炭阳极数据 - 仅在组件首次挂载时执行一次，避免无限循环
   useEffect(() => {
     if (onProductionLinesChange) {
       onProductionLinesChange(prevProcesses => {
@@ -113,9 +116,9 @@ function AluminumAnodeEffectEmission({ onEmissionChange, productionLines = [], o
         let hasChanges = false;
         const updatedProcesses = prevProcesses.map(process => {
           // 只有在需要修改时才创建新对象
-          if (!process.anodeEffectData) {
+          if (!process.heatData) {
             hasChanges = true;
-            return initializeAnodeEffectDataForProcess(process);
+            return initializeHeatDataForProcess(process);
           }
           
           // 没有变化，直接返回原对象
@@ -128,7 +131,8 @@ function AluminumAnodeEffectEmission({ onEmissionChange, productionLines = [], o
     }
   }, []); // 空依赖数组，确保只在组件挂载时执行一次
   
-  // 更新工序的计算值 - 实现阳极效应温室气体排放计算逻辑
+  
+  // 更新工序的计算值 - 实现炭阳极排放计算逻辑
   const updateCalculatedValues = useCallback(() => {
     if (onProductionLinesChange) {
       onProductionLinesChange(prevProcesses => {
@@ -136,95 +140,74 @@ function AluminumAnodeEffectEmission({ onEmissionChange, productionLines = [], o
         
         let hasChanges = false;
         const updatedProcesses = prevProcesses.map(process => {
-          if (!process.anodeEffectData) return process;
+          if (!process.heatData) return process;
           
-          let updatedProcess = { ...process, anodeEffectData: { ...process.anodeEffectData } };
+          let updatedProcess = { ...process, heatData: { ...process.heatData } };
           let processChanged = false;
           
-          // 计算各月份的阳极效应温室气体排放值
+          // 计算各月份的值
           for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
             const month = monthIndex + 1;
             
-            // 获取当月的输入值，增加严格的空值检查和类型转换
-            const aluminumProductionData = process.anodeEffectData.aluminumProduction?.find(m => m.month === month) || { value: 0 };
-            const aluminumProductionValue = parseFloat(aluminumProductionData.value) || 0;
-          
+            // 获取当月的输入值
+            const carbonAnodeConsumptionData = process.heatData.carbonAnodeConsumption?.find(m => m.month === month) || { value: 0 };
+            const carbonAnodeConsumptionValue = parseFloat(carbonAnodeConsumptionData.value) || 0;
             
-            // 获取CF4和C2F6排放因子
-            let cf4EmissionFactorValue = DEFAULT_CF4_EMISSION_FACTOR;
-            let c2f6EmissionFactorValue = DEFAULT_C2F6_EMISSION_FACTOR;
+            const anodeLossRateData = process.heatData.anodeLossRate?.find(m => m.month === month) || { value: DEFAULT_ANODE_LOSS_RATE };
+            const anodeLossRateValue = parseFloat(anodeLossRateData.value) || DEFAULT_ANODE_LOSS_RATE;
             
-            // 否则使用输入的排放因子值或默认值
-            const cf4Data = process.anodeEffectData.cf4EmissionFactor?.find(m => m.month === month) || { value: DEFAULT_CF4_EMISSION_FACTOR };
-            cf4EmissionFactorValue = parseFloat(cf4Data.value) || DEFAULT_CF4_EMISSION_FACTOR;
+            const sulfurContentData = process.heatData.sulfurContent?.find(m => m.month === month) || { value: DEFAULT_SULFUR_CONTENT };
+            const sulfurContentValue = parseFloat(sulfurContentData.value) || DEFAULT_SULFUR_CONTENT;
             
-            const c2f6Data = process.anodeEffectData.c2f6EmissionFactor?.find(m => m.month === month) || { value: DEFAULT_C2F6_EMISSION_FACTOR };
-            c2f6EmissionFactorValue = parseFloat(c2f6Data.value) || DEFAULT_C2F6_EMISSION_FACTOR;
+            const ashContentData = process.heatData.ashContent?.find(m => m.month === month) || { value: DEFAULT_ASH_CONTENT };
+            const ashContentValue = parseFloat(ashContentData.value) || DEFAULT_ASH_CONTENT;
             
+            // 计算阳极净耗量
+            const carbonAnodeNetConsumption = carbonAnodeConsumptionValue * (1 - anodeLossRateValue / 100);
             
-            // 获取指标定义以确定精度
-            const cf4GwpIndicator = HEAT_INDICATORS.find(ind => ind.key === 'cf4Gwp');
-            const c2f6GwpIndicator = HEAT_INDICATORS.find(ind => ind.key === 'c2f6Gwp');
+            // 获取阳极净耗量指标定义以确定精度
+            const netConsumptionIndicator = HEAT_INDICATORS.find(ind => ind.key === 'carbonAnodeNetConsumption');
+            const formattedNetConsumption = formatValueByPrecision(carbonAnodeNetConsumption, netConsumptionIndicator);
             
-            // 更新全球变暖潜势值
-            const cf4GwpData = updatedProcess.anodeEffectData.cf4Gwp || [];
-            const c2f6GwpData = updatedProcess.anodeEffectData.c2f6Gwp || [];
+            // 更新阳极净耗量数据
+            const currentNetConsumptionData = updatedProcess.heatData.carbonAnodeNetConsumption || [];
+            const netConsumptionMonthIndex = currentNetConsumptionData.findIndex(m => m.month === month);
+            const newNetConsumptionData = [...currentNetConsumptionData];
             
-            const cf4GwpMonthIndex = cf4GwpData.findIndex(m => m.month === month);
-            const c2f6GwpMonthIndex = c2f6GwpData.findIndex(m => m.month === month);
-            
-            const newCf4GwpData = [...cf4GwpData];
-            const newC2f6GwpData = [...c2f6GwpData];
-            
-            // 更新CF4全球变暖潜势
-            if (cf4GwpMonthIndex !== -1) {
-              newCf4GwpData[cf4GwpMonthIndex] = {
-                ...newCf4GwpData[cf4GwpMonthIndex],
-                value: CF4_GWP,
-                unit: cf4GwpIndicator.unit
-              };
+            if (netConsumptionMonthIndex !== -1) {
+              // 只有当值真正改变时才更新
+              if (parseFloat(newNetConsumptionData[netConsumptionMonthIndex].value) !== formattedNetConsumption) {
+                newNetConsumptionData[netConsumptionMonthIndex] = {
+                  ...newNetConsumptionData[netConsumptionMonthIndex],
+                  value: formattedNetConsumption,
+                  unit: netConsumptionIndicator.unit
+                };
+                processChanged = true;
+              }
             } else {
-              newCf4GwpData.push({
+              // 添加新的月份数据
+              newNetConsumptionData.push({
                 month,
                 monthName: MONTHS[monthIndex],
-                value: CF4_GWP,
-                unit: cf4GwpIndicator.unit
+                value: formattedNetConsumption,
+                unit: netConsumptionIndicator.unit
               });
               processChanged = true;
             }
             
-            // 更新C2F6全球变暖潜势
-            if (c2f6GwpMonthIndex !== -1) {
-              newC2f6GwpData[c2f6GwpMonthIndex] = {
-                ...newC2f6GwpData[c2f6GwpMonthIndex],
-                value: C2F6_GWP,
-                unit: c2f6GwpIndicator.unit
-              };
-            } else {
-              newC2f6GwpData.push({
-                month,
-                monthName: MONTHS[monthIndex],
-                value: C2F6_GWP,
-                unit: c2f6GwpIndicator.unit
-              });
-              processChanged = true;
-            }
+            // 更新阳极净耗量数据
+            updatedProcess.heatData.carbonAnodeNetConsumption = newNetConsumptionData;
             
-            // 应用GWP更新
-            updatedProcess.anodeEffectData.cf4Gwp = newCf4GwpData;
-            updatedProcess.anodeEffectData.c2f6Gwp = newC2f6GwpData;
-            
-            // 计算温室气体排放量
-            const cf4Emission = aluminumProductionValue * cf4EmissionFactorValue * CF4_GWP / 1000;
-            const c2f6Emission = aluminumProductionValue * c2f6EmissionFactorValue * C2F6_GWP / 1000;
-            const emissionAmount = cf4Emission + c2f6Emission;
+            // 计算排放量 = 阳极净耗量 * (1 - 阳极平均含硫量 - 阳极平均灰分含量) * 44/12
+            const carbonContent = 1 - (sulfurContentValue / 100) - (ashContentValue / 100);
+            const emissionAmount = carbonAnodeNetConsumption * carbonContent * (44/12);
             
             // 获取排放量指标定义以确定精度
             const emissionAmountIndicator = HEAT_INDICATORS.find(ind => ind.key === 'emissionAmount');
             const formattedEmissionAmount = formatValueByPrecision(emissionAmount, emissionAmountIndicator);
             
             // 手动更新排放量
-            const currentEmissionData = updatedProcess.anodeEffectData.emissionAmount || [];
+            const currentEmissionData = updatedProcess.heatData.emissionAmount || [];
             const emissionMonthIndex = currentEmissionData.findIndex(m => m.month === month);
             const newEmissionData = [...currentEmissionData];
             
@@ -252,8 +235,8 @@ function AluminumAnodeEffectEmission({ onEmissionChange, productionLines = [], o
             // 应用更新
             updatedProcess = {
               ...updatedProcess,
-              anodeEffectData: {
-                ...updatedProcess.anodeEffectData,
+              heatData: {
+                ...updatedProcess.heatData,
                 emissionAmount: newEmissionData
               }
             };
@@ -271,33 +254,25 @@ function AluminumAnodeEffectEmission({ onEmissionChange, productionLines = [], o
       });
     }
   }, [onProductionLinesChange]);
+  
+  
+  // 组件挂载时更新一次计算值
+  useEffect(() => {
+    updateCalculatedValues();
+  }, []); // 空依赖数组，确保只在组件挂载时执行一次
+  
+  // 监听processes变化，当工序数据改变时更新计算值
+  // 使用JSON.stringify作为依赖来检测深度变化，但添加防抖避免频繁更新
+  const processesString = JSON.stringify(processes);
+  
+  useEffect(() => {
+    // 创建防抖函数
+    const timer = setTimeout(() => {
+      updateCalculatedValues();
+    }, 100); // 100ms防抖延迟
     
-    
-    // 当processes变化时，使用深度比较或自定义比较来避免不必要的更新
-    // 注意：不再依赖processes.length，而是使用useRef来跟踪变化
-    const processesRef = useRef();
-    useEffect(() => {
-      // 自定义比较逻辑，只有当processes的实际内容变化时才调用updateCalculatedValues
-      // 这里我们比较processes中的关键数据是否变化
-      const hasProcessContentChanged = !processesRef.current || 
-        processes.some((process, index) => {
-          const prevProcess = processesRef.current[index];
-          if (!prevProcess) return true;
-          
-          // 检查关键数据是否变化
-          const currentConsumption = process.anodeEffectData?.aluminumProduction || [];
-          const prevConsumption = prevProcess.anodeEffectData?.aluminumProduction || [];
-          
-          // 比较阳极消耗量数据是否有变化
-          return JSON.stringify(currentConsumption) !== JSON.stringify(prevConsumption);
-        });
-      
-      if (hasProcessContentChanged) {
-        updateCalculatedValues();
-        // 更新ref
-        processesRef.current = [...processes];
-      }
-    }, [processes, updateCalculatedValues]);
+    return () => clearTimeout(timer);
+  }, [processesString]); // 依赖processes的字符串表示，当内部数据变化时触发
   
   // 计算总排放量和工序详细排放数据
   const { totalEmission, processEmissions } = useMemo(() => {
@@ -307,7 +282,7 @@ function AluminumAnodeEffectEmission({ onEmissionChange, productionLines = [], o
     const emissionsByProcess = {};
     
     processes.forEach(process => {
-      if (!process.anodeEffectData || !process.anodeEffectData.emissionAmount) return;
+      if (!process.heatData || !process.heatData.emissionAmount) return;
       
       // 初始化该工序的排放数据
       emissionsByProcess[process.id] = {
@@ -319,7 +294,7 @@ function AluminumAnodeEffectEmission({ onEmissionChange, productionLines = [], o
       
       // 遍历所有月份的排放量
       for (let i = 0; i < 12; i++) {
-        const monthData = process.anodeEffectData.emissionAmount.find(m => m.month === i + 1);
+        const monthData = process.heatData.emissionAmount.find(m => m.month === i + 1);
         const emission = monthData ? parseFloat(monthData.value) || 0 : 0;
         total += emission;
         processTotal += emission;
@@ -343,7 +318,7 @@ function AluminumAnodeEffectEmission({ onEmissionChange, productionLines = [], o
       // 获取指标定义以确定单位和精度
       const indicatorDefinition = HEAT_INDICATORS.find(ind => ind.key === indicatorKey);
       
-      // 不进行格式化，直接使用用户输入值，仅在展示时格式化
+      // 格式化输入值
       let formattedValue = value;
       
       // 使用函数式更新获取最新的processes
@@ -353,9 +328,9 @@ function AluminumAnodeEffectEmission({ onEmissionChange, productionLines = [], o
         let hasChanges = false;
         const updatedProcesses = prevProcesses.map(process => {
           if (process.id === processId) {
-            // 确保anodeEffectData存在
-            const currentAnodeEffectData = process.anodeEffectData || {};
-            const currentIndicatorData = currentAnodeEffectData[indicatorKey] || [];
+            // 确保heatData存在
+            const currentHeatData = process.heatData || {};
+            const currentIndicatorData = currentHeatData[indicatorKey] || [];
             
             // 创建新数组以避免直接修改原数组
             const updatedIndicatorData = [...currentIndicatorData];
@@ -385,8 +360,8 @@ function AluminumAnodeEffectEmission({ onEmissionChange, productionLines = [], o
             if (hasChanges) {
               const updatedProcess = {
                 ...process,
-                anodeEffectData: {
-                  ...currentAnodeEffectData,
+                heatData: {
+                  ...currentHeatData,
                   [indicatorKey]: updatedIndicatorData
                 }
               };
@@ -457,9 +432,9 @@ function AluminumAnodeEffectEmission({ onEmissionChange, productionLines = [], o
       let monthTotal = 0;
       if (Array.isArray(processes)) {
         processes.forEach(process => {
-          if (process.anodeEffectData && process.anodeEffectData['emissionAmount']) {
+          if (process.heatData && process.heatData['emissionAmount']) {
             // 获取该月的排放数据
-            const emissionData = process.anodeEffectData['emissionAmount'];
+            const emissionData = process.heatData['emissionAmount'];
             const monthData = emissionData.find(m => m.month === month); // 现在使用正确的月份值
             const emissionValue = monthData?.value || '';
             
@@ -493,9 +468,9 @@ function AluminumAnodeEffectEmission({ onEmissionChange, productionLines = [], o
   
   // 渲染纵向布局的表格
   const renderVerticalLayoutTable = (process) => {
-    if (!process.anodeEffectData) return null;
+    if (!process.heatData) return null;
     
-    const indicators =  HEAT_INDICATORS;
+    const indicators = HEAT_INDICATORS;
     
     // 表头：指标名称、单位、1-12月、全年值、获取方式、数据来源、支撑材料
     const tableHeaders = (
@@ -517,67 +492,88 @@ function AluminumAnodeEffectEmission({ onEmissionChange, productionLines = [], o
     // 表格主体：按指标分组显示
     const tableBody = (
       <tbody>
-        {indicators.map((indicator) => (
-          <tr key={indicator.key}>
-            <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>{indicator.name}</td>
-            <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>{indicator.unit}</td>
-            {process.anodeEffectData[indicator.key] && process.anodeEffectData[indicator.key].map((monthData, monthIndex) => (
-              <td key={monthIndex} style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>
-                {indicator.isCalculated || indicator.defaultValue  ? (
-                  <div style={{ backgroundColor: '#fafafa' }}>
-                    {typeof monthData.value === 'number' && indicator.unit === 'tCO₂'
-                      ? monthData.value.toFixed(2)
-                      : typeof monthData.value === 'number' && indicator.unit === 'tCO₂/tAl'
+        {indicators.map((indicator) => {
+          // 确保每个指标都有12个月的数据
+          const ensureCompleteMonthData = (indicatorKey, indicatorUnit) => {
+            const existingData = process.heatData[indicatorKey] || [];
+            const monthMap = new Map(existingData.map(item => [item.month, item]));
+            
+            // 为每个月创建数据项，如果不存在则创建默认项
+            return MONTHS.map((month, index) => {
+              const monthNumber = index + 1;
+              if (monthMap.has(monthNumber)) {
+                return monthMap.get(monthNumber);
+              }
+              // 创建默认数据项
+              return {
+                month: monthNumber,
+                monthName: month,
+                value: indicator.defaultValue !== undefined ? indicator.defaultValue : 0,
+                unit: indicatorUnit
+              };
+            });
+          };
+          
+          // 获取完整的月度数据
+          const completeMonthData = ensureCompleteMonthData(indicator.key, indicator.unit);
+          
+          return (
+            <tr key={indicator.key}>
+              <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>{indicator.name}</td>
+              <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>{indicator.unit}</td>
+              {completeMonthData.map((monthData, monthIndex) => (
+                <td key={monthIndex} style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>
+                  {indicator.isCalculated || indicator.defaultValue? (
+                    <div style={{ backgroundColor: '#fafafa' }}>
+                      {typeof monthData.value === 'number' && indicator.unit === 'tCO₂'
                         ? monthData.value.toFixed(2)
-                        : typeof monthData.value === 'number' && indicator.unit === 'GJ'
-                          ? monthData.value.toFixed(2)
-                          : typeof monthData.value === 'number'
-                            ? monthData.value.toFixed(indicator.precision ?? 3)
-                            : indicator.unit === 'GJ'
-                              ? '0.00'
-                              : '0.000'}
+                        : typeof monthData.value === 'number'
+                          ? monthData.value.toFixed(indicator.precision || 3)
+                          : '0.000'}
                     </div>
                   ) : (
-                  <input
-                    type="number"
-                    step="0.001"
-                    value={monthData.value || ''}
-                    style={{ width: '100%', textAlign: 'center' }}
-                    onChange={(e) => {
-                      // 直接传递输入值，不进行任何格式化处理
-                      handleDataChange(process.id, indicator.key, monthData.month, e.target.value);
-                    }}
-                  />
-                )}
-              </td>
-            ))}
-            <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center', backgroundColor: '#fafafa' }}>
-              {indicator.isCalculated || indicator.defaultValue ? "" : calculateAnnualTotal(process.anodeEffectData[indicator.key])}
-            </td>
-            {/* 获取方式 */}
-            <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>
-              {indicator.isCalculated ? '计算值' : ''}
-            </td>
-            {/* 数据来源 */}
-            <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>
-              <input
-                type="text"
-                placeholder="数据来源"
-                style={{ width: '100%', textAlign: 'center' }}
-              />
-            </td>
-            {/* 支撑材料 */}
-              <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>
-                  {!indicator.isCalculated && (
                     <input
-                      type="file"
-                      onChange={(e) => updateFile(process.id, indicator.key, e.target.files[0])}
-                      style={{ fontSize: '12px' }}
+                      type="number"
+                      step="0.001"
+                      value={monthData.value || ''}
+                      style={{ width: '100%', textAlign: 'center' }}
+                      onChange={(e) => {
+                        const inputValue = e.target.value;
+                        // 直接传递输入值，不进行toFixed格式化
+                        handleDataChange(process.id, indicator.key, monthData.month, inputValue);
+                      }}
                     />
                   )}
                 </td>
-          </tr>
-        ))}
+              ))}
+              <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center', backgroundColor: '#fafafa' }}>
+                {indicator.isCalculated || indicator.defaultValue ? "" : calculateAnnualTotal(completeMonthData)}
+              </td>
+              {/* 获取方式 */}
+              <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>
+                {indicator.isCalculated ? '计算值' : ''}
+              </td>
+              {/* 数据来源 */}
+              <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>
+                <input
+                  type="text"
+                  placeholder="数据来源"
+                  style={{ width: '100%', textAlign: 'center' }}
+                />
+              </td>
+              {/* 支撑材料 */}
+              <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>
+                {!indicator.isCalculated && (
+                  <input
+                    type="file"
+                    onChange={(e) => updateFile(process.id, indicator.key, e.target.files[0])}
+                    style={{ fontSize: '12px' }}
+                  />
+                )}
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     );
 
@@ -616,25 +612,25 @@ function AluminumAnodeEffectEmission({ onEmissionChange, productionLines = [], o
   // 移除了ensureThreeDecimals函数，因为现在使用onChange直接处理输入值
   
   return (
-      <div className="anode-effect-emission">
-        <h2>电解铝工序阳极效应温室气体排放</h2>
-        
-        <div className="calculation-description" style={{ marginBottom: '20px', padding: '15px', border: '1px solid #e0e0e0', borderRadius: '6px', backgroundColor: '#fafafa' }}>
-          <p><strong>阳极效应温室气体排放计算说明：</strong></p>
-          <p><strong>阳极效应的CF4排放因子缺省值：{DEFAULT_CF4_EMISSION_FACTOR} kgCF4/tAl</strong></p>
-          <p><strong>阳极效应的C2F6排放因子缺省值：{DEFAULT_C2F6_EMISSION_FACTOR} kgC2F6/tAl</strong></p>
-          <p><strong>四氟化碳（CF4）的全球变暖潜势：{CF4_GWP}</strong></p>
-          <p><strong>六氟化二碳（C2F6）全球变暖潜势：{C2F6_GWP}</strong></p>
-          <p><strong>计算方法：</strong></p>
-          <p>阳极效应温室气体排放量 = 铝液产量 × 阳极效应的CF4排放因子 × 四氟化碳（CF4）的全球变暖潜势 / 1000 + 铝液产量 × 阳极效应的C2F6排放因子 × 六氟化二碳（C2F6）全球变暖潜势 / 1000</p>
-          <p><strong>单位说明：</strong></p>
-          <p>- 铝液产量单位：t（吨），四舍五入保留到小数点后两位</p>
-          <p>- 阳极效应的CF4排放因子单位：kgCF4/tAl（千克四氟化碳/吨铝），四舍五入保留到小数点后三位</p>
-          <p>- 阳极效应的C2F6排放因子单位：kgC2F6/tAl（千克六氟化二碳/吨铝），四舍五入保留到小数点后四位</p>
-          <p>- 四氟化碳（CF4）的全球变暖潜势：无单位，固定值6630</p>
-          <p>- 六氟化二碳（C2F6）全球变暖潜势：无单位，固定值11100</p>
-          <p>- 阳极效应温室气体排放量单位：tCO2（吨二氧化碳当量），四舍五入保留到小数点后两位</p>
-        </div>
+    <div className="carbon-anode-emission">
+      <h2>炭阳极消耗排放</h2>
+      
+      <div className="calculation-description" style={{ marginBottom: '20px', padding: '15px', border: '1px solid #e0e0e0', borderRadius: '6px', backgroundColor: '#fafafa' }}>
+        <p><strong>炭阳极消耗排放计算说明：</strong></p>
+        <p><strong>阳极损失率固定值：{DEFAULT_ANODE_LOSS_RATE}%</strong></p>
+        <p><strong>阳极平均含硫量固定值：{DEFAULT_SULFUR_CONTENT}%</strong></p>
+        <p><strong>阳极平均灰分含量固定值：{DEFAULT_ASH_CONTENT}%</strong></p>
+        <p><strong>计算方法：</strong></p>
+        <p>阳极净耗量 = 阳极消耗量 × (1 - 阳极损失率/100)</p>
+        <p>碳排放量 = 阳极净耗量 × (1 - 阳极平均含硫量/100 - 阳极平均灰分含量/100) × (44/12)</p>
+        <p><strong>单位说明：</strong></p>
+        <p>- 阳极消耗量单位：t（吨），四舍五入保留到小数点后两位</p>
+        <p>- 阳极损失率单位：%，四舍五入保留到小数点后两位</p>
+        <p>- 阳极净耗量单位：t（吨），四舍五入保留到小数点后两位</p>
+        <p>- 阳极平均含硫量单位：%，四舍五入保留到小数点后两位</p>
+        <p>- 阳极平均灰分含量单位：%，四舍五入保留到小数点后两位</p>
+        <p>- 碳排放量单位：tCO₂（吨二氧化碳），四舍五入保留到小数点后两位</p>
+      </div>
       {/* 月度排放总量表格 */}
       <div className="calculation-section" style={{ marginTop: '20px' }}>
         <h3 className="section-title">月度排放总量汇总表</h3>
@@ -690,4 +686,4 @@ function AluminumAnodeEffectEmission({ onEmissionChange, productionLines = [], o
   );
 }
 
-export default AluminumAnodeEffectEmission;
+export default AluminumCarbonAnodeEmission;

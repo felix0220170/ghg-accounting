@@ -73,6 +73,9 @@ const AluminumNetElectricityHeatEmission = ({ onEmissionChange, initialData = {}
     };
   };
 
+  const updateParentComponent = (elecPurchase, elecFactor, heatPur, heatFac) => {
+  };
+
   // 创建防抖版的updateParentComponent
   const debouncedUpdateParentComponent = debounce((elecPurchase, elecFactor, heatPur, heatFac) => {
     updateParentComponent(elecPurchase, elecFactor, heatPur, heatFac);
@@ -146,51 +149,6 @@ const AluminumNetElectricityHeatEmission = ({ onEmissionChange, initialData = {}
     };
   };
 
-  // 直接更新父组件的函数，避免useEffect依赖问题
-  const updateParentComponent = (elecPurchase, elecFactor, heatPur, heatFac) => {
-    if (onEmissionChange) {
-      // 优化计算，避免重复的reduce操作
-      let electricityTotal = 0;
-      let heatTotal = 0;
-      let electricityEmission = 0;
-      let heatEmission = 0;
-      
-      // 单次遍历计算所有需要的值，减少计算次数
-      MONTHS.forEach(month => {
-        const elecValue = parseFloat(elecPurchase[month]) || 0;
-        const heatVal = parseFloat(heatPur[month]) || 0;
-        
-        electricityTotal += elecValue;
-        heatTotal += heatVal;
-        
-        electricityEmission += (elecValue * parseFloat(systemElectricityFactor) || 0);
-        heatEmission += (heatVal * parseFloat(systemHeatFactor) || 0) ;
-      });
-      
-      const totalEmission = electricityEmission + heatEmission;
-      
-      onEmissionChange({
-        electricityNetPurchase: elecPurchase,
-        systemElectricityFactor: systemElectricityFactor,
-        electricityTotalAmount: electricityTotal,
-        electricityEmission: electricityEmission,
-        heatNetPurchase: heatPur,
-        systemHeatFactor: systemHeatFactor,
-        heatTotalAmount: heatTotal,
-        heatEmission: heatEmission,
-        electricityDataSource: electricitySource,
-        heatDataSource: heatSource,
-        totalEmission: totalEmission,
-        value: totalEmission
-      });
-    }
-  };
-  
-  // 组件挂载时立即更新父组件，确保初始数据正确传递
-  React.useEffect(() => {
-    // 初始加载时直接更新，不使用防抖
-    updateParentComponent(electricityPurchase, getElectricityFactorData(), heatPurchase, getHeatFactorData());
-  }, []);
 
   // 简单的上传配置函数 - 避免复杂的闭包和依赖
   const getUploadPropsForElectricityPurchase = () => ({
@@ -233,7 +191,7 @@ const AluminumNetElectricityHeatEmission = ({ onEmissionChange, initialData = {}
   const tableData = [
     {
       key: 'electricity-purchase',
-      信息项: '净电（化石）净购入量',
+      信息项: '企业层级净购入使用电量',
       单位: 'MW∙h',
       ...electricityPurchase,
       全年值: summary.electricityTotal,
@@ -248,7 +206,7 @@ const AluminumNetElectricityHeatEmission = ({ onEmissionChange, initialData = {}
     },
     {
       key: 'heat-purchase',
-      信息项: '净热净购入量',
+      信息项: '企业层级净购入使用热量',
       单位: 'GJ',
       ...heatPurchase,
       全年值: summary.heatTotal,
@@ -261,31 +219,6 @@ const AluminumNetElectricityHeatEmission = ({ onEmissionChange, initialData = {}
         />
       )
     },
-    // 热力排放因子已移至系统设置区域，不再需要表格行
-    {
-      key: 'electricity-emission',
-      信息项: '电力CO2排放量',
-      单位: 'tCO2',
-      全年值: formatEmission(summary.electricityEmission),
-      获取方式: '计算值',
-      数据来源: '-'
-    },
-    {
-      key: 'heat-emission',
-      信息项: '热力CO2排放量',
-      单位: 'tCO2',
-      全年值: formatEmission(summary.heatEmission),
-      获取方式: '计算值',
-      数据来源: '-'
-    },
-    {
-      key: 'total-emission',
-      信息项: 'CO2排放总量',
-      单位: 'tCO2',
-      全年值: formatEmission(summary.totalEmission),
-      获取方式: '计算值',
-      数据来源: '-'
-    }
   ];
 
   // 手动构建月份列，避免复杂的map和闭包
@@ -381,35 +314,14 @@ const AluminumNetElectricityHeatEmission = ({ onEmissionChange, initialData = {}
 
   return (
     <div className="net-electricity-heat-emission">
-      <Card title="购入净电（化石）和净热" style={{ marginBottom: 20 }}>
-        {/* 系统级排放因子设置 */}
-        <div style={{ marginBottom: 20, padding: 15, backgroundColor: '#f0f5ff', borderRadius: 4 }}>
-          <h4 style={{ marginBottom: 10 }}>系统设置：排放因子</h4>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 15 }}>
-            <span>电力排放因子（tCO₂/MW·h）：</span>
-            <InputNumber
-              min={0}
-              step={0.0001}
-              value={systemElectricityFactor}
-              onChange={handleSystemElectricityFactorChange}
-              style={{ width: 150 }}
-              placeholder="请输入排放因子"
-            />
-            <span style={{ color: '#888', fontSize: '12px' }}>（系统级别设置，默认值：0.5366 tCO₂/MW·h）</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span>热力排放因子（tCO₂/GJ）：</span>
-            <InputNumber
-              min={0}
-              step={0.0001}
-              value={systemHeatFactor}
-              onChange={handleSystemHeatFactorChange}
-              style={{ width: 150 }}
-              placeholder="请输入排放因子"
-            />
-            <span style={{ color: '#888', fontSize: '12px' }}>（系统级别设置，默认值：0.11 tCO₂/GJ）</span>
-          </div>
-        </div>
+      <h2 style={{ marginBottom: '20px' }}>辅助参数报告项 2：企业层级净购入使用电量和热量</h2>
+      <div className="calculation-description" style={{ marginBottom: '20px', padding: '15px', border: '1px solid #e0e0e0', borderRadius: '6px', backgroundColor: '#fafafa' }}>
+        <p><strong>电量单位为 MW∙h，四舍五入保留到小数点后三位。</strong></p>
+        <p><strong>热量单位为 GJ，四舍五入保留到小数点后两位。</strong></p>
+      </div>
+      <div>
+
+     
         <Table 
           columns={columns} 
           dataSource={tableData} 
@@ -417,18 +329,8 @@ const AluminumNetElectricityHeatEmission = ({ onEmissionChange, initialData = {}
           rowKey="key" 
           scroll={{ x: 'max-content' }}
         />
-        
-        <div style={{ marginTop: 20, padding: 15, backgroundColor: '#e6f7ff', borderRadius: 4 }}>
-          <h4>计算说明：</h4>
-          <ul>
-            <li>净电（化石）CO2排放量 = 净电（化石）净购入量 × 电力排放因子 </li>
-          <li>净热CO2排放量 = 净热净购入量 × 热力排放因子 </li>
-          <li>电力排放因子通过系统设置，默认值为 0.5366 tCO₂/MW·h</li>
-          <li>热力排放因子通过系统设置，默认值为 0.11 tCO₂/GJ</li>
-          <li>全年值为各月份数据的合计</li>
-          </ul>
-        </div>
-      </Card>
+
+         </div>
       
       <style jsx>{`
         .net-electricity-heat-emission {
@@ -437,11 +339,11 @@ const AluminumNetElectricityHeatEmission = ({ onEmissionChange, initialData = {}
         
         .ant-table-thead > tr > th {
           background-color: #fafafa;
-          font-weight: 500;
+          font-weight: 400;
         }
         
         .ant-table-tbody > tr:last-child > td {
-          font-weight: bold;
+          font-weight: 400;
           background-color: #f0f5ff;
         }
       `}</style>

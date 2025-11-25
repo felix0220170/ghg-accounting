@@ -7,83 +7,112 @@ const AluminumSummary = ({ emissionData = {} }) => {
   // 汇总表格数据
   const summaryData = [
     {
-      category: '化石燃料燃烧排放',
-      source: '工序及移动燃烧设备',
-      gasType: 'CO2',
-      emission: emissionData.totalEmission || 0,
-      unit: '吨'
+      key: 'fossil-fuel',
+      排放来源: '化石燃料燃烧排放',
+      排放量: emissionData.totalEmission || 0,
+      单位: 'tCO₂',
+      isAuxiliary: false
     },
     {
-      category: '能源作为原材料用途排放',
-      source: '碳阳极消耗',
-      gasType: 'CO2',
-      emission: emissionData.carbonAnode || 0,
-      unit: '吨'
+      key: 'carbon-anode',
+      排放来源: '能源作为原材料用途排放',
+      排放量: emissionData.carbonAnode || 0,
+      单位: 'tCO₂',
+      isAuxiliary: false
     },
     {
-      category: '电解铝工序阳极效应排放',
-      source: '阳极效应排放',
-      gasType: 'PFCs (CF4/C2F6)',
-      emission: emissionData.anodeEffect || 0,
-      unit: '吨CO2当量'
+      key: 'anode-effect',
+      排放来源: '电解铝工序阳极效应排放',
+      排放量: emissionData.anodeEffect || 0,
+      单位: 'tCO₂',
+      isAuxiliary: false
     },
     {
-      category: '工业生产过程排放',
-      source: '碳酸盐分解',
-      gasType: 'CO2',
-      emission: emissionData.carbonateDecomposition || 0,
-      unit: '吨'
+      key: 'carbonate-decomposition',
+      排放来源: '企业层级碳酸盐分解排放',
+      排放量: emissionData.carbonateDecomposition || 0,
+      单位: 'tCO₂',
+      isAuxiliary: false
     },
     {
-      category: '其他非铝冶炼生产设施排放',
-      source: '发电设施及其他非铝冶炼设施',
-      gasType: 'CO2',
-      emission: emissionData.otherEmission || 0,
-      unit: '吨'
-    },
-    {
-      category: '净购入电力和热力产生的排放',
-      source: '购入净电（化石）和净热',
-      gasType: 'CO2',
-      emission: (emissionData.netElectricityHeat) || 0,
-      unit: '吨'
+      key: 'other-emission',
+      排放来源: '发电设施及其他非铝冶炼生产设施排放',
+      排放量: emissionData.otherEmission || 0,
+      单位: 'tCO₂',
+      isAuxiliary: false
     }
   ];
 
-  // 计算总排放量
+  // 计算总排放量 - 排除净购入电力和热力产生的排放
   const totalEmission = summaryData.reduce((total, item) => {
-    return total + (parseFloat(item.emission) || 0);
+    // 只累加非辅助报告项的排放量
+    if (!item.isAuxiliary) {
+      return total + (parseFloat(item.排放量) || 0);
+    }
+    return total;
   }, 0);
+
+  // 为数据项添加占比信息
+  const tableData = summaryData.map(item => ({
+    ...item,
+    占比: item.isAuxiliary ? '0.00' : (totalEmission > 0 ? ((item.排放量 / totalEmission) * 100).toFixed(2) : '0.00')
+  }));
+
+  // 增加合计行
+  tableData.push({
+    key: 'total',
+    排放来源: '合计',
+    排放量: totalEmission,
+    单位: 'tCO₂',
+    占比: '100.00',
+    isAuxiliary: false
+  });
 
   // 表格列配置
   const columns = [
     {
-      title: '排放类别',
-      dataIndex: 'category',
-      key: 'category',
-    },
-    {
-      title: '排放源',
-      dataIndex: 'source',
-      key: 'source',
-    },
-    {
-      title: '温室气体类型',
-      dataIndex: 'gasType',
-      key: 'gasType',
+      title: '排放来源',
+      dataIndex: '排放来源',
+      key: '排放来源',
+      render: (text, record) => (
+        <span style={{ fontStyle: record.isAuxiliary ? 'italic' : 'normal' }}>
+          {text}
+          {record.isAuxiliary && <Text type="secondary">（辅助报告）</Text>}
+        </span>
+      ),
     },
     {
       title: '排放量',
-      dataIndex: 'emission',
-      key: 'emission',
-      render: (text) => (
-        <span>{typeof text === 'number' ? text.toFixed(2) : text}</span>
+      dataIndex: '排放量',
+      key: '排放量',
+      render: (text, record) => (
+        <span style={{ 
+          color: record.isAuxiliary ? '#8c8c8c' : 'inherit',
+          fontStyle: record.isAuxiliary ? 'italic' : 'normal',
+          fontWeight: record.key === 'total' ? 'bold' : 'normal'
+        }}>
+          {typeof text === 'number' ? text.toFixed(2) : text}
+        </span>
       ),
     },
     {
       title: '单位',
-      dataIndex: 'unit',
-      key: 'unit',
+      dataIndex: '单位',
+      key: '单位',
+    },
+    {
+      title: '占比(%)',
+      dataIndex: '占比',
+      key: '占比',
+      render: (text, record) => (
+        <span style={{ 
+          color: record.isAuxiliary ? '#8c8c8c' : 'inherit',
+          fontStyle: record.isAuxiliary ? 'italic' : 'normal',
+          fontWeight: record.key === 'total' ? 'bold' : 'normal'
+        }}>
+          {text}
+        </span>
+      ),
     },
   ];
 
@@ -94,16 +123,13 @@ const AluminumSummary = ({ emissionData = {} }) => {
       
       <Table 
         columns={columns} 
-        dataSource={summaryData} 
+        dataSource={tableData} 
         pagination={false} 
-        rowKey="category"
+        rowKey="key"
+        rowClassName={(record) => record.key === 'total' ? 'total-row' : ''}
         footer={() => (
           <div>
-            <Divider />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-              <Text strong style={{ fontSize: '16px', marginRight: '10px' }}>总排放量：</Text>
-              <Text strong style={{ fontSize: '18px', color: '#ff4d4f' }}>{totalEmission.toFixed(2)} 吨CO2当量</Text>
-            </div>
+            {/* 移除净购入电力和热力产生的排放相关的辅助说明 */}
           </div>
         )}
       />
@@ -115,8 +141,8 @@ const AluminumSummary = ({ emissionData = {} }) => {
           <li>工业生产过程排放-阳极效应排放：主要包括电解铝生产过程中阳极效应产生的CF4和C2F6等PFCs温室气体排放</li>
           <li>工业生产过程排放-碳酸盐分解：主要包括铝冶炼过程中碳酸盐（如石灰石、纯碱等）分解产生的CO2排放</li>
           <li>能源作为原材料用途排放：主要包括碳阳极消耗产生的CO2排放</li>
-          <li>其他非铝冶炼生产设施排放：主要包括企业内部发电设施及其他非铝冶炼生产设施产生的CO2排放</li>
-          <li>净购入电力和热力产生的排放：主要包括企业购入净电（化石）和净热产生的CO2排放</li>
+          <li>发电设施及其他非铝冶炼生产设施排放：主要包括企业内部发电设施及其他非铝冶炼生产设施产生的CO2排放</li>
+          {/* 移除净购入电力和热力产生的排放说明 */}
         </ul>
       </div>
     </div>

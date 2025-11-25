@@ -5,8 +5,8 @@ const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', 
 
 // 默认碳酸盐配置
 const DEFAULT_CARBONATE_PRODUCTS = [
-  { id: 'carbonate-product-1', name: '石灰石', emissionFactor: 0.405 },
-  { id: 'carbonate-product-2', name: '纯碱', emissionFactor: 0.411 }
+  { id: 'carbonate-product-1', name: '石灰石', emissionFactor: 0.4400 },
+  { id: 'carbonate-product-2', name: '纯碱', emissionFactor: 0.4149 }
 ];
 
 // 碳酸盐分解排放计算指标

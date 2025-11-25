@@ -39,28 +39,6 @@ const COKING_METHODS = [
   { value: 'stamping', label: '捣固焦炉' }
 ];
 
-// 生产设施数据结构: {
-//   id: string,
-//   facilityName: string, // 主要生产设施规格名称
-//   facilityUnit: string, // 主要生产设施规格单位
-//   facilitySpec: string  // 主要生产设施规格
-// }
-
-// 工序数据结构: {
-//   id: string,
-//   processType: string, // 工序类型
-//   processTypeName: string, // 工序类型名称
-//   productName: string, // 产品名称
-//   productCode: string, // 产品代码
-//   productionCapacity: string, // 工序产品生产能力（万 t/a）
-//   cokingMethod: string, // 焦炭生产方式（焦化工序特有）
-//   facilities: Array<ProductionFacility>, // 多组生产设施
-//   description: string, // 说明
-//   supportingMaterials: { [key: string]: string[] } // 支撑材料
-// }
-
-// 工序初始化逻辑已移至父组件SteelIndustry.jsx
-
 const ProcessManagement = ({ processes = [], onProcessesChange = () => {} }) => {
   // 添加一些自定义样式
   const customStyles = {
@@ -90,12 +68,12 @@ const ProcessManagement = ({ processes = [], onProcessesChange = () => {} }) => 
       productName: '',
       productCode: '',
       productionCapacity: '',
-      cokingMethod: '',
       facilities: [{
         id: Date.now().toString() + '-facility-1',
         facilityName: '',
         facilityUnit: '',
-        facilitySpec: ''
+        facilitySpec: '',
+        transportTime: ''
       }],
       description: '',
       supportingMaterials: {}
@@ -113,7 +91,8 @@ const ProcessManagement = ({ processes = [], onProcessesChange = () => {} }) => 
         id: Date.now().toString() + '-facility-1',
         facilityName: '',
         facilityUnit: '',
-        facilitySpec: ''
+        facilitySpec: '',
+        transportTime: ''
       }];
     }
     setEditingProcess(clonedProcess);
@@ -182,12 +161,12 @@ const ProcessManagement = ({ processes = [], onProcessesChange = () => {} }) => 
       productName: '',
       productCode: '',
       productionCapacity: '',
-      cokingMethod: '',
       facilities: [{
         id: Date.now().toString() + '-facility-1',
         facilityName: '',
         facilityUnit: '',
-        facilitySpec: ''
+        facilitySpec: '',
+        transportTime: ''
       }],
       description: '',
       supportingMaterials: {},
@@ -208,8 +187,9 @@ const ProcessManagement = ({ processes = [], onProcessesChange = () => {} }) => 
     const newFacility = {
       id: Date.now().toString() + `-facility-${editingProcess.facilities.length + 1}`,
       facilityName: '',
-      facilityUnit: '',
-      facilitySpec: ''
+      facilityUnit: facilityUnitDefaultValue[editingProcess.processType],
+      facilitySpec: '',
+      transportTime: ''
     };
     
     setEditingProcess(prev => ({
@@ -294,12 +274,6 @@ const ProcessManagement = ({ processes = [], onProcessesChange = () => {} }) => 
       
       if (hasEmptyFacilityInfo) {
         message.warning('请填写完整的生产设施信息');
-        return;
-      }
-      
-      // 焦化工序需要验证生产方式
-      if (editingProcess.processType === 'coking' && !editingProcess.cokingMethod) {
-        message.warning('焦化工序请选择焦炭生产方式');
         return;
       }
       
@@ -401,16 +375,6 @@ const ProcessManagement = ({ processes = [], onProcessesChange = () => {} }) => 
       key: 'productionCapacity',
     },
     {
-      title: '焦炭生产方式',
-      dataIndex: 'cokingMethod',
-      key: 'cokingMethod',
-      render: (text) => {
-        if (!text) return '-';
-        const method = COKING_METHODS.find(m => m.value === text);
-        return method ? method.label : text;
-      }
-    },
-    {
       title: '操作',
       key: 'action',
       render: (_, record) => (
@@ -421,6 +385,30 @@ const ProcessManagement = ({ processes = [], onProcessesChange = () => {} }) => 
       ),
     },
   ];
+
+  const facilityNameToolTip = {
+    coking: '顶装焦炉/捣固焦炉/热回收焦炉等',
+    sintering: '带式烧结机/步进式烧结机等',
+    pelletizing: '链篦机-回转窑/带式焙烧机/竖炉等',
+    blastFurnace: '高炉/气基直接还原竖炉/熔融还原炉/回转窑和矿热炉等',
+    converter: '转炉',
+    eaf: '电炉'
+  }
+
+  const facilityUnitDefaultValue = {
+    coking: '米',
+    sintering: '平方米',
+    pelletizing: '平方米',
+    blastFurnace: '立方米',
+    converter: '吨',
+    eaf: '吨'
+  }
+
+  const facilityUnitToolTip = {
+    coking: '炭化室高度',
+    sintering: '传送带面积',
+    pelletizing: '容量'
+  }
 
   // 填报说明
   const renderInstructions = () => (
@@ -544,25 +532,6 @@ const ProcessManagement = ({ processes = [], onProcessesChange = () => {} }) => 
             />
           </Form.Item>
 
-          {/* 焦炭生产方式（仅焦化工序显示） */}
-          {editingProcess.processType === 'coking' && (
-            <Form.Item
-              label="焦炭生产方式"
-              required
-            >
-              <Select 
-                style={{ width: 240 }} 
-                placeholder="选择焦炭生产方式"
-                value={editingProcess.cokingMethod}
-                onChange={(value) => setEditingProcess(prev => ({...prev, cokingMethod: value}))}
-              >
-                {COKING_METHODS.map(method => (
-                  <Option key={method.value} value={method.value}>{method.label}</Option>
-                ))}
-              </Select>
-            </Form.Item>
-          )}
-
           {/* 生产设施 */}
           <Form.Item
             label={
@@ -585,6 +554,15 @@ const ProcessManagement = ({ processes = [], onProcessesChange = () => {} }) => 
                     value={facility.facilityName}
                     onChange={(e) => handleUpdateFacility(facility.id, 'facilityName', e.target.value)}
                   />
+                  <b>{facilityNameToolTip[editingProcess.processType]}</b>
+                </Space>
+                <Space style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+                  <Text style={{ width: 150, textAlign: 'right', marginRight: 8 }}>主要生产设施规格:</Text>
+                  <Input 
+                    style={{ width: 150 }} 
+                    value={facility.facilitySpec}
+                    onChange={(e) => handleUpdateFacility(facility.id, 'facilitySpec', e.target.value)}
+                  />
                 </Space>
                 <Space style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
                   <Text style={{ width: 150, textAlign: 'right', marginRight: 8 }}>主要生产设施规格单位:</Text>
@@ -593,13 +571,14 @@ const ProcessManagement = ({ processes = [], onProcessesChange = () => {} }) => 
                     value={facility.facilityUnit}
                     onChange={(e) => handleUpdateFacility(facility.id, 'facilityUnit', e.target.value)}
                   />
+                  <b>{facilityUnitToolTip[editingProcess.processType]}</b>
                 </Space>
                 <Space style={{ display: 'flex', alignItems: 'center' }}>
-                  <Text style={{ width: 150, textAlign: 'right', marginRight: 8 }}>主要生产设施规格:</Text>
+                  <Text style={{ width: 150, textAlign: 'right', marginRight: 8 }}>投运时间:</Text>
                   <Input 
                     style={{ width: 150 }} 
-                    value={facility.facilitySpec}
-                    onChange={(e) => handleUpdateFacility(facility.id, 'facilitySpec', e.target.value)}
+                    value={facility.transportTime}
+                    onChange={(e) => handleUpdateFacility(facility.id, 'transportTime', e.target.value)}
                   />
                   <Button 
                     danger 

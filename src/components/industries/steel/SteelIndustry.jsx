@@ -16,19 +16,20 @@ const PROCESS_TYPES = [
 
 // 工序产品缺省值映射
 const DEFAULT_PRODUCT_INFO = {
-  coking: { name: '焦炭', code: '250401' },
-  sintering: { name: '烧结铁矿', code: '08010301' },
-  pelletizing: { name: '球团铁矿', code: '08010302' },
-  blastFurnace: { name: '生铁', code: '3201' },
-  converter: { name: '转炉钢', code: '320641' },
-  eaf: { name: '电弧炉钢', code: '320642' },
-  lime: { name: '石灰', code: '31020101' }
+  coking: { name: '焦炭', code: '250401', facilityName: '顶装焦炉',  facilityUnit: '米'},
+  sintering: { name: '烧结铁矿', code: '08010301', facilityName: '带式烧结机', facilityUnit: '平方米' },
+  pelletizing: { name: '球团铁矿', code: '08010302', facilityName: '链篦机-回转窑', facilityUnit: '平方米' },
+  blastFurnace: { name: '生铁', code: '3201', facilityName: '高炉', facilityUnit: '立方米' },
+  converter: { name: '粗钢（转炉钢）', code: '320641', facilityName: '转炉', facilityUnit: '吨' },
+  eaf: { name: '粗钢（电炉钢）', code: '320642', facilityName: '电炉', facilityUnit: '吨' },
+  lime: { name: '石灰', code: '31020101', facilityName: '', facilityUnit: '' }
 };
+
 
 // 初始化10个固定工序
 const initializeDefaultProcesses = () => {
   return PROCESS_TYPES.map(type => {
-    const defaultProduct = DEFAULT_PRODUCT_INFO[type.value] || { name: '', code: '' };
+    const defaultProduct = DEFAULT_PRODUCT_INFO[type.value] || { name: '', code: '', facilityName: '', facilityUnit: '' };
     return {
       id: `default-${type.value}-${Date.now()}`,
       processType: type.value,
@@ -39,9 +40,10 @@ const initializeDefaultProcesses = () => {
       cokingMethod: type.value === 'coking' ? '' : undefined,
       facilities: [{
         id: `default-${type.value}-facility-${Date.now()}`,
-        facilityName: '',
-        facilityUnit: '',
-        facilitySpec: ''
+        facilityName: defaultProduct.facilityName,
+        facilityUnit: defaultProduct.facilityUnit,
+        facilitySpec: '',
+        transportTime: ''
       }],
       description: '',
       supportingMaterials: {},
