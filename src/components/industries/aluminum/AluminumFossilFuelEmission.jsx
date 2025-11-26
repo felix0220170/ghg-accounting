@@ -434,7 +434,7 @@ function AluminumFossilFuelEmission({ onEmissionChange, productionLines = [], on
       case 'liquid':
         return 't';
       case 'gas':
-        return 'gas'; // 返回标识而不是具体单位
+        return '104Nm³'; // 返回标识而不是具体单位
       default:
         return '';
     }

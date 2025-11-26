@@ -277,7 +277,7 @@ function SteelProcessFossilFuelEmission({ onEmissionChange, productionLines = []
       case 'liquid':
         return 't';
       case 'gas':
-        return '万Nm³';
+        return '104Nm³';
       default:
         return 't';
     }
@@ -299,7 +299,7 @@ function SteelProcessFossilFuelEmission({ onEmissionChange, productionLines = []
 
   // 辅助函数：格式化单位
   const formatUnit = useCallback((fuelType, prefix) => {
-    return prefix + (fuelType === 'gas' ? '万Nm³' : 't');
+    return prefix + (fuelType === 'gas' ? '104Nm³' : 't');
   }, []);
 
   // 辅助函数：计算月度排放量
@@ -634,7 +634,7 @@ function SteelProcessFossilFuelEmission({ onEmissionChange, productionLines = []
         <h5 style={{ marginBottom: '10px', color: '#666' }}>计算说明</h5>
         <p style={{ marginBottom: '8px' }}>• 排放量计算采用单位热值含碳量法: 消耗量 × 低位发热量 × 单位热值含碳量 × 碳氧化率 × (44/12)</p>
         <p style={{ marginBottom: '8px' }}>• 单位热值含碳量单位: tC/GJ</p>
-        <p style={{ marginBottom: '8px' }}>• 低位发热量单位: GJ/t (固体燃料), GJ/t (液体燃料), GJ/万Nm³ (气体燃料)</p>
+        <p style={{ marginBottom: '8px' }}>• 低位发热量单位: GJ/t (固体燃料), GJ/t (液体燃料), GJ/10<sup>4</sup>Nm³ (气体燃料)</p>
         <p style={{ marginBottom: '8px' }}>• 默认碳氧化率: 固体燃料98%, 液体燃料98%, 气体燃料99%</p>
         <p style={{ marginBottom: '8px' }}>• <strong>工序汇总计算逻辑</strong>:</p>
         <p style={{ marginBottom: '8px', marginLeft: '20px' }}>✓ 输入燃料排放量汇总: 各燃料输入量按上述公式分别计算后求和</p>

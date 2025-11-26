@@ -64,7 +64,10 @@ const createInitialMonthlyData = () => {
 };
 
 // 钢铁行业化石燃料燃烧排放量组件（企业级）
-function SteelFossilFuelEmission({ onEmissionChange, productionLines = [], onProductionLinesChange, customFuels = [] }) {
+function SteelFossilFuelEmission({ onEmissionChange, productionLines = [], onProductionLinesChange }) {
+
+  const [customFuels, setCustomFuels] = useState([]);
+
   // 将productionLines重命名为processes以符合工序驱动的概念
   const processes = productionLines;
   
@@ -150,57 +153,7 @@ function SteelFossilFuelEmission({ onEmissionChange, productionLines = [], onPro
       onProductionLinesChange(updatedProcesses);
     }
   }, [processes, onProductionLinesChange]);
-  
-  // 从其他(移动燃烧设备)移除燃料
-  const removeFuelFromOtherMobile = useCallback((fuelItemId) => {
-    setOtherMobileFuels(otherMobileFuels.filter(item => item.id !== fuelItemId));
-  }, [otherMobileFuels]);
-  
-  // 向其他(移动燃烧设备)添加燃料
-  const addFuelToOtherMobile = useCallback((fuelId) => {
-    // 先在默认燃料中查找
-    let fuel = ALL_FUELS.find(f => f.id === fuelId);
-    // 如果默认燃料中没有找到，在自定义燃料中查找
-    if (!fuel) {
-      fuel = customFuels.find(f => f.id === fuelId);
-    }
-    if (!fuel) return;
 
-    // 检查是否已经添加了该燃料
-    const fuelExists = otherMobileFuels.some(item => item.fuelId === fuelId);
-    if (fuelExists) return;
-
-    // 为不同类型的燃料设置默认氧化率，与工序部分保持一致
-    let defaultOxidationRate = fuel.oxidationRate || 98;
-    
-    if (fuel.type === 'solid') {
-      defaultOxidationRate = 98; // 固体燃料默认氧化率，与工序部分保持一致
-    } else if (fuel.type === 'liquid') {
-      defaultOxidationRate = 98; // 液体燃料默认氧化率
-    } else if (fuel.type === 'gas') {
-      defaultOxidationRate = 99; // 气体燃料默认氧化率
-    }
-
-    const newFuelItem = {
-      id: generateId(),
-      fuelId: fuel.id,
-      fuelName: fuel.name,
-      fuelType: fuel.type,
-      files: {
-        consumption: null,
-        calorificValue: null
-      },
-      monthlyData: createInitialMonthlyData().map(monthData => ({
-        ...monthData,
-        calorificValue: fuel.calorificValue.toString(),
-        carbonContent: fuel.carbonContent.toString(),
-        receivedBaseCarbonContent: '',
-        oxidationRate: defaultOxidationRate.toString()
-      }))
-    };
-
-    setOtherMobileFuels([...otherMobileFuels, newFuelItem]);
-  }, [otherMobileFuels, customFuels]);
 
   // 更新月度数据，通过回调通知父组件
   const updateMonthlyData = useCallback((processId, fuelItemId, monthIndex, field, value) => {
@@ -434,7 +387,7 @@ function SteelFossilFuelEmission({ onEmissionChange, productionLines = [], onPro
       case 'liquid':
         return 't';
       case 'gas':
-        return 'gas'; // 返回标识而不是具体单位
+        return '104Nm³'; // 返回标识而不是具体单位
       default:
         return '';
     }

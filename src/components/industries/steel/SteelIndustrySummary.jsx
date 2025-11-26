@@ -82,7 +82,7 @@ const SteelIndustrySummary = ({ emissionData }) => {
       
       <Title level={5}>排放核算公式说明</Title>
       <Paragraph>
-        企业级总排放量(E总) = 企业级化石燃料排放量(Ec_钢铁燃料) + 工业过程排放量(Ec_过程) + - 固碳产品隐含排放量(Ec_固碳产品)
+        企业级总排放量(E总) = 企业级化石燃料排放量(Ec_钢铁燃料) + 工业过程排放量(Ec_过程) - 固碳产品隐含排放量(Ec_固碳产品)
       </Paragraph>
       
       <Paragraph>
