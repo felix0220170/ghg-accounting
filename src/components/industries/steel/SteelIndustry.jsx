@@ -167,7 +167,7 @@ function SteelIndustry({ onEmissionChange }) {
       </Card>
 
       <Tabs defaultActiveKey="summary" onChange={() => calculateTotalEmission()}>
-        <TabPane tab="排放汇总" key="summary">
+        <TabPane tab="企业级排放汇总" key="summary">
           <SteelIndustrySummary emissionData={prepareSummaryData()} />
         </TabPane>
         <TabPane tab="企业级化石燃料燃烧排放" key="fossilFuel">
