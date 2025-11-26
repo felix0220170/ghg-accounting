@@ -64,9 +64,11 @@ const createInitialMonthlyData = () => {
 };
 
 // 铝行业化石燃料燃烧排放量组件（工序驱动）
-function AluminumFossilFuelEmission({ onEmissionChange, productionLines = [], onProductionLinesChange, customFuels = [] }) {
+function AluminumFossilFuelEmission({ onEmissionChange, productionLines = [], onProductionLinesChange }) {
   // 将productionLines重命名为processes以符合工序驱动的概念
   const processes = productionLines;
+
+  const [customFuels, setCustomFuels] = useState([]);
   
   // 自定义燃料列表通过props传入
   
