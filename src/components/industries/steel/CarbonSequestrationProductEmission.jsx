@@ -5,8 +5,10 @@ const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', 
 
 // 默认固碳产品配置
 const DEFAULT_CARBON_PRODUCTS = [
-  { id: 'carbon-product-1', name: '粗钢', emissionFactor: 0.0154 },
-  { id: 'carbon-product-2', name: '甲醇', emissionFactor: 1.3750 }
+  { id: 'carbon-product-1', name: '生铁', emissionFactor: 0.172 },
+  { id: 'carbon-product-2', name: '粗钢', emissionFactor: 0.037 },
+  { id: 'carbon-product-3', name: '焦油', emissionFactor: 2.699 },
+  { id: 'carbon-product-4', name: '粗苯', emissionFactor: 3.382 }
 ];
 
 // 固碳产品排放计算指标

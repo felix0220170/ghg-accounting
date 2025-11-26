@@ -20,7 +20,7 @@ import { INDUSTRY_TYPES } from './config/industryConfig'
 function App() {
   // 使用INDUSTRY_TYPES中的默认值作为初始选择
   // add some logs
-  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.ALUMINUM_SMELTING);
+  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.IRON_AND_STEEL);
 
   // 从INDUSTRY_TYPES常量生成行业列表
   //const industries = Object.values(INDUSTRY_TYPES);

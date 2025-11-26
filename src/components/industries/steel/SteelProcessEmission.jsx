@@ -18,8 +18,15 @@ const DEFAULT_CARBON_MATERIALS = [
   { id: 'carbon-material-1', name: '生铁', emissionFactor: 0.172 },
   { id: 'carbon-material-2', name: '直接还原铁', emissionFactor: 0.073 },
   { id: 'carbon-material-3', name: '镍铁合金', emissionFactor: 0.037 },
-  { id: 'carbon-material-4', name: '铬铁合金', emissionFactor: 0.275 },
-  { id: 'carbon-material-5', name: '钼铁合金', emissionFactor: 0.018 }
+  { id: 'carbon-material-4', name: '硅铁合金', emissionFactor: 0.007 },
+  { id: 'carbon-material-5', name: '钼铁合金', emissionFactor: 0.018 },
+  { id: 'carbon-material-6', name: '锰硅合金', emissionFactor: 0.092 },
+  { id: 'carbon-material-7', name: '低碳锰硅合金', emissionFactor: 0.011 },
+  { id: 'carbon-material-8', name: '高炉锰铁', emissionFactor: 0.275 },
+  { id: 'carbon-material-9', name: '电炉高碳锰铁', emissionFactor: 0.275 },
+  { id: 'carbon-material-10', name: '微碳锰铁', emissionFactor: 0.004 },
+  { id: 'carbon-material-11', name: '高碳铬铁', emissionFactor: 0.348 },
+  { id: 'carbon-material-12', name: '废钢', emissionFactor: 0.037 }
 ];
 
 // 熔剂排放计算指标

@@ -53,8 +53,6 @@ const initializeDefaultProcesses = () => {
 };
 import { Card, Tabs, Typography } from 'antd';
 import SteelFossilFuelEmission from './SteelFossilFuelEmission';
-import SteelElectricityEmission from './SteelElectricityEmission';
-import SteelHeatEmission from './SteelHeatEmission';
 import SteelProcessEmission from './SteelProcessEmission';
 import SteelProcessEmissionSummary from './SteelProcessEmissionSummary';
 import SteelIndustrySummary from './SteelIndustrySummary';
@@ -62,12 +60,17 @@ import ProcessManagement from './ProcessManagement';
 import CarbonSequestrationProductEmission from './CarbonSequestrationProductEmission';
 import SteelOtherEmission from './SteelOtherEmission';
 import SteelCarbonInventory from './SteelCarbonInventory';
-import { INDUSTRY_TYPES } from '../../../config/industryConfig';
+import SteelProcessFossilFuelEmission from './SteelProcessFossilFuelEmission';
 
 const { Title, Paragraph } = Typography;
 const { TabPane } = Tabs;
 
 function SteelIndustry({ onEmissionChange }) {
+   const [fuelProcesses, setFuelProcesses] = useState([{
+      id: 'fule-process-1',
+      processName: '化石燃料工序placeholder',
+    }]);
+
   const [emissionData, setEmissionData] = useState({
     fossilFuel: 0,
     steelFossilFuel: 0,
@@ -97,6 +100,10 @@ function SteelIndustry({ onEmissionChange }) {
         processes: updatedProcesses
       });
     }
+  };
+
+  const handleFuelProcessesChange = (updatedProcesses) => {
+    setFuelProcesses(updatedProcesses);
   };
 
   // 处理各组件排放量变化
@@ -140,9 +147,7 @@ function SteelIndustry({ onEmissionChange }) {
 
   // 准备传递给Summary组件的数据格式
   const prepareSummaryData = () => ({
-    steelFossilFuelEmission: emissionData.steelFossilFuel,
-    electricityEmission: emissionData.electricity,
-    heatEmission: emissionData.heat,
+    steelFossilFuelEmission: emissionData.fossilFuel,
     processEmission: emissionData.processEmission,
     carbonSequestrationEmission: emissionData.carbonSequestration,
     otherEmission: emissionData.otherEmission
@@ -157,14 +162,31 @@ function SteelIndustry({ onEmissionChange }) {
           其碳排放主要来自化石燃料燃烧、生产过程等环节。
         </Paragraph>
         <Paragraph>
-          核算范围包括：化石燃料燃烧排放、钢铁生产过程排放、发电设施及其他非生产设施排放、
-          净购入电力和热力隐含的排放等。
+          核算范围包括：化石燃料燃烧排放、钢铁生产过程排放、含碳产品隐含的排放等。
         </Paragraph>
       </Card>
 
       <Tabs defaultActiveKey="summary" onChange={() => calculateTotalEmission()}>
         <TabPane tab="排放汇总" key="summary">
           <SteelIndustrySummary emissionData={prepareSummaryData()} />
+        </TabPane>
+        <TabPane tab="企业级化石燃料燃烧排放" key="fossilFuel">
+              <SteelFossilFuelEmission 
+                onEmissionChange={(value) => handleEmissionChange('fossilFuel', value)}
+                productionLines={fuelProcesses} 
+                onProductionLinesChange={handleFuelProcessesChange}
+              />
+          </TabPane>
+          <TabPane tab="工业生产过程排放" key="processEmission">
+          <SteelProcessEmission 
+            onEmissionChange={(value) => handleEmissionChange('processEmission', value)}
+            onProductionLinesChange={handleProcessesChange} // 传递工序变化回调
+          />
+        </TabPane>
+        <TabPane tab="固碳产品隐含排放" key="carbonSequestration">
+          <CarbonSequestrationProductEmission 
+            onEmissionChange={(value) => handleEmissionChange('carbonSequestration', value)}
+          />
         </TabPane>
         <TabPane tab="工序管理" key="processManagement">
           <ProcessManagement 
@@ -173,27 +195,15 @@ function SteelIndustry({ onEmissionChange }) {
           />
         </TabPane>
         
-        <TabPane tab="钢铁行业化石燃料排放" key="steelFossilFuel">
-          <SteelFossilFuelEmission 
+        <TabPane tab="工序化石燃料排放" key="steelFossilFuel">
+          <SteelProcessFossilFuelEmission 
             onEmissionChange={(value) => handleEmissionChange('steelFossilFuel', value)}
             productionLines={processes} // 传递工序信息给子组件，使用productionLines名称匹配组件要求
             onProductionLinesChange={handleProcessesChange} // 添加工序变化回调，使用onProductionLinesChange名称
           />
         </TabPane>
-        <TabPane tab="工序消耗电力排放" key="electricity">
-          <SteelElectricityEmission 
-            onEmissionChange={(value) => handleEmissionChange('electricity', value)}
-            productionLines={processes} // 传递工序信息给子组件
-            onProductionLinesChange={handleProcessesChange} // 传递工序变化回调
-          />
-        </TabPane>
-        <TabPane tab="工序消耗热力排放" key="heat">
-          <SteelHeatEmission 
-            onEmissionChange={(value) => handleEmissionChange('heat', value)}
-            productionLines={processes} // 传递工序信息给子组件
-            onProductionLinesChange={handleProcessesChange} // 传递工序变化回调
-          />
-        </TabPane>
+        {
+        /* 
         <TabPane tab="工序生产数据及排放量汇总" key="processEmissionSummary">
           <SteelProcessEmissionSummary 
             processes={processes}
@@ -208,18 +218,9 @@ function SteelIndustry({ onEmissionChange }) {
               handleProcessesChange(updatedProcesses);
             }}
           />
-        </TabPane>
-        <TabPane tab="工业生产过程排放" key="processEmission">
-          <SteelProcessEmission 
-            onEmissionChange={(value) => handleEmissionChange('processEmission', value)}
-            onProductionLinesChange={handleProcessesChange} // 传递工序变化回调
-          />
-        </TabPane>
-        <TabPane tab="固碳产品隐含排放" key="carbonSequestration">
-          <CarbonSequestrationProductEmission 
-            onEmissionChange={(value) => handleEmissionChange('carbonSequestration', value)}
-          />
-        </TabPane>
+        </TabPane> */
+        }
+        
         <TabPane tab="发电设施及其他排放" key="otherEmission">
           <SteelOtherEmission 
             onEmissionChange={(value) => handleEmissionChange('otherEmission', value)}

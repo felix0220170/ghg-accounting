@@ -64,7 +64,7 @@ const createInitialMonthlyData = () => {
 };
 
 // 钢铁行业化石燃料燃烧排放量组件（工序驱动）
-function SteelFossilFuelEmission({ onEmissionChange, productionLines = [], onProductionLinesChange, customFuels = [] }) {
+function SteelProcessFossilFuelEmission({ onEmissionChange, productionLines = [], onProductionLinesChange, customFuels = [] }) {
   // 将productionLines重命名为processes以符合工序驱动的概念
   const processes = productionLines;
   
@@ -468,16 +468,13 @@ function SteelFossilFuelEmission({ onEmissionChange, productionLines = [], onPro
 
   return (
     <div className="fossil-fuel-emission">
-      <h2>化石燃料燃烧排放量</h2>
+      <h2>主要工序消耗化石燃料排放</h2>
       
       <div className="calculation-description" style={{ marginBottom: '20px', padding: '15px', border: '1px solid #e0e0e0', borderRadius: '6px', backgroundColor: '#fafafa' }}>
-        <p><strong>企业级化石燃料燃烧排放：</strong></p>
-        <p>化石燃料在各种类型的固定燃烧设备（工序）和其他（移动燃烧设备）中燃烧产生的二氧化碳排放。</p>
         <p><strong>计算公式：</strong></p>
-        <p>1. 单道工序的CO2排放量 = Σ(该工序各化石燃料消耗量 × （化石燃料收到基元素碳含量[如有] 或 （化石燃料收到基低位发热量 × 化石燃料单位热值含碳量）） × 化石燃料碳氧化率 × 44/12)</p>
-        <p>2. 其他部分（移动燃烧设备）的CO2排放量 = Σ(其他部分各化石燃料消耗量 × （化石燃料收到基元素碳含量[如有] 或 （化石燃料收到基低位发热量 × 化石燃料单位热值含碳量）） × 化石燃料碳氧化率 × 44/12)</p>
+        <p>单道工序的CO2排放量 = Σ(该工序各化石燃料消耗量 × （化石燃料收到基元素碳含量[如有] 或 （化石燃料收到基低位发热量 × 化石燃料单位热值含碳量）） × 化石燃料碳氧化率 × 44/12)</p>
         <p><strong>注：</strong>收到基元素碳含量 = 收到基低位发热量 × 单位热值含碳量。如用户输入了收到基元素碳含量，则优先使用该值进行计算；否则，使用收到基低位发热量和单位热值含碳量的乘积进行计算。</p>
-        <p>3. 企业总CO2排放量 = 所有工序CO2排放量之和 + 其他部分CO2排放量</p>
+        <p>总CO2排放量 = 所有工序CO2排放量之和量</p>
         <p>其中：44/12 是二氧化碳与碳的相对分子质量之比</p>
       </div>
 
@@ -1135,4 +1132,4 @@ function CustomFuelForm({ onAdd }) {
   );
 }
 
-export default SteelFossilFuelEmission;
+export default SteelProcessFossilFuelEmission;

@@ -63,7 +63,7 @@ const createInitialMonthlyData = () => {
   }));
 };
 
-// 钢铁行业化石燃料燃烧排放量组件（工序驱动）
+// 钢铁行业化石燃料燃烧排放量组件（企业级）
 function SteelFossilFuelEmission({ onEmissionChange, productionLines = [], onProductionLinesChange, customFuels = [] }) {
   // 将productionLines重命名为processes以符合工序驱动的概念
   const processes = productionLines;
@@ -472,12 +472,10 @@ function SteelFossilFuelEmission({ onEmissionChange, productionLines = [], onPro
       
       <div className="calculation-description" style={{ marginBottom: '20px', padding: '15px', border: '1px solid #e0e0e0', borderRadius: '6px', backgroundColor: '#fafafa' }}>
         <p><strong>企业级化石燃料燃烧排放：</strong></p>
-        <p>化石燃料在各种类型的固定燃烧设备（工序）和其他（移动燃烧设备）中燃烧产生的二氧化碳排放。</p>
+        <p>外购燃料在各种类型的生产设备（如焦炉、高炉等）中用作原料或燃料用途产生的二氧化碳排放，不包括点火助燃、运输设施和附属生产系统使用的化石燃料排放。</p>
         <p><strong>计算公式：</strong></p>
-        <p>1. 单道工序的CO2排放量 = Σ(该工序各化石燃料消耗量 × （化石燃料收到基元素碳含量[如有] 或 （化石燃料收到基低位发热量 × 化石燃料单位热值含碳量）） × 化石燃料碳氧化率 × 44/12)</p>
-        <p>2. 其他部分（移动燃烧设备）的CO2排放量 = Σ(其他部分各化石燃料消耗量 × （化石燃料收到基元素碳含量[如有] 或 （化石燃料收到基低位发热量 × 化石燃料单位热值含碳量）） × 化石燃料碳氧化率 × 44/12)</p>
+        <p>总CO2排放量 = Σ(各化石燃料消耗量 × （化石燃料收到基元素碳含量[如有] 或 （化石燃料收到基低位发热量 × 化石燃料单位热值含碳量）） × 化石燃料碳氧化率 × 44/12)</p>
         <p><strong>注：</strong>收到基元素碳含量 = 收到基低位发热量 × 单位热值含碳量。如用户输入了收到基元素碳含量，则优先使用该值进行计算；否则，使用收到基低位发热量和单位热值含碳量的乘积进行计算。</p>
-        <p>3. 企业总CO2排放量 = 所有工序CO2排放量之和 + 其他部分CO2排放量</p>
         <p>其中：44/12 是二氧化碳与碳的相对分子质量之比</p>
       </div>
 
@@ -485,7 +483,6 @@ function SteelFossilFuelEmission({ onEmissionChange, productionLines = [], onPro
       {Array.isArray(processes) && processes.map((process, processIndex) => (
         <div key={process.id} className="process-section" style={{ marginBottom: '30px', padding: '20px', border: '2px solid #4CAF50', borderRadius: '8px', backgroundColor: '#f9fff9' }}>
           <div className="process-header" style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-            <h3 style={{ margin: '10px 0' }}>{process.processTypeName || process.name || `工序 ${processIndex + 1}`}</h3>
             {/* 工序信息由父组件控制 */}
           </div>
 
@@ -726,252 +723,6 @@ function SteelFossilFuelEmission({ onEmissionChange, productionLines = [], onPro
       ))}
 
       {/* 不再显示添加生产线按钮，由父组件控制生产线的添加和删除 */}
-
-      {/* 其他(移动燃烧设备) */}
-      <div key="other-mobile" className="production-line" style={{ marginBottom: '30px', padding: '20px', border: '2px solid #2196F3', borderRadius: '8px', backgroundColor: '#f0f7ff' }}>
-        <div className="line-header" style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-          <h3 style={{ margin: '10px 0' }}>其他(移动燃烧设备)</h3>
-        </div>
-
-        {/* 添加燃料 */}
-        <div className="add-fuel" style={{ marginBottom: '20px' }}>
-          <select
-            onChange={(e) => {
-              if (e.target.value) {
-                addFuelToOtherMobile(e.target.value);
-                e.target.value = '';
-              }
-            }}
-            style={{ padding: '5px' }}
-          >
-            <option value="">选择要添加的燃料</option>
-            {getAvailableFuels('other-mobile').map(fuel => (
-              <option key={fuel.id} value={fuel.id}>
-                {fuel.name} ({fuel.type === 'solid' ? '固体' : fuel.type === 'liquid' ? '液体' : '气体'})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {otherMobileFuels.length > 0 && (
-          <>
-            {/* 按燃料类型分组显示 */}
-            {['solid', 'liquid', 'gas'].map((fuelType, typeIndex) => {
-              // 过滤当前类型的燃料
-              const fuelsOfType = otherMobileFuels.filter(item => item.fuelType === fuelType);
-              if (fuelsOfType.length === 0) return null;
-              
-              // 获取燃料类型的中文名称
-              const fuelTypeLabel = fuelType === 'solid' ? '固体燃料' : fuelType === 'liquid' ? '液体燃料' : '气体燃料';
-              
-              return (
-                <div key={fuelType} style={{ marginBottom: '25px' }}>
-                  <h4 style={{ color: fuelType === 'solid' ? '#8B4513' : fuelType === 'liquid' ? '#0000CD' : '#4682B4', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {fuelType === 'solid' && <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><rect x="5" y="6" width="10" height="8" rx="1"/><path d="M7 4h6M6 8h8M7 12h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>}
-                    {fuelType === 'liquid' && <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M5 8c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2v4c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V8z" fillOpacity="0.3"/><path d="M6 10h8M5 12h10M6 14h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>}
-                    {fuelType === 'gas' && <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><circle cx="7" cy="8" r="2" fillOpacity="0.3"/><circle cx="13" cy="8" r="1.5" fillOpacity="0.3"/><circle cx="10" cy="12" r="2.5" fillOpacity="0.3"/><path d="M5 16c0-1.65 3.35-3 5-3s5 1.35 5 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>}
-                    {fuelTypeLabel}
-                  </h4>
-                  <div className="column-data-table" style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr>
-                          <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center', width: '150px' }}>燃料名称</th>
-                          <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center', width: '150px' }}>信息项</th>
-                          <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center', width: '100px' }}>单位</th>
-                          {/* 1-12月 */}
-                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(month => (
-                            <th key={month} style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center', width: '80px' }}>{month}月</th>
-                          ))}
-                          <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center', width: '100px' }}>全年值</th>
-                          <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center', width: '100px' }}>获取方式</th>
-                          <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center', width: '120px' }}>数据来源</th>
-                          <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center', width: '150px' }}>支撑材料</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {/* 每个燃料生成5行数据 */}
-                        {fuelsOfType.map(fuelItem => {
-                          const fuelUnit = getFuelUnit(fuelItem.fuelType);
-                          const yearlyConsumption = calculateYearlyTotal(fuelItem.monthlyData, 'consumption');
-                          const yearlyEmission = calculateYearlyEmission(fuelItem.monthlyData);
-                          
-                          // 生成5行数据：消耗量、低位发热量、单位热值含碳量、碳氧化率、排放量
-                          const rows = [
-                            {
-                              type: 'consumption',
-                              label: '消耗量',
-                              unit: fuelUnit,
-                              getValue: (monthData) => monthData.consumption,
-                              yearlyValue: yearlyConsumption,
-                              yearlyValueType: '合计',
-                              acquisitionMethod: '',
-                              showUpload: true
-                            },
-                            {
-                              type: 'calorificValue',
-                              label: '收到基低位发热量',
-                              unit: fuelUnit === 't' ? 'GJ/t' : formatUnit('gas', 'GJ/'),
-                              getValue: (monthData) => monthData.calorificValue,
-                              yearlyValue: '',
-                              yearlyValueType: '',
-                              acquisitionMethod: '',
-                              showUpload: true
-                            },
-                            {
-                              type: 'carbonContent',
-                              label: '单位热值含碳量',
-                              unit: 'tC/GJ',
-                              getValue: (monthData) => monthData.carbonContent,
-                              yearlyValue: '',
-                              yearlyValueType: '',
-                              acquisitionMethod: '缺省值',
-                              showUpload: false
-                            },
-                            {
-                              type: 'receivedBaseCarbonContent',
-                              label: '收到基元素碳含量',
-                              unit: fuelUnit === 't' ? 'tC/t' : formatUnit('gas', 'tC/'),
-                              getValue: (monthData) => monthData.receivedBaseCarbonContent,
-                              yearlyValue: '',
-                              yearlyValueType: '',
-                              acquisitionMethod: '',
-                              showUpload: false
-                            },
-                            {
-                              type: 'oxidationRate',
-                              label: '碳氧化率',
-                              unit: '%',
-                              getValue: (monthData) => monthData.oxidationRate,
-                              yearlyValue: '',
-                              yearlyValueType: '',
-                              acquisitionMethod: '缺省值',
-                              showUpload: false
-                            },
-                            {
-                              type: 'emission',
-                              label: '燃烧排放量',
-                              unit: '吨CO2当量',
-                              getValue: (monthData) => calculateMonthlyEmission(monthData),
-                              yearlyValue: yearlyEmission,
-                              yearlyValueType: '合计',
-                              acquisitionMethod: '计算值',
-                              showUpload: false
-                            }
-                          ];
-
-                          return rows.map((row, rowIndex) => (
-                            <tr key={`${fuelItem.id}-${row.type}`}>
-                                {/* 燃料名称 */}
-                                {rowIndex === 0 ? (
-                                  <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left', position: 'relative', verticalAlign: 'top' }} rowSpan="6">
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                      <div>
-                                        <strong style={{ color: fuelItem.fuelType === 'solid' ? '#8B4513' : fuelItem.fuelType === 'liquid' ? '#0000CD' : '#4682B4' }}>
-                                          {fuelItem.fuelName}
-                                        </strong>
-                                      </div>
-                                      <div>
-                                        <button
-                                          onClick={() => removeFuelFromOtherMobile(fuelItem.id)}
-                                          style={{
-                                            padding: '2px 6px',
-                                            background: 'red',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '3px',
-                                            cursor: 'pointer',
-                                            fontSize: '12px'
-                                          }}
-                                        >
-                                          移除燃料
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </td>
-                                ) : null}
-                                {/* 信息项 */}
-                                <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>
-                                  {row.label}
-                                </td>
-                              
-                              {/* 单位 */}
-                              <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>{row.unit}</td>
-                              
-                              {/* 1-12月数据 */}
-                              {fuelItem.monthlyData.map((monthData, monthIndex) => {
-                                // 获取原始值用于输入框，不在输入时进行格式化，提高用户体验
-                                let value = row.getValue(monthData);
-                                // 只对非空字符串进行处理，避免空值导致的错误
-                                if (value !== '' && !isNaN(parseFloat(value))) {
-                                  value = parseFloat(value).toString();
-                                }
-                                
-                                return (
-                                  <td key={monthIndex} style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>
-                                    {row.type === 'emission' ? (
-                                      value !== '' && !isNaN(parseFloat(value)) ? parseFloat(value).toFixed(2) : value
-                                    ) : (
-                                      <input
-                                        type="number"
-                                        value={value}
-                                        onChange={(e) => updateMonthlyData('other-mobile', fuelItem.id, monthIndex, row.type, e.target.value)}
-                                        placeholder="0"
-                                        style={{ width: '60px', textAlign: 'center' }}
-                                        step={row.type === 'receivedBaseCarbonContent' ? '0.0001' : 'any'}
-                                      />
-                                    )}
-                                  </td>
-                                );
-                              })}
-                              
-                              {/* 全年值 */}
-                              <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center', fontWeight: 'bold' }}>
-                                {row.type === 'emission' ? (
-                                  // 化石燃料燃烧排放量全年值保留到小数点后两位
-                                  parseFloat(row.yearlyValue).toFixed(2)
-                                ) : row.type === 'consumption' && row.yearlyValue ? (
-                                  // 化石燃料消耗量全年值保留到小数点后两位
-                                  parseFloat(row.yearlyValue).toFixed(2)
-                                ) : row.yearlyValue ? (
-                                  row.yearlyValue
-                                ) : ''}
-                              </td>
-                              
-                              {/* 获取方式 */}
-                              <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>{row.acquisitionMethod}</td>
-                              
-                              {/* 数据来源 */}
-                              <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>
-                                <input
-                                  type="text"
-                                  placeholder="数据来源"
-                                  style={{ width: '100%', textAlign: 'center' }}
-                                />
-                              </td>
-                              
-                              {/* 支撑材料 */}
-                              <td style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>
-                                {row.showUpload ? (
-                                  <input
-                                    type="file"
-                                    onChange={(e) => updateFile('other-mobile', fuelItem.id, row.type, e.target.files[0])}
-                                    style={{ fontSize: '12px' }}
-                                  />
-                                ) : ''}
-                              </td>
-                            </tr>
-                          ));
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              );
-            })}
-          </>
-        )}
-      </div>
 
       {/* 自定义燃料添加区域 */}
       <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #e8e8e8', borderRadius: '4px' }}>
