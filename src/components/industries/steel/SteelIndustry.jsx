@@ -61,6 +61,10 @@ import CarbonSequestrationProductEmission from './CarbonSequestrationProductEmis
 import SteelOtherEmission from './SteelOtherEmission';
 import SteelCarbonInventory from './SteelCarbonInventory';
 import SteelProcessFossilFuelEmission from './SteelProcessFossilFuelEmission';
+import SteelACConsumption from './SteelACConsumption';
+import SteelFossilFuelConsumption from './SteelFossilFuelConsumption';
+
+
 
 const { Title, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -233,7 +237,22 @@ function SteelIndustry({ onEmissionChange }) {
             onProductionLinesChange={handleProcessesChange}
           />
         </TabPane>
+        <TabPane tab="工序电力热力消耗(辅助报告项1)" key="acConsumption">
+          <SteelACConsumption 
+            onEmissionChange={(value) => handleEmissionChange('acConsumption', value)}
+            productionLines={processes} 
+            onProductionLinesChange={handleProcessesChange}
+          />
+        </TabPane>
+        <TabPane tab="工序化石燃料消耗(辅助报告项2)" key="fossilFuelConsumption">
+          <SteelFossilFuelConsumption 
+            onEmissionChange={(value) => handleEmissionChange('fossilFuelConsumption', value)}
+            productionLines={fuelProcesses} 
+            onProductionLinesChange={handleFuelProcessesChange}
+          />
+        </TabPane>
       </Tabs>
+        
     </div>
   );
 }
