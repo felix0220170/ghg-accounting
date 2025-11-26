@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import CustomFuelList from './CustomFuelList';
+import CustomFuelForm from './CustomFuelForm';
 
 // 固体燃料数据
 const SOLID_FUELS = [
@@ -61,9 +63,11 @@ const createInitialMonthlyData = () => {
 };
 
 // 钢铁行业化石燃料燃烧排放量组件（工序驱动）
-function SteelProcessFossilFuelEmission({ onEmissionChange, productionLines = [], onProductionLinesChange, customFuels = [] }) {
+function SteelProcessFossilFuelEmission({ onEmissionChange, productionLines = [], onProductionLinesChange }) {
   // 将productionLines重命名为processes以符合工序驱动的概念
   const processes = productionLines;
+
+  const [customFuels, setCustomFuels] = useState([]);
   
   // 保存上一次的排放量，用于比较是否真正发生变化
   const previousEmissionRef = useRef(null);
@@ -200,25 +204,18 @@ function SteelProcessFossilFuelEmission({ onEmissionChange, productionLines = []
   
   // 添加自定义燃料
   const addCustomFuel = useCallback((formData) => {
-    if (!onProductionLinesChange || !Array.isArray(processes) || processes.length === 0) return;
-    
-    // 创建新的自定义燃料对象
+    // 创建一个新的自定义燃料对象
     const newCustomFuel = {
-      id: generateId(),
+      id: `custom_${Date.now()}`,
       name: formData.name,
       type: formData.type,
-      calorificValue: parseFloat(formData.calorificValue) || 0,
-      carbonContent: parseFloat(formData.carbonContent) || 0,
-      oxidationRate: parseFloat(formData.oxidationRate) || (formData.type === 'solid' || formData.type === 'liquid' ? 98 : 99)
+      calorificValue: parseFloat(formData.calorificValue),
+      carbonContent: parseFloat(formData.carbonContent)
     };
     
-    // 根据燃料类型决定添加到输入还是输出
-    const fuelCategory = formData.fuelCategory || 'input';
-    
-    // 将新创建的自定义燃料添加到第一个工序
-    const firstProcessId = processes[0].id;
-    addFuelToProcess(firstProcessId, newCustomFuel.id, fuelCategory);
-  }, [processes, addFuelToProcess, onProductionLinesChange]);
+    // 将新创建的自定义燃料添加到customFuels状态中
+    setCustomFuels(prevCustomFuels => [...prevCustomFuels, newCustomFuel]);
+  }, [setCustomFuels]);
   
   // 移除自定义燃料
   const removeCustomFuel = useCallback((fuelId) => {
@@ -522,109 +519,7 @@ function SteelProcessFossilFuelEmission({ onEmissionChange, productionLines = []
   }, [updateFuelMonthlyData, removeFuelFromProcess, getFuelUnit, calculateYearlyTotal, calculateYearlyEmission, formatUnit, calculateMonthlyEmission, updateFile]);
 
   // 自定义燃料表单组件
-  const CustomFuelForm = ({ onAddCustomFuel }) => {
-    const [formData, setFormData] = useState({
-      name: '',
-      type: 'solid',
-      calorificValue: '',
-      carbonContent: '',
-      oxidationRate: '',
-      fuelCategory: 'input'
-    });
-
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      onAddCustomFuel(formData);
-      // 重置表单
-      setFormData({
-        name: '',
-        type: 'solid',
-        calorificValue: '',
-        carbonContent: '',
-        oxidationRate: '',
-        fuelCategory: 'input'
-      });
-    };
-
-    return (
-      <div style={{ margin: '20px 0', padding: '15px', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#f9f9f9' }}>
-        <h4 style={{ marginBottom: '15px' }}>添加自定义燃料</h4>
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px' }}>燃料名称:</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-                style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px' }}>燃料类型:</label>
-              <select
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-              >
-                <option value="solid">固体燃料</option>
-                <option value="liquid">液体燃料</option>
-                <option value="gas">气体燃料</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px' }}>低位发热量 (GJ/t):</label>
-              <input
-                type="number"
-                step="0.001"
-                value={formData.calorificValue}
-                onChange={(e) => setFormData({ ...formData, calorificValue: e.target.value })}
-                required
-                style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px' }}>单位热值含碳量 (tC/GJ):</label>
-              <input
-                type="number"
-                step="0.00001"
-                value={formData.carbonContent}
-                onChange={(e) => setFormData({ ...formData, carbonContent: e.target.value })}
-                required
-                style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px' }}>碳氧化率 (%):</label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                step="0.1"
-                value={formData.oxidationRate}
-                onChange={(e) => setFormData({ ...formData, oxidationRate: e.target.value })}
-                placeholder={formData.type === 'solid' || formData.type === 'liquid' ? '98' : '99'}
-                style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px' }}>燃料类别:</label>
-              <select
-                value={formData.fuelCategory}
-                onChange={(e) => setFormData({ ...formData, fuelCategory: e.target.value })}
-                style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-              >
-                <option value="input">输入燃料</option>
-                <option value="output">输出燃料</option>
-              </select>
-            </div>
-          </div>
-          <button type="submit" style={{ marginTop: '15px', padding: '8px 16px', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>添加燃料</button>
-        </form>
-      </div>
-    );
-  };
+  // CustomFuelForm 组件已被提取到单独文件
 
   // 组件返回JSX结构
   return (
@@ -916,8 +811,16 @@ function SteelProcessFossilFuelEmission({ onEmissionChange, productionLines = []
               >
                 <option value="">选择燃料...</option>
                 {ALL_FUELS.map(fuel => (
-                  <option key={fuel.id} value={fuel.id}>{fuel.name}</option>
+                  <option key={fuel.id} value={fuel.id}>{fuel.name} ({fuel.type === 'solid' ? '固体' : fuel.type === 'liquid' ? '液体' : '气体'})</option>
                 ))}
+                {customFuels && customFuels.length > 0 && (
+                  <>
+                    <option disabled>--------------------</option>
+                    {customFuels.map(fuel => (
+                      <option key={fuel.id} value={fuel.id}>{fuel.name} ({fuel.type === 'solid' ? '固体' : fuel.type === 'liquid' ? '液体' : '气体'})</option>
+                    ))}
+                  </>
+                )}
               </select>
             </div>
             {renderFuelTable(process, process.inputFuels || [], 'input')}
@@ -939,8 +842,16 @@ function SteelProcessFossilFuelEmission({ onEmissionChange, productionLines = []
               >
                 <option value="">选择燃料...</option>
                 {ALL_FUELS.map(fuel => (
-                  <option key={fuel.id} value={fuel.id}>{fuel.name}</option>
+                  <option key={fuel.id} value={fuel.id}>{fuel.name} ({fuel.type === 'solid' ? '固体' : fuel.type === 'liquid' ? '液体' : '气体'})</option>
                 ))}
+                {customFuels && customFuels.length > 0 && (
+                  <>
+                    <option disabled>--------------------</option>
+                    {customFuels.map(fuel => (
+                      <option key={fuel.id} value={fuel.id}>{fuel.name} ({fuel.type === 'solid' ? '固体' : fuel.type === 'liquid' ? '液体' : '气体'})</option>
+                    ))}
+                  </>
+                )}
               </select>
             </div>
             {renderFuelTable(process, process.outputFuels || [], 'output')}
@@ -951,7 +862,7 @@ function SteelProcessFossilFuelEmission({ onEmissionChange, productionLines = []
       ))}
       
       <CustomFuelForm onAddCustomFuel={addCustomFuel} />
-      
+      <CustomFuelList customFuels={customFuels} setCustomFuels={setCustomFuels} />
 
       
     </div>

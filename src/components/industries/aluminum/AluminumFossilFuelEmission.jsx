@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import CustomFuelForm from '../steel/CustomFuelForm';
+import CustomFuelList from '../steel/CustomFuelList';
 
 // 固体燃料数据
 const SOLID_FUELS = [
@@ -977,43 +979,8 @@ function AluminumFossilFuelEmission({ onEmissionChange, productionLines = [], on
       {/* 自定义燃料添加区域 */}
       <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #e8e8e8', borderRadius: '4px' }}>
         <h3 style={{ marginBottom: '15px', color: '#1890ff' }}>添加自定义燃料</h3>
-        <CustomFuelForm onAdd={addCustomFuel} />
-        
-        {customFuels.length > 0 && (
-          <div style={{ marginTop: '15px' }}>
-            <h4 style={{ marginBottom: '10px', color: '#595959' }}>已添加的自定义燃料：</h4>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-              {customFuels.map(fuel => (
-                <div 
-                  key={fuel.id} 
-                  style={{
-                    padding: '8px 12px', 
-                    backgroundColor: '#f0f0f0', 
-                    borderRadius: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}
-                >
-                  <span>{fuel.name} ({fuel.type === 'solid' ? '固体' : fuel.type === 'liquid' ? '液体' : '气体'})</span>
-                  <button
-                    onClick={() => removeCustomFuel(fuel.id)}
-                    style={{
-                      padding: '2px 6px',
-                      backgroundColor: '#ff4d4f',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '3px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    删除
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <CustomFuelForm onAddCustomFuel={addCustomFuel} />
+        <CustomFuelList customFuels={customFuels} setCustomFuels={removeCustomFuel} />
       </div>
 
       {/* 总排放量显示 */}
@@ -1046,93 +1013,6 @@ function AluminumFossilFuelEmission({ onEmissionChange, productionLines = [], on
         </div>
       </div>
     </div>
-  );
-}
-
-// 自定义燃料表单组件
-function CustomFuelForm({ onAdd }) {
-  const [formData, setFormData] = useState({
-    name: '',
-    type: 'solid',
-    calorificValue: '',
-    carbonContent: ''
-  });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (formData.name && formData.calorificValue && formData.carbonContent) {
-      onAdd(formData);
-      setFormData({
-        name: '',
-        type: 'solid',
-        calorificValue: '',
-        carbonContent: ''
-      });
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'end' }}>
-      <div>
-        <label>燃料名称：</label>
-        <input
-          type="text"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          required
-          style={{ marginLeft: '5px', padding: '5px' }}
-        />
-      </div>
-      <div>
-        <label>燃料类型：</label>
-        <select
-          value={formData.type}
-          onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-          style={{ marginLeft: '5px', padding: '5px' }}
-        >
-          <option value="solid">固体</option>
-          <option value="liquid">液体</option>
-          <option value="gas">气体</option>
-        </select>
-      </div>
-      <div>
-        <label>低位发热量：</label>
-        <input
-          type="number"
-          value={formData.calorificValue}
-          onChange={(e) => setFormData({ ...formData, calorificValue: e.target.value })}
-          required
-          min="0"
-          step="0.001"
-          style={{ marginLeft: '5px', padding: '5px' }}
-        />
-      </div>
-      <div>
-        <label>单位热值含碳量：</label>
-        <input
-          type="number"
-          value={formData.carbonContent}
-          onChange={(e) => setFormData({ ...formData, carbonContent: e.target.value })}
-          required
-          min="0"
-          step="0.00001"
-          style={{ marginLeft: '5px', padding: '5px' }}
-        />
-      </div>
-      <button
-        type="submit"
-        style={{
-          padding: '6px 15px',
-          background: '#2196F3',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer'
-        }}
-      >
-        添加燃料
-      </button>
-    </form>
   );
 }
 
