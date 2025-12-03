@@ -7,7 +7,7 @@ import CokingProcessEmission from './CokingProcessEmission';
 import CokingProcessFossilFuelEmission from './CokingProcessFossilFuelEmission';
 import CO2RecyclingUtilization from './CO2RecyclingUtilization';
 import NetElectricityHeatEmission from '../cement/NetElectricityHeatEmission';
-import CokingCarbonInventory from './cokingInventory';
+import CokingCarbonInventory from './CokingCarbonInventory';
 
 function CokingIndustry({ onEmissionChange }) {
   const [fuelProcesses, setFuelProcesses] = useState([{
