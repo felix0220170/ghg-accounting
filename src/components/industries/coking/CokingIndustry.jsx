@@ -150,11 +150,7 @@ function CokingIndustry({ onEmissionChange }) {
             />
           </TabPane>
           <TabPane tab="碳排查材料清单" key="carbonInventory">
-            <CokingCarbonInventory 
-              onEmissionChange={(value) => handleEmissionChange('carbonInventory', value)}
-              productionLines={processes} 
-              onProductionLinesChange={handleProcessesChange}
-            />
+            <CokingCarbonInventory />
           </TabPane>
         
       </Tabs>

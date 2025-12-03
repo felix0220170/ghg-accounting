@@ -518,7 +518,15 @@ function CokingProcessEmission({ onEmissionChange, productionLines = [], onProdu
 
         <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#fff', borderRadius: '4px', borderLeft: '4px solid #52c41a' }}>
           <h3 style={{ marginBottom: '8px', color: '#52c41a' }}>2. 焦化产品延伸加工等其它生产过程的CO2 排放</h3>
-          <p style={{ marginBottom: '8px' }}>• 包含煤焦油加工、苯加工精制，或焦炉煤气制甲醇、合成氨、尿素、LNG/CNG 等化工产品</p>
+          <p style={{ marginBottom: '2px' }}>• 焦炉煤气制化工产品：</p>
+          <p style={{ marginBottom: '2px', paddingLeft: '20px' }}>输入：焦炉煤气、其它原料</p>
+          <p style={{ marginBottom: '2px', paddingLeft: '20px' }}>输出：甲醇、合成氨、尿素、LNG/CNG、其它化工产品</p>
+          <p style={{ marginBottom: '2px' }}>• 煤焦油加工：</p>
+          <p style={{ marginBottom: '2px', paddingLeft: '20px' }}>输入：煤焦油、其它原料</p>
+          <p style={{ marginBottom: '2px', paddingLeft: '20px' }}>输出：咔唑、萘、酚、蒽、菲、沥青、其它</p>
+          <p style={{ marginBottom: '2px' }}>• 苯加工精制：</p>
+          <p style={{ marginBottom: '2px', paddingLeft: '20px' }}>输入：粗苯、轻苯、其它原料</p>
+          <p style={{ marginBottom: '2px', paddingLeft: '20px' }}>输出：苯、二甲苯、甲苯、溶剂油、吹苯残渣、其它产品</p>
         </div>
       </div>
 

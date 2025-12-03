@@ -283,7 +283,7 @@ function CokingProcessFossilFuelEmission({ onEmissionChange, productionLines = [
       case 'liquid':
         return 't';
       case 'gas':
-        return '104Nm³';
+        return '10⁴Nm³';
       default:
         return 't';
     }
@@ -305,7 +305,7 @@ function CokingProcessFossilFuelEmission({ onEmissionChange, productionLines = [
 
   // 辅助函数：格式化单位
   const formatUnit = useCallback((fuelType, prefix) => {
-    return prefix + (fuelType === 'gas' ? '104Nm³' : 't');
+    return prefix + (fuelType === 'gas' ? '10⁴Nm³' : 't');
   }, []);
 
   // 辅助函数：计算月度排放量
@@ -567,7 +567,7 @@ function CokingProcessFossilFuelEmission({ onEmissionChange, productionLines = [
         <h5 style={{ marginBottom: '10px', color: '#666' }}>计算说明</h5>
         
         <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#fff', borderRadius: '4px', borderLeft: '4px solid #1890ff' }}>
-          <h6 style={{ marginBottom: '8px', color: '#1890ff' }}>1. 常规机焦炉（半焦炉）</h6>
+          <h3 style={{ marginBottom: '8px', color: '#1890ff' }}>1. 常规机焦炉（半焦炉）</h3>
           <p style={{ marginBottom: '8px' }}>• 常规机焦炉（半焦炉）具有独立的燃烧室，且煤气成份和流量可计量</p>
           <p style={{ marginBottom: '8px' }}>• 排放量计算采用单位热值含碳量法: 消耗量 × 低位发热量 × 单位热值含碳量 × 碳氧化率 × (44/12)</p>
           <p style={{ marginBottom: '8px' }}>• 单位热值含碳量单位: tC/GJ</p>
@@ -576,7 +576,7 @@ function CokingProcessFossilFuelEmission({ onEmissionChange, productionLines = [
         </div>
         
         <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#fff', borderRadius: '4px', borderLeft: '4px solid #52c41a' }}>
-          <h6 style={{ marginBottom: '8px', color: '#52c41a' }}>2. 热回收焦炉</h6>
+          <h3 style={{ marginBottom: '8px', color: '#52c41a' }}>2. 热回收焦炉</h3>
           <p style={{ marginBottom: '8px' }}>• 热回收焦炉的燃烧室与炭化室合一，其煤气燃烧量难以计量</p>
           <p style={{ marginBottom: '8px' }}>• 热回收焦炉内煤气燃烧（包括一部分焦炭的烧损）产生的CO2采用碳质量平衡法估算</p>
           <p style={{ marginBottom: '8px' }}>• 计算公式: (炼焦原料 * 含碳量 - 产出的焦炭量 * 含碳量）* 44 /12</p>
@@ -584,7 +584,7 @@ function CokingProcessFossilFuelEmission({ onEmissionChange, productionLines = [
         </div>
         
         <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#fff', borderRadius: '4px', borderLeft: '4px solid #faad14' }}>
-          <h6 style={{ marginBottom: '8px', color: '#faad14' }}>3. 其它燃烧设备</h6>
+          <h3 style={{ marginBottom: '8px', color: '#faad14' }}>3. 其它燃烧设备</h3>
           <p style={{ marginBottom: '8px' }}>• 报告主体除焦炉之外的其它燃烧设备</p>
           <p style={{ marginBottom: '8px' }}>• 排放量计算采用单位热值含碳量法: 消耗量 × 低位发热量 × 单位热值含碳量 × 碳氧化率 × (44/12)</p>
         </div>
