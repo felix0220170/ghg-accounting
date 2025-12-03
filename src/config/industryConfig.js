@@ -1,7 +1,11 @@
 // 行业类型常量 - 通用常量
 export const INDUSTRY_TYPES = {
   CEMENT: '水泥行业',
-  OTHER: '其他行业',
+  IRON_AND_STEEL: '钢铁生产行业',
+  ALUMINUM_SMELTING: '铝冶炼行业',
+  POWER_PLANT: '发电设施',
+  ELECTRIC_GRID_COMPANY: '电网企业（待确认）',
+  COKING: '独立焦化企业（待确认）',
   PAPER: '造纸及纸制品业',
   FOOD: '食品、烟草及酒、饮料和精制茶行业',
   NON_FERROUS_METALS: '其他有色金属冶炼和压延加工业',
@@ -10,9 +14,7 @@ export const INDUSTRY_TYPES = {
   MACHINERY_MANUFACTURING: '机械设备制造企业',
   PUBLIC_BUILDING: '公共建筑运营单位（企业）',
   FLUORINE_CHEMICAL: '氟化工企业',
-  POWER_PLANT: '发电设施',
-  IRON_AND_STEEL: '钢铁生产行业',
-  ALUMINUM_SMELTING: '铝冶炼行业'
+  OTHER: '其他行业',
 };
 
 // 在INDUSTRY_TYPES中确保氟化工企业存在
@@ -88,7 +90,7 @@ export const industryConfigs = {
       { key: 'electricityHeat', label: '净购入电力和热力隐含的 CO2 排放', unit: '吨' }
     ]
   },
-  
+
   // 新增公共建筑运营单位（企业）的行业配置
   '公共建筑运营单位（企业）': {
     name: '公共建筑运营单位（企业）',
@@ -97,7 +99,7 @@ export const industryConfigs = {
       { key: 'electricityHeat', label: '净购入电力和热力隐含的 CO2 排放', unit: '吨' }
     ]
   },
-  
+
   // 在机械设备制造企业的emissionItems中添加新的排放项
   'MachineryManufacturingIndustry': {
     name: '机械设备制造企业',
@@ -133,6 +135,25 @@ export const industryConfigs = {
     emissionItems: [
       { key: 'powerPlantFuel', label: '发电设施化石燃料燃烧 CO2 排放', unit: '吨' },
       { key: 'powerPlantElectricity', label: '发电设施购入使用电力排放', unit: '吨' }
+    ]
+  },
+  // 新增独立焦化企业的配置
+  '独立焦化企业': {
+    name: '独立焦化企业',
+    emissionItems: [
+      { key: 'fossilFuel', label: '化石燃料燃烧 CO2 排放', unit: '吨' },
+      { key: 'cokeProduction', label: '炼焦生产过程 CO2 排放', unit: '吨' },
+      { key: 'methaneN2O', label: 'CH4和N2O排放', unit: '吨' },
+      { key: 'electricityHeat', label: '净购入电力和热力隐含的 CO2 排放', unit: '吨' }
+    ]
+  },
+  // 新增电网企业的配置
+  '电网企业': {
+    name: '电网企业',
+    emissionItems: [
+      { key: 'fossilFuel', label: '化石燃料燃烧 CO2 排放', unit: '吨' },
+      { key: 'electricityHeat', label: '净购入电力和热力隐含的 CO2 排放', unit: '吨' },
+      { key: 'sulfurHexafluorideEmission', label: '使用六氟化硫设备修理与退役过程产生的排放', unit: '吨' }
     ]
   }
 };

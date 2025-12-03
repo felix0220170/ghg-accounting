@@ -192,44 +192,6 @@ function SteelIndustry({ onEmissionChange }) {
             onEmissionChange={(value) => handleEmissionChange('carbonSequestration', value)}
           />
         </TabPane>
-        <TabPane tab="工序管理" key="processManagement">
-          <ProcessManagement 
-            processes={processes}
-            onProcessesChange={handleProcessesChange}
-          />
-        </TabPane>
-        
-        <TabPane tab="工序化石燃料排放" key="steelFossilFuel">
-          <SteelProcessFossilFuelEmission 
-            onEmissionChange={(value) => handleEmissionChange('steelFossilFuel', value)}
-            productionLines={processes} // 传递工序信息给子组件，使用productionLines名称匹配组件要求
-            onProductionLinesChange={handleProcessesChange} // 添加工序变化回调，使用onProductionLinesChange名称
-          />
-        </TabPane>
-        {
-        /* 
-        <TabPane tab="工序生产数据及排放量汇总" key="processEmissionSummary">
-          <SteelProcessEmissionSummary 
-            processes={processes}
-            onProcessesChange={handleProcessesChange}
-            fossilFuelEmissions={fossilFuelEmissions}
-            electricityEmissions={electricityEmissions}
-            heatEmissions={heatEmissions}
-            onProcessUpdate={(processId, updates) => {
-              const updatedProcesses = processes.map(process => 
-                process.id === processId ? { ...process, ...updates } : process
-              );
-              handleProcessesChange(updatedProcesses);
-            }}
-          />
-        </TabPane> */
-        }
-        
-        <TabPane tab="发电设施及其他排放" key="otherEmission">
-          <SteelOtherEmission 
-            onEmissionChange={(value) => handleEmissionChange('otherEmission', value)}
-          />
-        </TabPane>
         <TabPane tab="碳排查材料清单" key="carbonInventory">
           <SteelCarbonInventory 
             onEmissionChange={(value) => handleEmissionChange('carbonInventory', value)}
@@ -237,14 +199,33 @@ function SteelIndustry({ onEmissionChange }) {
             onProductionLinesChange={handleProcessesChange}
           />
         </TabPane>
-        <TabPane tab="工序电力热力消耗(辅助报告项1)" key="acConsumption">
+
+        <TabPane tab="工序管理" key="processManagement">
+          <ProcessManagement 
+            processes={processes}
+            onProcessesChange={handleProcessesChange}
+          />
+        </TabPane>
+        <TabPane tab="工序化石燃料排放" key="steelFossilFuel">
+          <SteelProcessFossilFuelEmission 
+            onEmissionChange={(value) => handleEmissionChange('steelFossilFuel', value)}
+            productionLines={processes} // 传递工序信息给子组件，使用productionLines名称匹配组件要求
+            onProductionLinesChange={handleProcessesChange} // 添加工序变化回调，使用onProductionLinesChange名称
+          />
+        </TabPane>
+        <TabPane tab="发电设施及其他排放" key="otherEmission">
+          <SteelOtherEmission 
+            onEmissionChange={(value) => handleEmissionChange('otherEmission', value)}
+          />
+        </TabPane>
+        <TabPane tab={"工序电力热力消耗(辅助报告项1)"} key="acConsumption">
           <SteelACConsumption 
             onEmissionChange={(value) => handleEmissionChange('acConsumption', value)}
             productionLines={processes} 
             onProductionLinesChange={handleProcessesChange}
           />
         </TabPane>
-        <TabPane tab="工序化石燃料消耗(辅助报告项2)" key="fossilFuelConsumption">
+        <TabPane tab={"工序化石燃料消耗(辅助报告项2)"} key="fossilFuelConsumption">
           <SteelFossilFuelConsumption 
             onEmissionChange={(value) => handleEmissionChange('fossilFuelConsumption', value)}
             productionLines={fuelProcesses} 
