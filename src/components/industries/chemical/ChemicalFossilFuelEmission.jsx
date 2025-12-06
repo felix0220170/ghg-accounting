@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import CustomFuelForm from './CustomFuelForm';
-import CustomFuelList from './CustomFuelList';
+import CustomFuelForm from '../steel/CustomFuelForm';
+import CustomFuelList from '../steel/CustomFuelList';
 
 // 固体燃料数据
 const SOLID_FUELS = [
@@ -65,8 +65,8 @@ const createInitialMonthlyData = () => {
   }));
 };
 
-// 钢铁行业化石燃料燃烧排放量组件（企业级）
-function SteelFossilFuelEmission({ onEmissionChange, productionLines = [], onProductionLinesChange }) {
+// 化学行业化石燃料燃烧排放量组件（企业级）
+function ChemicalFossilFuelEmission({ onEmissionChange, productionLines = [], onProductionLinesChange }) {
 
   const [customFuels, setCustomFuels] = useState([]);
 
@@ -389,7 +389,7 @@ function SteelFossilFuelEmission({ onEmissionChange, productionLines = [], onPro
       case 'liquid':
         return 't';
       case 'gas':
-        return '10⁴Nm³'; // 返回标识而不是具体单位
+        return '104Nm³'; // 返回标识而不是具体单位
       default:
         return '';
     }
@@ -427,10 +427,11 @@ function SteelFossilFuelEmission({ onEmissionChange, productionLines = [], onPro
       
       <div className="calculation-description" style={{ marginBottom: '20px', padding: '15px', border: '1px solid #e0e0e0', borderRadius: '6px', backgroundColor: '#fafafa' }}>
         <p><strong>企业级化石燃料燃烧排放：</strong></p>
-        <p>外购燃料在各种类型的生产设备（如焦炉、高炉等）中用作原料或燃料用途产生的二氧化碳排放，不包括点火助燃、运输设施和附属生产系统使用的化石燃料排放。</p>
+        <p>指化石燃料在各种类型的固定或移动燃烧设备中（如锅炉、燃烧器、涡轮机、加热器、焚烧炉、煅烧炉、窑炉、熔炉、烤炉、内燃机等）与氧气充分燃烧生成的CO2排放</p>
         <p><strong>计算公式：</strong></p>
         <p>总CO2排放量 = Σ(各化石燃料消耗量 × （化石燃料收到基元素碳含量[如有] 或 （化石燃料收到基低位发热量 × 化石燃料单位热值含碳量）） × 化石燃料碳氧化率 × 44/12)</p>
         <p><strong>注：</strong>收到基元素碳含量 = 收到基低位发热量 × 单位热值含碳量。如用户输入了收到基元素碳含量，则优先使用该值进行计算；否则，使用收到基低位发热量和单位热值含碳量的乘积进行计算。</p>
+        <p>固体和液体燃料的碳氧化率的缺省值为98%, 气体燃料的碳氧化率的缺省值为99%</p>
         <p>其中：44/12 是二氧化碳与碳的相对分子质量之比</p>
       </div>
 
@@ -534,7 +535,7 @@ function SteelFossilFuelEmission({ onEmissionChange, productionLines = [], onPro
                               yearlyValue: '',
                               yearlyValueType: '',
                               acquisitionMethod: '缺省值',
-                              showUpload: false
+                              showUpload: true
                             },
                             {
                               type: 'receivedBaseCarbonContent',
@@ -544,7 +545,7 @@ function SteelFossilFuelEmission({ onEmissionChange, productionLines = [], onPro
                               yearlyValue: '',
                               yearlyValueType: '',
                               acquisitionMethod: '',
-                              showUpload: false
+                              showUpload: true
                             },
                             {
                               type: 'oxidationRate',
@@ -718,4 +719,4 @@ function SteelFossilFuelEmission({ onEmissionChange, productionLines = [], onPro
   );
 }
 
-export default SteelFossilFuelEmission;
+export default ChemicalFossilFuelEmission;

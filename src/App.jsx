@@ -17,12 +17,13 @@ import SteelIndustry from './components/industries/steel/SteelIndustry';
 import AluminumIndustryPage from './components/industries/aluminum/AluminumIndustryPage';
 import ElectricIndustry from './components/industries/electric/ElectricIndustry'
 import CokingIndustry from './components/industries/coking/CokingIndustry'
+import ChemicalIndustry from './components/industries/chemical/ChemicalIndustry'
 import { INDUSTRY_TYPES } from './config/industryConfig' 
 
 function App() {
   // 使用INDUSTRY_TYPES中的默认值作为初始选择
   // add some logs
-  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.COKING);
+  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.CHEMICAL_PRODUCTION);
 
   // 从INDUSTRY_TYPES常量生成行业列表
   //const industries = Object.values(INDUSTRY_TYPES);
@@ -31,7 +32,8 @@ function App() {
     INDUSTRY_TYPES.IRON_AND_STEEL, 
     INDUSTRY_TYPES.ALUMINUM_SMELTING,
     INDUSTRY_TYPES.ELECTRIC_GRID_COMPANY,
-    INDUSTRY_TYPES.COKING
+    INDUSTRY_TYPES.COKING,
+    INDUSTRY_TYPES.CHEMICAL_PRODUCTION
   ];
 
   // 根据选择的行业动态加载相应的组件
@@ -67,6 +69,8 @@ function App() {
         return <ElectricIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.COKING: // 添加独立焦化企业
         return <CokingIndustry industry={selectedIndustry} />;
+      case INDUSTRY_TYPES.CHEMICAL_PRODUCTION: // 添加化学行业
+        return <ChemicalIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.OTHER:
       default:
         return <OtherIndustry industry={selectedIndustry} />;

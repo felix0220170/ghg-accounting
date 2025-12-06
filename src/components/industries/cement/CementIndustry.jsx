@@ -3,7 +3,7 @@ import { Card, Tabs, Typography, Divider } from 'antd';
 import FossilFuelEmission from '../../FossilFuelEmission';
 import ClinkerProductionEmission from './ClinkerProductionEmission';
 import PowerPlantOtherEmission from './PowerPlantOtherEmission';
-import NetElectricityHeatEmission from './NetElectricityHeatEmission';
+import NetElectricityHeatEmission from '../common/NetElectricityHeatEmission';
 import CementIndustrySummary from './CementIndustrySummary';
 import ProductionLineManagement from './ProductionLineManagement';
 import CementCarbonInventory from './CementCarbonInventory';

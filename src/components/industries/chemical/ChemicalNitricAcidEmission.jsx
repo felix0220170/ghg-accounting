@@ -5,44 +5,55 @@ const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', 
 
 // 默认碳酸盐配置
 const DEFAULT_CARBONATE_PRODUCTS = [
-  { id: 'product-1', name: 'place-holder', emissionFactor: 0.4400 },
+  { id: 'process-1', name: '高压法', emissionFactor: 0.0139 },
+  { id: 'process-2', name: '中压法', emissionFactor: 0.0118 },
+  { id: 'process-3', name: '常压法', emissionFactor: 0.0097 },
+  { id: 'process-4', name: '双加压法', emissionFactor: 0.0080 },
+  { id: 'process-5', name: '综合法', emissionFactor: 0.0075 },
+  { id: 'process-6', name: '低压法', emissionFactor: 0.0050 },
 ];
+
+const DEFAULT_TECH = [
+    { id: 'tech-1', name: '非选择性催化还原 NSCR', rate: 85 },
+    { id: 'tech-2', name: '选择性催化还原 SCR', rate: 0 },
+    { id: 'tech-3', name: '延长吸收', rate: 0  },
+]
+
+const N2O_GWP = 310;
 
 // 碳酸盐分解排放计算指标
 const CARBONATE_INDICATORS = [
   {
-    key: 'recyclingSupplyAmount',
-    name: 'CO2 回收外供量',
-    unit: 'tCO₂',
+    key: 'consumptionAmount',
+    name: '硝酸产量',
+    unit: 't',
     isCalculated: false,
-    isFullYear: true,
     decimalPlaces: 2
   },
   {
-    key: 'supplyGasCO2Concentration',
-    name: '外供气体CO2 体积浓度',
+    key: 'emissionFactor',
+    name: 'N₂O生成因子',
+    unit: 'tN₂O/t',
+    isCalculated: false,
+    decimalPlaces: 4
+  },
+  {
+    key: 'n2oRemovalEfficiency',
+    name: 'N₂O去除效率',
     unit: '%',
     isCalculated: false,
     decimalPlaces: 0
   },
   {
-    key: 'recyclingRawMaterialAmount',
-    name: 'CO2 回收作原料量',
-    unit: 'tCO₂',
-    isCalculated: false,
-    isFullYear: true,
-    decimalPlaces: 2
-  },
-  {
-    key: 'rawMaterialGasCO2Concentration',
-    name: '原料气CO2 体积浓度',
+    key: 'n2oRemovalEfficiencyUsage',
+    name: 'N₂O去除效率使用率',
     unit: '%',
     isCalculated: false,
     decimalPlaces: 0
   },
   {
     key: 'emission',
-    name: '回收利用量',
+    name: '排放量',
     unit: 'tCO₂',
     isCalculated: true,
     decimalPlaces: 2
@@ -69,28 +80,40 @@ const createInitialIndicatorData = () => {
 const initializeCarbonateProductData = (product) => {
   const initialData = createInitialIndicatorData();
   
-
-  const indicators = CARBONATE_INDICATORS;
+  // 为排放因子设置默认值和额外字段
+  initialData.emissionFactor = initialData.emissionFactor.map(item => ({
+    ...item,
+    value: product.emissionFactor,
+    dataSource: '', // 数据来源
+    supportingMaterial: null // 支撑材料
+  }));
   
-  // 为每个指标创建包含12个月数据的对象
-  indicators.forEach((indicator) => {
-    initialData[indicator.key] = initialData[indicator.key].map(item => ({
-      ...item,
-      value: indicator.isCalculated ? 0 : (indicator.key === 'emissionFactor' ? 0 : ''),
-      dataSource: '', // 数据来源
-      supportingMaterial: null // 支撑材料
-    }));
-  });
+  // 为消耗量初始化额外字段
+  initialData.n2oRemovalEfficiency = initialData.n2oRemovalEfficiency.map(item => ({
+    ...item,
+    value: product.n2oRemovalEfficiency,
+    dataSource: '', // 数据来源
+    supportingMaterial: null // 支撑材料
+  }));
+
+  // 为消耗量初始化额外字段
+  initialData.n2oRemovalEfficiencyUsage = initialData.n2oRemovalEfficiencyUsage.map(item => ({
+    ...item,
+    value: 100,
+    dataSource: '', // 数据来源
+    supportingMaterial: null // 支撑材料
+  }));
   
   return {
     ...product,
     data: initialData,
     files: {},
-    isDefault: product.id === 'product-1'
+    isDefault: product.id === 'carbonate-product-1' || product.id === 'carbonate-product-2' // 标记默认碳酸盐
   };
 };
 
-function CO2RecyclingUtilization({ onEmissionChange }) {
+function ChemicalNitricAcidEmission({ onEmissionChange }) {
+  // 碳酸盐列表状态
   const [carbonateProducts, setCarbonateProducts] = useState([]);
   
   // 保存上一次的总排放量，用于比较是否真正发生变化
@@ -98,17 +121,30 @@ function CO2RecyclingUtilization({ onEmissionChange }) {
   
   // 初始化默认数据
   useEffect(() => {
-    const initializedProducts = DEFAULT_CARBONATE_PRODUCTS.map(product => initializeCarbonateProductData(product));
+    const initializedProducts = [];
     setCarbonateProducts(initializedProducts);
   }, []);
   
-  // 添加新的自定义carbonsite
-  const addNewRecyclingMaterial = useCallback(() => {
-    const newProductId = `product-${Date.now()}`;
+  // 添加新的自定义碳酸盐
+  const addNewCarbonateProduct = useCallback(() => {
+    let productType = document.getElementById('carbonateProductType').value;
+    let techType = document.getElementById('techType').value;
+
+    let productName = DEFAULT_CARBONATE_PRODUCTS.find(item => item.id === productType)?.name || '新碳酸盐';
+    let emissionFactor = DEFAULT_CARBONATE_PRODUCTS.find(item => item.id === productType)?.emissionFactor || 0;
+    let techName = DEFAULT_TECH.find(item => item.id === techType)?.name || '新技术';
+    let rate = DEFAULT_TECH.find(item => item.id === techType)?.rate || 0;
+
+
+    const newProductId = `carbonate-product-${Date.now()}`;
     const newProduct = {
       id: newProductId,
-      name: '新carbonsite',
-      emissionFactor: 0
+      name: productName,
+      emissionFactor: emissionFactor,
+      techType: techType,
+      techName: techName,
+      n2oRemovalEfficiency: rate,
+      n2oRemovalEfficiencyUsage: 0
     };
     
     const initializedNewProduct = initializeCarbonateProductData(newProduct);
@@ -116,22 +152,15 @@ function CO2RecyclingUtilization({ onEmissionChange }) {
   }, []);
   
   // 移除碳酸盐（仅支持移除非默认产品）
-  const removeRecyclingMaterial = useCallback((productId) => {
+  const removeCarbonateProduct = useCallback((productId) => {
     setCarbonateProducts(prevProducts => {
       const productToRemove = prevProducts.find(product => product.id === productId);
       // 只允许移除非默认产品
-      if (productToRemove && !productToRemove.isDefault) {
+      if (productToRemove) {
         return prevProducts.filter(product => product.id !== productId);
       }
       return prevProducts;
     });
-  }, []);
-  
-  // 更新carbonsite名称
-  const updateRecyclingMaterialName = useCallback((productId, newName) => {
-    setCarbonateProducts(prevProducts => prevProducts.map(product => 
-      product.id === productId ? { ...product, name: newName } : product
-    ));
   }, []);
   
   // 格式化数值显示
@@ -157,24 +186,21 @@ function CO2RecyclingUtilization({ onEmissionChange }) {
         for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
           const month = monthIndex + 1;
           
-          // 获取当月的回收外供量
-          const recyclingSupplyAmountData = product.data.recyclingSupplyAmount?.find(m => m.month === month);
-          const recyclingSupplyAmountValue = recyclingSupplyAmountData?.value ? parseFloat(recyclingSupplyAmountData.value) : 0;
-          
-          // 获取当月的外供气体CO2 体积浓度
-          const supplyGasCO2ConcentrationData = product.data.supplyGasCO2Concentration?.find(m => m.month === month);
-          const supplyGasCO2ConcentrationValue = supplyGasCO2ConcentrationData?.value ? parseFloat(supplyGasCO2ConcentrationData.value) : 0;
+          // 获取当月的消耗量和排放因子
+          const consumptionAmountData = product.data.consumptionAmount?.find(m => m.month === month);
+          const consumptionAmountValue = consumptionAmountData?.value ? parseFloat(consumptionAmountData.value) : 0;
 
-          // 获取当月的CO2 回收作原料量
-          const recyclingRawMaterialAmountData = product.data.recyclingRawMaterialAmount?.find(m => m.month === month);
-          const recyclingRawMaterialAmountValue = recyclingRawMaterialAmountData?.value ? parseFloat(recyclingRawMaterialAmountData.value) : 0;
-
-          // 获取当月的原料气CO2 体积浓度
-          const rawMaterialGasCO2ConcentrationData = product.data.rawMaterialGasCO2Concentration?.find(m => m.month === month);
-          const rawMaterialGasCO2ConcentrationValue = rawMaterialGasCO2ConcentrationData?.value ? parseFloat(rawMaterialGasCO2ConcentrationData.value) : 0;
+          const n2oRemovalEfficiencyData = product.data.n2oRemovalEfficiency?.find(m => m.month === month);
+          const n2oRemovalEfficiencyValue = n2oRemovalEfficiencyData?.value || 0;
           
-          // 计算排放量：(回收外供量 * 外供气体CO2 体积浓度 + 回收作原料量 * 原料气CO2 体积浓度) * 19.7
-          const emissionValue = Math.max(0, recyclingSupplyAmountValue * supplyGasCO2ConcentrationValue + recyclingRawMaterialAmountValue * rawMaterialGasCO2ConcentrationValue) / 100 * 19.7;
+          const n2oRemovalEfficiencyUsageData = product.data.n2oRemovalEfficiencyUsage?.find(m => m.month === month);
+          const n2oRemovalEfficiencyUsageValue = n2oRemovalEfficiencyUsageData?.value || 0;
+          
+          const emissionFactorData = product.data.emissionFactor?.find(m => m.month === month);
+          const emissionFactorValue = emissionFactorData?.value || product.emissionFactor || 0;
+          
+          // 计算排放量：消耗量 * 排放因子 * (1 - N₂O去除效率 × N₂O去除效率使用率%)
+          const emissionValue = Math.max(0, consumptionAmountValue) * emissionFactorValue * (1 - n2oRemovalEfficiencyValue / 100 * n2oRemovalEfficiencyUsageValue / 100) * N2O_GWP;
           
           // 更新排放量数据
           const currentEmissionData = updatedProduct.data.emission || [];
@@ -228,6 +254,21 @@ function CO2RecyclingUtilization({ onEmissionChange }) {
   useEffect(() => {
     updateCalculatedValues();
   }, [updateCalculatedValues, carbonateProducts]);
+
+  // 处理技术选择变化
+  const handleTechChange = useCallback((productId, selectedTech) => {
+    setCarbonateProducts(prevProducts => {
+      return prevProducts.map(product => {
+        if (product.id === productId) {
+          return {
+            ...product,
+            selectedTech
+          };
+        }
+        return product;
+      });
+    });
+  }, [setCarbonateProducts]);
   
   // 处理数据变化（纵向布局）
   const handleDataChange = useCallback((id, indicatorKey, month, field, value, type = 'carbonate-product') => {
@@ -266,7 +307,7 @@ function CO2RecyclingUtilization({ onEmissionChange }) {
             const indicatorDefinition = indicators.find(ind => ind.key === indicatorKey);
             
             updatedIndicatorData.push({
-              month,
+              month, 
               monthName: MONTHS[month - 1],
               value: field === 'value' ? formattedValue : '',
               dataSource: '',
@@ -418,7 +459,7 @@ function CO2RecyclingUtilization({ onEmissionChange }) {
           
           // 计算全年值
           let yearlyValue = 0;
-          if (indicator.isFullYear) {
+          if (indicator.isCalculated || indicator.key === 'consumptionAmount') {
             yearlyValue = indicatorData.reduce((sum, monthData) => {
               const value = parseFloat(monthData.value) || 0;
               return sum + value;
@@ -458,7 +499,7 @@ function CO2RecyclingUtilization({ onEmissionChange }) {
                   );
                 })}
                 <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>
-                  {indicator.isFullYear ? (
+                  {indicator.isCalculated || indicator.key === 'consumptionAmount' ? (
                     formatValue(yearlyValue, indicator.decimalPlaces)
                   ) : (
                     '-' // 排放因子不显示全年值
@@ -564,7 +605,7 @@ function CO2RecyclingUtilization({ onEmissionChange }) {
         </thead>
         <tbody>
           <tr>
-            <td style={{ border: '1px solid #d9d9d9', padding: '8px', fontWeight: 'bold' }}>总量</td>
+            <td style={{ border: '1px solid #d9d9d9', padding: '8px', fontWeight: 'bold' }}>硝酸生产过程的排放总量</td>
             {totalEmissions.map((value, index) => (
               <td key={index} style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>
                 {formatValue(value, 2)}
@@ -581,46 +622,80 @@ function CO2RecyclingUtilization({ onEmissionChange }) {
 
   return (
     <div style={{ padding: '16px' }}>
-      <h2 style={{ marginBottom: '24px', fontSize: '20px', color: '#333' }}>企业CO2回收利用量</h2>
-      
-      {renderTotalEmissionTable()}
-
-      {/* CO2回收材料 */}
+      <h2 style={{ marginBottom: '24px', fontSize: '20px', color: '#333' }}>硝酸生产过程排放</h2>
+      {/* 碳酸盐 */}
       <div style={{ marginTop: '20px',marginBottom: '40px' }}>
         <div style={{ marginBottom: '20px' }}>
-          <h3 style={{ marginBottom: '16px' }}>CO2回收利用计算说明</h3>
+          <h3 style={{ marginBottom: '16px' }}>硝酸排放计算说明</h3>
           <div style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '4px', lineHeight: '1.6' }}>
-            <p>CO2回收利用量计算方法：回收利用量（tCO₂） = （CO2回收外供量（tCO₂）× 外供气体CO2体积浓度（%） + CO2回收作原料量（tCO₂）× 原料气CO2体积浓度（%）） × 19.7</p>
-            <p>- CO2回收外供量单位为 tCO₂，保留两位小数</p>
-            <p>- CO2回收作原料量单位为 tCO₂，保留两位小数</p>
-            <p>- 气体CO2体积浓度单位为 %，保留整数</p>
-            <p>- 回收利用量单位为 tCO₂，保留两位小数</p>
-            <p>- 19.7 为标况下CO2 气体的密度，单位为tCO₂/10<sup>4</sup>Nm³, 可以考虑为系统配置或常量</p>
+            <p>硝酸生产过程中氨气高温催化氧化会生成副产品N₂O，N₂O排放量根据硝酸产量、不同生产技术的N₂O生成因子、所安装的NOₓ/N₂O尾气处理设备的N₂O去除效率以及尾气处理设备使用率计算。</p>
+            <p>单个生产技术类型的硝酸生产过程N₂O排放量 = 生产技术类型的硝酸产量 × 相应的N₂O的排放因子 × (1 - 尾气处理设备类型的N₂O去除效率 × 尾气处理设备类型的使用率) * {N2O_GWP}</p>
+            <p>硝酸生产过程N₂O总排放量 = 所有生产技术类型的排放量之和</p>
+            <p>- 产量单位为 t，保留两位小数</p>
+            <p>- 排放因子单位为 tN₂O/t，保留四位小数</p>
+            <p>- 排放量单位为 tCO₂，保留两位小数</p>
+            <p>- 尾气处理设备类型的N₂O去除效率 单位为 %, 尾气处理设备类型的使用率 单位为 %</p>
+            <p>- N₂O的全球变暖潜势（GWP）值为 {N2O_GWP}</p>
           </div>
         </div>
 
-        <div>
-          {carbonateProducts.map((material, index) => (
-            <div key={material.id} style={{ marginBottom: '32px', border: '1px solid #e8e8e8', padding: '16px', borderRadius: '4px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                {/* 
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <h3 style={{ margin: 0, fontSize: '16px', marginRight: '16px' }}>回收材料类型 {index + 1}</h3> 
-                  <input
-                    type="text"
-                    value={material.name}
-                    onChange={(e) => updateRecyclingMaterialName(material.id, e.target.value)}
+        {renderTotalEmissionTable()}
+
+        <div style={{ marginTop: '24px', backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', marginBottom: '24px' }}>
+            <h3 style={{ marginBottom: '20px', color: '#1890ff', fontWeight: 'bold', fontSize: '18px' }}>添加硝酸生产排放记录</h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '16px', alignItems: 'end' }}>
+                <div>
+                    <label htmlFor="carbonateProductType" style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#333' }}>硝酸生产技术类型 <span style={{ color: '#ff4d4f' }}>*</span></label>
+                    <select id="carbonateProductType" style={{ width: '100%', padding: '10px 12px', borderRadius: '4px', border: '1px solid #d9d9d9', fontSize: '14px', transition: 'all 0.3s', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' }}>
+                        {DEFAULT_CARBONATE_PRODUCTS.map((item) => (
+                            <option key={item.id} value={item.id}>{item.name}</option>
+                        ))}
+                    </select>
+                </div>
+                
+                <div>
+                    <label htmlFor="techType" style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#333' }}>NOₓ/N₂O尾气处理设备类型 <span style={{ color: '#ff4d4f' }}>*</span></label>
+                    <select id="techType" style={{ width: '100%', padding: '10px 12px', borderRadius: '4px', border: '1px solid #d9d9d9', fontSize: '14px', transition: 'all 0.3s', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' }}>
+                        {DEFAULT_TECH.map((item) => (
+                            <option key={item.id} value={item.id}>{item.name}</option>
+                        ))}
+                    </select>
+                </div>
+                
+                <button
+                    onClick={addNewCarbonateProduct}
                     style={{
-                      padding: '4px 8px',
-                      border: '1px solid #d9d9d9',
-                      borderRadius: '4px',
-                      fontSize: '14px'
+                        padding: '10px 24px',
+                        backgroundColor: '#1890ff',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        transition: 'all 0.3s',
+                        boxShadow: '0 2px 4px rgba(24, 144, 255, 0.3)',
+                        height: '40px'
                     }}
-                  />
-                </div>*/}
-                {!material.isDefault && 1 == 2 && (
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#40a9ff'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1890ff'}
+                >
+                    添加排放记录
+                </button>
+            </div>
+        </div>
+
+        <div>
+          {carbonateProducts.map((product, index) => (
+            <div key={product.id} style={{ marginBottom: '32px', border: '1px solid #e8e8e8', padding: '16px', borderRadius: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <h3 style={{ margin: 0, fontSize: '16px', marginRight: '16px' }}>{product.name}({product.techName})</h3>
+                </div>
+                {!product.isDefault && (
                   <button
-                    onClick={() => removeRecyclingMaterial(material.id)}
+                    onClick={() => removeCarbonateProduct(product.id)}
                     style={{
                       padding: '4px 12px',
                       backgroundColor: '#ff4d4f',
@@ -636,27 +711,9 @@ function CO2RecyclingUtilization({ onEmissionChange }) {
                 )}
               </div>
               
-              {renderVerticalLayoutTable(material)}
+              {renderVerticalLayoutTable(product)}
             </div>
           ))}
-          
-          
-          <button
-            onClick={addNewRecyclingMaterial}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#1890ff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              marginBottom: '24px',
-              display: 'none'
-            }}
-          >
-            添加回收材料
-          </button> 
           
         </div>
       </div>
@@ -664,4 +721,4 @@ function CO2RecyclingUtilization({ onEmissionChange }) {
   );
 }
 
-export default CO2RecyclingUtilization;
+export default ChemicalNitricAcidEmission;

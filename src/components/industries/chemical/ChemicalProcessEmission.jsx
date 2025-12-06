@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import CustomCarbonMaterialList from './CustomCarbonMaterialList';
-import CustomCarbonMaterialForm from './CustomCarbonMaterialForm';
+import CustomCarbonMaterialList from '../coking/CustomCarbonMaterialList';
+import CustomCarbonMaterialForm from '../coking/CustomCarbonMaterialForm';
 
 // 固体燃料数据
 const SOLID_FUELS = [
@@ -13,8 +13,6 @@ const SOLID_FUELS = [
   { id: 'petroleumCoke', name: '石油焦', calorificValue: 32.500, carbonContent: 0.02750, type: 'solid' },
   { id: 'cleanedCoke', name: '炼焦洗精煤', calorificValue: 32.500, carbonContent: 0.02750, type: 'solid' },
   { id: 'asphalt', name: '沥青', calorificValue: 22.867, carbonContent: 0.02749, type: 'solid' },
-  { id: 'crudeBenzole', name: '粗苯', calorificValue: 0, carbonContent: 0, type: 'solid' },
-  { id: 'lightBenzole', name: '轻苯', calorificValue: 0, carbonContent: 0, type: 'solid' },
 ];
 
 // 液体燃料数据
@@ -28,10 +26,8 @@ const LIQUID_FUELS = [
   { id: 'lpg', name: '液化石油气', calorificValue: 50.179, carbonContent: 0.01720, type: 'liquid', oxidationRate: 98 },
   { id: 'coalTar', name: '煤焦油', calorificValue: 33.453, carbonContent: 0.02200, type: 'liquid', oxidationRate: 98 },
   { id: 'refineryGas', name: '炼厂干气', calorificValue: 45.998, carbonContent: 0.01820, type: 'liquid', oxidationRate: 98 },
-  { id: 'methane', name: '甲醇 ', calorificValue: 0, carbonContent: 0, type: 'gas' },
-  { id: 'ammonia', name: '合成氨', calorificValue: 0, carbonContent: 0, type: 'gas' },
-  { id: 'urea', name: '尿素', calorificValue: 0, carbonContent: 0, type: 'gas' },
-  { id: 'lngCng', name: 'LNG/CNG', calorificValue: 0, carbonContent: 0, type: 'gas' },
+  { id: 'crudeBenzole', name: '粗苯', calorificValue: 0, carbonContent: 0, type: 'liquid', oxidationRate: 98 },
+  { id: 'lightBenzole', name: '轻苯', calorificValue: 0, carbonContent: 0, type: 'liquid', oxidationRate: 98 },
 ];
 
 // 气体燃料数据
@@ -43,20 +39,146 @@ const GAS_FUELS = [
 ];
 
 const 化工产品 = [
-  { id: 'carbazole', name: '咔唑', calorificValue: 0, carbonContent: 0, type: 'solid'},
-  { id: 'naphthalene', name: '萘', type: 'solid'  },
-  { id: 'phenol', name: '酚', type: 'solid'  },
-  { id: 'acrylic', name: '蒽', type: 'solid'  },
-  { id: 'vinylAcetate', name: '菲', type: 'solid'  },
-  { id: 'benzene', name: '苯', calorificValue: 0, carbonContent: 0, type: 'solid' }, 
-  { id: 'xylene', name: '二甲苯', calorificValue: 0, carbonContent: 0, type: 'solid'},
-  { id: 'toluene', name: '甲苯', type: 'solid'},
-  { id: 'solventOil', name: '溶剂油', type: 'solid'},
-  { id: 'benzeneBlowingResidue', name: '吹苯残渣', type: 'solid'}
+  {
+    "id": "acetonitrile",
+    "name": "乙腈",
+    "calorificValue": 0.5852,
+    "carbonContent": 1,
+    "type": "solid"
+  },
+  {
+    "id": "acrylonitrile",
+    "name": "丙烯腈",
+    "calorificValue": 0.6664,
+    "carbonContent": 1,
+    "type": "solid"
+  },
+  {
+    "id": "butadiene",
+    "name": "丁二烯",
+    "calorificValue": 0.888,
+    "carbonContent": 1,
+    "type": "solid"
+  },
+  {
+    "id": "carbon_black",
+    "name": "炭黑",
+    "calorificValue": 0.970,
+    "carbonContent": 1,
+    "type": "solid"
+  },
+  {
+    "id": "ethylene",
+    "name": "乙烯",
+    "calorificValue": 0.856,
+    "carbonContent": 1,
+    "type": "solid"
+  },
+  {
+    "id": "dichloroethane",
+    "name": "二氯乙烷",
+    "calorificValue": 0.245,
+    "carbonContent": 1,
+    "type": "solid"
+  },
+  {
+    "id": "ethylene_glycol",
+    "name": "乙二醇",
+    "calorificValue": 0.387,
+    "carbonContent": 1,
+    "type": "solid"
+  },
+  {
+    "id": "ethylene_oxide",
+    "name": "环氧乙烷",
+    "calorificValue": 0.545,
+    "carbonContent": 1,
+    "type": "solid"
+  },
+  {
+    "id": "hydrogen_cyanide",
+    "name": "氰化氢",
+    "calorificValue": 0.4444,
+    "carbonContent": 1,
+    "type": "solid"
+  },
+  {
+    "id": "methanol",
+    "name": "甲醇",
+    "calorificValue": 0.375,
+    "carbonContent": 1,
+    "type": "solid"
+  },
+  {
+    "id": "methane",
+    "name": "甲烷",
+    "calorificValue": 0.749,
+    "carbonContent": 1,
+    "type": "solid"
+  },
+  {
+    "id": "ethane",
+    "name": "乙烷",
+    "calorificValue": 0.856,
+    "carbonContent": 1,
+    "type": "solid"
+  },
+  {
+    "id": "propane",
+    "name": "丙烷",
+    "calorificValue": 0.817,
+    "carbonContent": 1,
+    "type": "solid"
+  },
+  {
+    "id": "propylene",
+    "name": "丙烯",
+    "calorificValue": 0.8563,
+    "carbonContent": 1,
+    "type": "solid"
+  },
+  {
+    "id": "vinyl_chloride_monomer",
+    "name": "氯乙烯单体",
+    "calorificValue": 0.384,
+    "carbonContent": 1,
+    "type": "solid"
+  },
+  {
+    "id": "urea",
+    "name": "尿素",
+    "calorificValue": 0.200,
+    "carbonContent": 1,
+    "type": "solid"
+  },
+  {
+    "id": "ammonium_bicarbonate",
+    "name": "碳酸氢铵",
+    "calorificValue": 0.1519,
+    "carbonContent": 1,
+    "type": "solid"
+  },
+  {
+    "id": "calcium_carbide",
+    "name": "标准电石",
+    "calorificValue": 0.314,
+    "carbonContent": 1,
+    "type": "solid"
+  }
 ];
 
+const 废料 = [
+  { id: 'slag', name: '炉渣', calorificValue: 0, carbonContent: 1, type: 'solid' },
+  { id: 'dust', name: '粉尘', calorificValue: 0, carbonContent: 1, type: 'solid' },
+  { id: 'sludge', name: '污泥', calorificValue: 0, carbonContent: 1, type: 'solid' }
+];
+
+
+
 // 所有燃料列表
-const ALL_FUELS = [...SOLID_FUELS, ...LIQUID_FUELS, ...GAS_FUELS, ...化工产品];
+const ALL_FUELS = [...SOLID_FUELS, ...LIQUID_FUELS, ...GAS_FUELS];
+
+const ALL= [...ALL_FUELS, ...化工产品, ...废料];
 
 // CO2计算常量
 const CARBON_TO_CO2_RATIO = 44 / 12;
@@ -95,26 +217,12 @@ function CokingProcessEmission({ onEmissionChange, productionLines = [], onProdu
   const previousEmissionRef = useRef(null);
 
   const getInputFuels = useCallback((process) => {
-    if (process.id === 'fule-process-1') return ALL_FUELS.filter(fuel => ['asphalt', 'petroleumCoke', 'cleanedCoke'].includes(fuel.id));
-    if (process.id === 'fule-process-2') return ALL_FUELS.filter(fuel => ['cokeOvenGas'].includes(fuel.id));
-    if (process.id === 'fule-process-3') return ALL_FUELS.filter(fuel => ['coalTar'].includes(fuel.id));
-    if (process.id === 'fule-process-4') return ALL_FUELS.filter(fuel => ['crudeBenzole', 'lightBenzole'].includes(fuel.id));
     return ALL_FUELS;
   }, []);
 
-  const getInputCustomFuels = useCallback((process) => {
-    if (process.id === 'fule-process-1') return customFuels.filter(fuel => ['asphalt', 'petroleumCoke', 'cleanedCoke'].includes(fuel.id));
-    if (process.id === 'fule-process-2') return customFuels.filter(fuel => ['anthracite', 'bituminous', 'lignite', 'gangue', 'sludge', 'coke', 'petroleumCoke', 'cleanedCoke'].includes(fuel.id));
-    return customFuels;
-  }, [customFuels]);
 
   const getOutputFuels = useCallback((process) => {
-    if (process.id === 'fule-process-1') return ALL_FUELS.filter(fuel => ['coke', 'cokeOvenGas', 'coalTar', 'crudeBenzole', 'lightBenzole'].includes(fuel.id));
-    if (process.id === 'fule-process-2') return ALL_FUELS.filter(fuel => ['methane', 'ammonia', 'urea', 'lngCng'].includes(fuel.id));
-    if (process.id === 'fule-process-3') return ALL_FUELS.filter(fuel => ['carbazole', 'naphthalene', 'phenol', 'acrylic', 'vinylAcetate', 'asphalt'].includes(fuel.id));
-    if (process.id === 'fule-process-4') return ALL_FUELS.filter(fuel => ['benzene', 'xylene', 'toluene', 'solventOil', 'benzeneBlowingResidue'].includes(fuel.id));
-
-    return ALL_FUELS;
+    return [...化工产品, ...废料]; 
   }, []);
 
   // 计算特定燃料类型的排放量
@@ -131,7 +239,7 @@ function CokingProcessEmission({ onEmissionChange, productionLines = [], onProdu
   // 添加燃料到工序，通过回调通知父组件
   const addFuelToProcess = useCallback((processId, fuelId, fuelType = 'input') => {
     // 先在默认燃料中查找
-    let fuel = ALL_FUELS.find(f => f.id === fuelId);
+    let fuel = ALL.find(f => f.id === fuelId);
     // 如果默认燃料中没有找到，在自定义燃料中查找
     if (!fuel) {
       fuel = customFuels.find(f => f.id === fuelId);
@@ -506,28 +614,15 @@ function CokingProcessEmission({ onEmissionChange, productionLines = [], onProdu
   // 组件返回JSX结构
   return (
     <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-      <h3 style={{ marginBottom: '20px', color: '#333' }}>工业生产过程 CO2 排放</h3>
+      <h3 style={{ marginBottom: '20px', color: '#333' }}>工业生产过程中原材料消耗产生的 CO2 排放</h3>
       <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '4px', fontSize: '14px' }}>
         <h5 style={{ marginBottom: '10px', color: '#666' }}>计算说明</h5>
 
         <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#fff', borderRadius: '4px', borderLeft: '4px solid #1890ff' }}>
-          <h3 style={{ marginBottom: '8px', color: '#1890ff' }}>1. 炼焦过程的CO2 排放</h3>
-          <p style={{ marginBottom: '8px' }}>• 根据输入该系统的炼焦原料与输出系统的焦炭、焦炉煤气、煤焦油、粗（轻）苯等进行碳质量平衡核算出子系统的碳损失，并假定损失的碳全部转化成CO2 被排放到大气中。</p>
-          <p style={{ marginBottom: '8px' }}>• 排放量 = (炼焦原料 * 含碳量 - 产出的焦炭量 * 含碳量 - 净化回收的焦炉煤气量 * 含碳量 - 煤气净化过程中回收的各类型副产品（如煤焦油、粗（轻）苯等）的产量 * 含碳量) * 44 / 12</p>
+          <p style={{ marginBottom: '8px' }}>• 根据碳质量平衡核算，进入企业边界的含碳原材料与流出企业边界的含碳产品及废物之间的碳损失，假定全部转化为CO₂排放到大气中。</p>
+          <p style={{ marginBottom: '8px' }}>• 总排放 = (进入企业边界的含碳原材料投入量*含碳量 - 流出企业边界的含碳产品产量*含碳量 - 流出企业边界的含碳废物输出量*含碳量) * 44/12</p>
         </div>
 
-        <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#fff', borderRadius: '4px', borderLeft: '4px solid #52c41a' }}>
-          <h3 style={{ marginBottom: '8px', color: '#52c41a' }}>2. 焦化产品延伸加工等其它生产过程的CO2 排放</h3>
-          <p style={{ marginBottom: '2px' }}>• 焦炉煤气制化工产品：</p>
-          <p style={{ marginBottom: '2px', paddingLeft: '20px' }}>输入：焦炉煤气、其它原料</p>
-          <p style={{ marginBottom: '2px', paddingLeft: '20px' }}>输出：甲醇、合成氨、尿素、LNG/CNG、其它化工产品</p>
-          <p style={{ marginBottom: '2px' }}>• 煤焦油加工：</p>
-          <p style={{ marginBottom: '2px', paddingLeft: '20px' }}>输入：煤焦油、其它原料</p>
-          <p style={{ marginBottom: '2px', paddingLeft: '20px' }}>输出：咔唑、萘、酚、蒽、菲、沥青、其它</p>
-          <p style={{ marginBottom: '2px' }}>• 苯加工精制：</p>
-          <p style={{ marginBottom: '2px', paddingLeft: '20px' }}>输入：粗苯、轻苯、其它原料</p>
-          <p style={{ marginBottom: '2px', paddingLeft: '20px' }}>输出：苯、二甲苯、甲苯、溶剂油、吹苯残渣、其它产品</p>
-        </div>
       </div>
 
       <div style={{ marginBottom: '25px', padding: '15px', backgroundColor: '#fff3f3', border: '1px solid #e57373', borderRadius: '6px' }}>
@@ -828,7 +923,11 @@ function CokingProcessEmission({ onEmissionChange, productionLines = [], onProdu
                 style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
               >
                 <option value="">选择...</option>
-                {getOutputFuels(process).map(fuel => (
+                {化工产品.map(fuel => (
+                  <option key={fuel.id} value={fuel.id}>{fuel.name} </option>
+                ))}
+                <option disabled>--------------------</option>
+                {废料.map(fuel => (
                   <option key={fuel.id} value={fuel.id}>{fuel.name} </option>
                 ))}
                 {customFuels && customFuels.length > 0 && (
@@ -848,6 +947,7 @@ function CokingProcessEmission({ onEmissionChange, productionLines = [], onProdu
         </div>
       ))}
 
+      <h3 style={{ marginBottom: '15px', color: '#2196F3', fontWeight: 'bold' }}>这里可以优化为 分别添加原料，化工产品和碳废料</h3>
       <CustomCarbonMaterialForm onAddCustomMaterial={addCustomFuel} />
       <CustomCarbonMaterialList customCarbonMaterials={customFuels} setCustomCarbonMaterials={setCustomFuels} />
 

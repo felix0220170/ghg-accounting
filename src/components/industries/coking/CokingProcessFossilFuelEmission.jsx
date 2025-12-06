@@ -388,7 +388,7 @@ function CokingProcessFossilFuelEmission({ onEmissionChange, productionLines = [
                     yearlyValue: '',
                     yearlyValueType: '',
                     acquisitionMethod: '缺省值',
-                    showUpload: false
+                    showUpload: true
                   },
                   {
                     type: 'receivedBaseCarbonContent',
@@ -398,7 +398,7 @@ function CokingProcessFossilFuelEmission({ onEmissionChange, productionLines = [
                     yearlyValue: '',
                     yearlyValueType: '',
                     acquisitionMethod: '',
-                    showUpload: false
+                    showUpload: true
                   },
                   {
                     type: 'oxidationRate',
@@ -408,7 +408,7 @@ function CokingProcessFossilFuelEmission({ onEmissionChange, productionLines = [
                     yearlyValue: '',
                     yearlyValueType: '',
                     acquisitionMethod: '缺省值',
-                    showUpload: false
+                    showUpload: true
                   },
                   {
                     type: 'emission',

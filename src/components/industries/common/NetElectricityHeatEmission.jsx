@@ -381,7 +381,7 @@ const NetElectricityHeatEmission = ({ onEmissionChange, initialData = {} }) => {
 
   return (
     <div className="net-electricity-heat-emission">
-      <Card title="购入净电（化石）和净热" style={{ marginBottom: 20 }}>
+      <Card title="购入净电（化石）和净热（公用组件）" style={{ marginBottom: 20 }}>
         {/* 系统级排放因子设置 */}
         <div style={{ marginBottom: 20, padding: 15, backgroundColor: '#f0f5ff', borderRadius: 4 }}>
           <h4 style={{ marginBottom: 10 }}>系统设置：排放因子</h4>

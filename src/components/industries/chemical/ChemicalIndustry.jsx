@@ -2,23 +2,20 @@ import { useState, useCallback } from 'react';
 import { Card, Tabs, Typography } from 'antd';
 const { Title, Paragraph } = Typography;
 const { TabPane } = Tabs;
-import CokingIndustrySummary from './CokingIndustrySummary';
-import CokingProcessEmission from './CokingProcessEmission';
-import CokingProcessFossilFuelEmission from './CokingProcessFossilFuelEmission';
+import ChemicalIndustrySummary from './ChemicalIndustrySummary';
+import ChemicalProcessEmission from './ChemicalProcessEmission';
+import ChemicalFossilFuelEmission from './ChemicalFossilFuelEmission';
 import CO2RecyclingUtilization from '../common/CO2RecyclingUtilization';
 import NetElectricityHeatEmission from '../common/NetElectricityHeatEmission';
-import CokingCarbonInventory from './CokingCarbonInventory';
+import ChemicalCarbonInventory from './ChemicalCarbonInventory';
+import ChemicalCarbonateDecompositionEmission from './ChemicalCarbonateDecompositionEmission';
+import ChemicalNitricAcidEmission from './ChemicalNitricAcidEmission';
+import ChemicalAdipicAcidEmission from './ChemicalAdipicAcidEmission';
 
-function CokingIndustry({ onEmissionChange }) {
+function ChemicalIndustry({ onEmissionChange }) {
   const [fuelProcesses, setFuelProcesses] = useState([{
       id: 'fule-process-1',
-      processTypeName: '常规机焦炉（半焦炉）',
-    }, {
-      id: 'fule-process-2',
-      processTypeName: '热回收焦炉',
-    }, {
-      id: 'fule-process-3',
-      processTypeName: '其它燃烧设施',
+      processName: '化石燃料工序placeholder',
     }]);
 
   const [emissionData, setEmissionData] = useState({
@@ -37,17 +34,8 @@ function CokingIndustry({ onEmissionChange }) {
   const [heatEmissions, setHeatEmissions] = useState({});
   
   const [processes, setProcesses] = useState([{
-      id: 'fule-process-1',
-      processTypeName: '炼焦过程的CO2 排放',
-    }, {
-      id: 'fule-process-2',
-      processTypeName: '焦炉煤气制化工产品生产过程的CO2 排放',
-    }, {
-      id: 'fule-process-3',
-      processTypeName: '煤焦油加工生产过程CO2 排放',
-    },  {
-      id: 'fule-process-4',
-      processTypeName: '苯加工精制生产过程CO2 排放',
+      id: 'process-1',
+      processTypeName: '生产过程的CO2 排放',
     }]);
   
   // 处理工序变化
@@ -104,39 +92,57 @@ function CokingIndustry({ onEmissionChange }) {
   const prepareSummaryData = () => ({
     fossilFuelEmission: emissionData.fossilFuel,
     processEmission: emissionData.processEmission,
+    carbonateDecompositionEmission: emissionData.carbonateDecompositionEmission,
+    nitricAcidEmission: emissionData.nitricAcidEmission,
+    adipicAcidEmission: emissionData.adipicAcidEmission,
     recyclingEmission: emissionData.recyclingEmission,
     electricityHeatEmission: emissionData.electricityHeatEmission
   });
 
   return (
     <div className="coking-industry">
-      <Card title="焦化工行业温室气体排放核算" style={{ marginBottom: '20px' }}>
+      <Card title="化工行业温室气体排放核算" style={{ marginBottom: '20px' }}>
         <Title level={4}>行业说明</Title>
         <Paragraph>
-          本模块适用于焦化工行业企业开展温室气体排放核算。焦化工行业是重要的基础原材料产业，
+          本模块适用于化工行业企业开展温室气体排放核算。化工行业是重要的基础原材料产业，
           其碳排放主要来自化石燃料燃烧、生产过程等环节。
         </Paragraph>
         <Paragraph>
-          核算范围包括：化石燃料燃烧排放、工业生产过程排放、企业CO2回收利用量、购入净电净热排放等。
+          核算范围包括：化石燃料燃烧排放、工业生产过程排放（原材料消耗产生的排放、碳酸盐分解排放、硝酸产生的排放、己二酸产生的排放）、企业CO2回收利用量、购入净电净热排放等。
         </Paragraph>
       </Card>
 
       <Tabs defaultActiveKey="summary" onChange={() => calculateTotalEmission()}>
         <TabPane tab="企业级排放汇总" key="summary">
-          <CokingIndustrySummary emissionData={prepareSummaryData()} />
+          <ChemicalIndustrySummary emissionData={prepareSummaryData()} />
         </TabPane>
         <TabPane tab="企业级化石燃料燃烧排放" key="fossilFuel">
-              <CokingProcessFossilFuelEmission 
+              <ChemicalFossilFuelEmission 
                 onEmissionChange={(value) => handleEmissionChange('fossilFuel', value)}
                 productionLines={fuelProcesses} 
                 onProductionLinesChange={handleFuelProcessesChange}
               />
           </TabPane>
-          <TabPane tab="工业生产过程排放" key="process">
-            <CokingProcessEmission 
+          <TabPane tab="工业生产过程中原材料消耗产生的排放" key="process">
+            <ChemicalProcessEmission 
               onEmissionChange={(value) => handleEmissionChange('processEmission', value)}
               productionLines={processes} 
               onProductionLinesChange={handleProcessesChange}
+            />
+          </TabPane>
+          <TabPane tab="工业生产过程中碳酸盐分解排放" key="carbonateDecomposition">
+            <ChemicalCarbonateDecompositionEmission 
+              onEmissionChange={(value) => handleEmissionChange('carbonateDecompositionEmission', value)}
+            />
+          </TabPane>
+          <TabPane tab="工业生产过程中硝酸产生的排放" key="nitricAcid">
+            <ChemicalNitricAcidEmission 
+              onEmissionChange={(value) => handleEmissionChange('nitricAcidEmission', value)}
+            />
+          </TabPane>
+          <TabPane tab="工业生产过程中己二酸产生的排放" key="adipicAcid">
+            <ChemicalAdipicAcidEmission 
+              onEmissionChange={(value) => handleEmissionChange('adipicAcidEmission', value)}
             />
           </TabPane>
           <TabPane tab="企业CO2回收利用量" key="recycling">
@@ -150,7 +156,7 @@ function CokingIndustry({ onEmissionChange }) {
             />
           </TabPane>
           <TabPane tab="碳排查材料清单" key="carbonInventory">
-            <CokingCarbonInventory />
+            <ChemicalCarbonInventory />
           </TabPane>
         
       </Tabs>
@@ -159,4 +165,4 @@ function CokingIndustry({ onEmissionChange }) {
   );
 }
 
-export default CokingIndustry;
+export default ChemicalIndustry;
