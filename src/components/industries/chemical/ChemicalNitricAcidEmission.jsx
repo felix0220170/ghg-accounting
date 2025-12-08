@@ -626,8 +626,8 @@ function ChemicalNitricAcidEmission({ onEmissionChange }) {
       {/* 碳酸盐 */}
       <div style={{ marginTop: '20px',marginBottom: '40px' }}>
         <div style={{ marginBottom: '20px' }}>
-          <h3 style={{ marginBottom: '16px' }}>硝酸排放计算说明</h3>
-          <div style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '4px', lineHeight: '1.6' }}>
+          <div style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '4px', lineHeight: '1.2' }}>
+            <h3 style={{ marginBottom: '16px' }}>计算说明</h3>
             <p>硝酸生产过程中氨气高温催化氧化会生成副产品N₂O，N₂O排放量根据硝酸产量、不同生产技术的N₂O生成因子、所安装的NOₓ/N₂O尾气处理设备的N₂O去除效率以及尾气处理设备使用率计算。</p>
             <p>单个生产技术类型的硝酸生产过程N₂O排放量 = 生产技术类型的硝酸产量 × 相应的N₂O的排放因子 × (1 - 尾气处理设备类型的N₂O去除效率 × 尾气处理设备类型的使用率) * {N2O_GWP}</p>
             <p>硝酸生产过程N₂O总排放量 = 所有生产技术类型的排放量之和</p>

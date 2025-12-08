@@ -7,7 +7,7 @@ const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', 
 
 // 默认碳酸盐配置
 const DEFAULT_CARBONATE_PRODUCTS = [
-  { id: 'carbonate-product-1', name: '碳酸钙 (CaCO₃) - 俗称：石灰石', formula: 'CaCO₃', emissionFactor: 0.4397 },
+  { id: 'carbonate-product-1', name: '碳酸钙 (CaCO₃) - 俗称：石灰石', formula: 'CaCO₃', emissionFactor: 0.4400 },
   { id: 'carbonate-product-2', name: '碳酸镁 (MgCO₃) - 俗称：菱镁矿', formula: 'MgCO₃', emissionFactor: 0.5220 },
   { id: 'carbonate-product-3', name: '碳酸钠 (Na₂CO₃) - 俗称：纯碱、苏打', formula: 'Na₂CO₃', emissionFactor: 0.4149 },
   { id: 'carbonate-product-4', name: '碳酸氢钠 (NaHCO₃) - 俗称：小苏打', formula: 'NaHCO₃', emissionFactor: 0.5237 },
@@ -588,8 +588,8 @@ function ChemicalCarbonateDecompositionEmission({ onEmissionChange }) {
       {/* 碳酸盐 */}
       <div style={{ marginTop: '20px',marginBottom: '40px' }}>
         <div style={{ marginBottom: '20px' }}>
-          <h3 style={{ marginBottom: '12px' }}>碳酸盐排放计算说明</h3>
           <div style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '4px', lineHeight: '1.2' }}>
+            <h3 style={{ marginBottom: '12px' }}>计算说明</h3>
             <p>碳酸盐的排放计算方法：排放量（tCO₂） = 碳酸盐消耗量（t） × 碳酸盐排放因子（tCO₂/t）</p>
             <p>- 消费量单位为 t，保留两位小数</p>
             <p>- 排放因子单位为 tCO₂/t，保留四位小数</p>
@@ -600,7 +600,7 @@ function ChemicalCarbonateDecompositionEmission({ onEmissionChange }) {
         {renderTotalEmissionTable()}
 
         <div style={{ marginTop: '24px', backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', marginBottom: '24px' }}>
-          <h3 style={{ marginBottom: '20px', color: '#1890ff', fontWeight: 'bold', fontSize: '18px' }}>添加硝酸生产排放记录</h3>
+          <h3 style={{ marginBottom: '20px', color: '#1890ff', fontWeight: 'bold', fontSize: '18px' }}>添加碳酸盐分解排放记录</h3>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '16px', alignItems: 'end' }}>
             <div>

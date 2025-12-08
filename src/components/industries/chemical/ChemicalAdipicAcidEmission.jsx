@@ -623,8 +623,8 @@ function ChemicalAdipicAcidEmission({ onEmissionChange }) {
       {/* 碳酸盐 */}
       <div style={{ marginTop: '20px',marginBottom: '40px' }}>
         <div style={{ marginBottom: '20px' }}>
-          <h3 style={{ marginBottom: '16px' }}>己二酸排放计算说明</h3>
-          <div style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '4px', lineHeight: '1.6' }}>
+          <div style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '4px', lineHeight: '1.2' }}>
+            <h3 style={{ marginBottom: '16px' }}>计算说明</h3>
             <p>环己酮/环己醇混合物经硝酸氧化制取己二酸会生成副产品N₂O，N₂O排放量可根据己二酸产量、不同生产工艺的N₂O生成因子、所安装的NOx/N₂O尾气处理设备的N₂O去除效率以及尾气处理设备使用率计算。</p>
             <p>单个生产技术类型的己二酸生产过程N₂O排放量 = 生产技术类型的己二酸产量 × 相应的N₂O的排放因子 × (1 - 尾气处理设备类型的N₂O去除效率 × 尾气处理设备类型的使用率) * {N2O_GWP}</p>
             <p>己二酸生产过程N₂O总排放量 = 所有生产技术类型的排放量之和</p>

@@ -665,7 +665,7 @@ function AluminumCarbonAnodeEmission({ onEmissionChange, productionLines = [], o
     
     return (
         <div className="anode-effect-emission">
-          <h2>电解铝工序阳极效应温室气体排放</h2>
+          <h2>铝电解工序能源作为原材料用途的排放</h2>
           
           <div className="calculation-description" style={{ marginBottom: '20px', padding: '15px', border: '1px solid #e0e0e0', borderRadius: '6px', backgroundColor: '#fafafa' }}>
             <p><strong>炭阳极碳排放计算说明：</strong></p>

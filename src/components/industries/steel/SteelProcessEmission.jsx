@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import CustomCarbonateDecompositionForm from '../common/CustomCarbonateDecompositionForm';
+import CustomCarbonateDecompositionList from '../common/CustomCarbonateDecompositionList';
 
 // 月份列表
 const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
@@ -224,6 +226,10 @@ const initializeCarbonMaterialData = (material) => {
 function SteelProcessEmission({ onEmissionChange, onProductionLinesChange }) {
   // 熔剂列表状态
   const [fluxes, setFluxes] = useState([]);
+
+  const [customFluxes, setCustomFluxes] = useState([]);
+
+  const [customCarbonMaterials, setCustomCarbonMaterials] = useState([]);
   
   // 电极列表状态
   const [electrodes, setElectrodes] = useState([]);
@@ -236,48 +242,50 @@ function SteelProcessEmission({ onEmissionChange, onProductionLinesChange }) {
   
   // 初始化默认数据
   useEffect(() => {
-    const initializedFluxes = DEFAULT_FLUXES.map(flux => initializeFluxData(flux));
+    const initializedFluxes = [];
     setFluxes(initializedFluxes);
     
     const initializedElectrodes = DEFAULT_ELECTRODES.map(electrode => initializeElectrodeData(electrode));
     setElectrodes(initializedElectrodes);
     
-    const initializedCarbonMaterials = DEFAULT_CARBON_MATERIALS.map(material => initializeCarbonMaterialData(material));
+    const initializedCarbonMaterials = [];
     setCarbonMaterials(initializedCarbonMaterials);
   }, []);
   
   // 添加新的自定义熔剂
-  const addNewFlux = useCallback(() => {
-    const newFluxId = `flux-${Date.now()}`;
+  const addNewFlux = useCallback((id) => {
+    const newProductId = `${id}`;
+    const DEFAULT_CARBONATE_PRODUCT = [...DEFAULT_FLUXES, ...customFluxes].find(product => product.id === id);
     const newFlux = {
-      id: newFluxId,
-      name: '新熔剂',
-      emissionFactor: 0
+      id: `${newProductId}-${Date.now()}`,
+      name: DEFAULT_CARBONATE_PRODUCT?.name || '新熔剂',
+      emissionFactor: DEFAULT_CARBONATE_PRODUCT?.emissionFactor || 0
     };
     
     const initializedNewFlux = initializeFluxData(newFlux);
     setFluxes(prevFluxes => [...prevFluxes, initializedNewFlux]);
-  }, []);
+  }, [customFluxes]);
   
   // 添加新的自定义外购含碳原料
-  const addNewCarbonMaterial = useCallback(() => {
-    const newMaterialId = `carbon-material-${Date.now()}`;
-    const newMaterial = {
-      id: newMaterialId,
-      name: '新外购含碳原料',
-      emissionFactor: 0
+  const addNewCarbonMaterial = useCallback((id) => {
+    const newProductId = `${id}`;
+    const DEFAULT_CARBONATE_PRODUCT = [...DEFAULT_CARBON_MATERIALS, ...customCarbonMaterials].find(product => product.id === id);
+    const newProduct = {
+      id: `${newProductId}-${Date.now()}`,
+      name: DEFAULT_CARBONATE_PRODUCT?.name || '新外购含碳原料',
+      emissionFactor: DEFAULT_CARBONATE_PRODUCT?.emissionFactor || 0
     };
     
-    const initializedNewMaterial = initializeCarbonMaterialData(newMaterial);
-    setCarbonMaterials(prevMaterials => [...prevMaterials, initializedNewMaterial]);
-  }, []);
+    const initializedNewProduct = initializeCarbonMaterialData(newProduct);
+    setCarbonMaterials(prevProducts => [...prevProducts, initializedNewProduct]);
+  }, [customCarbonMaterials]);
   
   // 移除熔剂（仅支持移除非默认熔剂）
   const removeFlux = useCallback((fluxId) => {
     setFluxes(prevFluxes => {
       const fluxToRemove = prevFluxes.find(flux => flux.id === fluxId);
       // 只允许移除非默认熔剂
-      if (fluxToRemove && !fluxToRemove.isDefault) {
+      if (fluxToRemove) {
         return prevFluxes.filter(flux => flux.id !== fluxId);
       }
       return prevFluxes;
@@ -289,7 +297,7 @@ function SteelProcessEmission({ onEmissionChange, onProductionLinesChange }) {
     setCarbonMaterials(prevMaterials => {
       const materialToRemove = prevMaterials.find(material => material.id === materialId);
       // 只允许移除非默认原料
-      if (materialToRemove && !materialToRemove.isDefault) {
+      if (materialToRemove) {
         return prevMaterials.filter(material => material.id !== materialId);
       }
       return prevMaterials;
@@ -986,6 +994,29 @@ function SteelProcessEmission({ onEmissionChange, onProductionLinesChange }) {
     );
   };
   
+  const generateId = () => {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  };
+  const addCustomCarbonMaterial = useCallback((materialData) => {
+        const customMaterial = {
+          id: `custom-${generateId()}`,
+          name: materialData.name,
+          emissionFactor: parseFloat(materialData.emissionFactor) || 0,
+          isCustom: true,
+        };
+        setCustomCarbonMaterials([...customCarbonMaterials, customMaterial]);
+      }, [customCarbonMaterials]);
+
+  const addCustomFlux = useCallback((materialData) => {
+        const customMaterial = {
+          id: `custom-${generateId()}`,
+          name: materialData.name,
+          emissionFactor: parseFloat(materialData.emissionFactor) || 0,
+          isCustom: true,
+        };
+        setCustomFluxes([...customFluxes, customMaterial]);
+      }, [customFluxes]);
+
   return (
     <div style={{ padding: '20px', backgroundColor: '#fff' }}>
       <h2 style={{ marginBottom: '20px' }}>工业生产过程排放</h2>
@@ -1017,26 +1048,49 @@ function SteelProcessEmission({ onEmissionChange, onProductionLinesChange }) {
           </div>
         </div>
         
+        <div style={{ marginTop: '24px', backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', marginBottom: '24px' }}>
+          <h3 style={{ marginBottom: '20px', color: '#1890ff', fontWeight: 'bold', fontSize: '18px' }}>添加熔剂排放记录</h3>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '16px', alignItems: 'end' }}>
+            <div>
+              <label htmlFor="carbonateProductType" style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#333' }}>添加熔剂 <span style={{ color: '#ff4d4f' }}>*</span></label>
+            <select
+              onChange={(e) => {
+                const fuelId = e.target.value;
+                if (fuelId) {
+                  addNewFlux(fuelId);
+                  e.target.value = '';
+                }
+              }}
+              style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+            >
+              <option value="">请选择</option>
+              {DEFAULT_FLUXES.map(fuel => (
+                <option key={fuel.id} value={fuel.id}>{fuel.name}</option>
+              ))}
+              {customFluxes && customFluxes.length > 0 && (
+                    <>
+                      <option disabled>--------------------</option>
+                      {customFluxes.map(fuel => (
+                        <option key={fuel.id} value={fuel.id}>{fuel.name}</option>
+                      ))}
+                    </>
+                  )}
+            </select>
+            </div>
+            
+          </div>
+        </div>
+
         {/* 熔剂列表 */}
         <div>
           {fluxes.map((flux, index) => (
             <div key={flux.id} style={{ marginBottom: '32px', border: '1px solid #e8e8e8', padding: '16px', borderRadius: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <h3 style={{ margin: 0, marginRight: '16px' }}>熔剂 {index + 1}</h3>
-                  <input
-                    type="text"
-                    value={flux.name}
-                    onChange={(e) => updateFluxName(flux.id, e.target.value)}
-                    style={{
-                      padding: '6px 12px',
-                      border: '1px solid #d9d9d9',
-                      borderRadius: '4px',
-                      width: '150px'
-                    }}
-                  />
+                  <h3 style={{ margin: 0, marginRight: '16px' }}>熔剂 {index + 1}: {flux.name}</h3>
                 </div>
-                {!flux.isDefault && (
+                {(
                   <button
                     onClick={() => removeFlux(flux.id)}
                     style={{
@@ -1055,24 +1109,21 @@ function SteelProcessEmission({ onEmissionChange, onProductionLinesChange }) {
               {renderVerticalLayoutTable(flux, 'flux')}
             </div>
           ))}
-          
-          <button
-            onClick={addNewFlux}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#1890ff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              marginTop: '8px'
-            }}
-          >
-            添加熔剂
-          </button>
+        </div>
+
+        <div style={{ marginTop: '20px', marginBottom: '20px', padding: '15px', border: '1px solid #e8e8e8', borderRadius: '4px' }}>
+          <CustomCarbonateDecompositionForm
+            onAddCustomMaterial={addCustomFlux}
+            name="熔剂"
+          />
+          <CustomCarbonateDecompositionList
+            customCarbonMaterials={customFluxes}
+            setCustomCarbonMaterials={setCustomFluxes}
+            name="熔剂"
+          />
         </div>
       </div>
-      
+
       {/* 明显分隔线 - 区分外购含碳原料和熔剂部分 */}
       <div style={{ 
         borderTop: '4px solid #1890ff', 
@@ -1097,26 +1148,48 @@ function SteelProcessEmission({ onEmissionChange, onProductionLinesChange }) {
           </div>
         </div>
         
+        <div style={{ marginTop: '24px', backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', marginBottom: '24px' }}>
+          <h3 style={{ marginBottom: '20px', color: '#1890ff', fontWeight: 'bold', fontSize: '18px' }}>添加外购含碳原料排放记录</h3>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '16px', alignItems: 'end' }}>
+            <div>
+              <label htmlFor="carbonateProductType" style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#333' }}>添加外购含碳原料 <span style={{ color: '#ff4d4f' }}>*</span></label>
+            <select
+              onChange={(e) => {
+                const fuelId = e.target.value;
+                if (fuelId) {
+                  addNewCarbonMaterial(fuelId);
+                  e.target.value = '';
+                }
+              }}
+              style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+            >
+              <option value="">请选择</option>
+              {DEFAULT_CARBON_MATERIALS.map(fuel => (
+                <option key={fuel.id} value={fuel.id}>{fuel.name}</option>
+              ))}
+              {customCarbonMaterials && customCarbonMaterials.length > 0 && (
+                    <>
+                      <option disabled>--------------------</option>
+                      {customCarbonMaterials.map(fuel => (
+                        <option key={fuel.id} value={fuel.id}>{fuel.name}</option>
+                      ))}
+                    </>
+                  )}
+            </select>
+            </div>
+            
+          </div>
+        </div>
         {/* 外购含碳原料列表 */}
         <div>
           {carbonMaterials.map((material, index) => (
             <div key={material.id} style={{ marginBottom: '32px', border: '1px solid #e8e8e8', padding: '16px', borderRadius: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <h3 style={{ margin: 0, marginRight: '16px' }}>外购含碳原料 {index + 1}</h3>
-                  <input
-                    type="text"
-                    value={material.name}
-                    onChange={(e) => updateCarbonMaterialName(material.id, e.target.value)}
-                    style={{
-                      padding: '6px 12px',
-                      border: '1px solid #d9d9d9',
-                      borderRadius: '4px',
-                      width: '150px'
-                    }}
-                  />
+                  <h3 style={{ margin: 0, marginRight: '16px' }}>外购含碳原料 {index + 1}: {material.name}</h3>
                 </div>
-                {!material.isDefault && (
+                { (
                   <button
                     onClick={() => removeCarbonMaterial(material.id)}
                     style={{
@@ -1135,21 +1208,18 @@ function SteelProcessEmission({ onEmissionChange, onProductionLinesChange }) {
               {renderVerticalLayoutTable(material, 'carbon-material')}
             </div>
           ))}
-          
-          <button
-            onClick={addNewCarbonMaterial}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#1890ff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              marginTop: '8px'
-            }}
-          >
-            添加外购含碳原料
-          </button>
+        </div>
+
+        <div style={{ marginTop: '20px', marginBottom: '20px', padding: '15px', border: '1px solid #e8e8e8', borderRadius: '4px' }}>
+          <CustomCarbonateDecompositionForm
+            onAddCustomMaterial={addCustomCarbonMaterial}
+            name="外购含碳原料"
+          />
+          <CustomCarbonateDecompositionList
+            customCarbonMaterials={customCarbonMaterials}
+            setCustomCarbonMaterials={setCustomCarbonMaterials}
+            name="外购含碳原料"
+          />
         </div>
       </div>
 

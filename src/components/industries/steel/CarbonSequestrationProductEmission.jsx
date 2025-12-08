@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import CustomCarbonateDecompositionForm from '../common/CustomCarbonateDecompositionForm';
+import CustomCarbonateDecompositionList from '../common/CustomCarbonateDecompositionList';
 
 // 月份列表
 const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
@@ -83,35 +85,38 @@ const initializeCarbonProductData = (product) => {
 function CarbonSequestrationProductEmission({ onEmissionChange }) {
   // 固碳产品列表状态
   const [carbonProducts, setCarbonProducts] = useState([]);
+
+  const [customCarbonMaterials, setCustomCarbonMaterials] = useState([]);
   
   // 保存上一次的总排放量，用于比较是否真正发生变化
   const previousEmissionRef = useRef(null);
   
   // 初始化默认数据
   useEffect(() => {
-    const initializedProducts = DEFAULT_CARBON_PRODUCTS.map(product => initializeCarbonProductData(product));
+    const initializedProducts = [];
     setCarbonProducts(initializedProducts);
   }, []);
   
   // 添加新的自定义固碳产品
-  const addNewCarbonProduct = useCallback(() => {
-    const newProductId = `carbon-product-${Date.now()}`;
+  const addNewCarbonProduct = useCallback((id) => {
+    const newProductId = `${id}`;
+    const DEFAULT_CARBONATE_PRODUCT = [...DEFAULT_CARBON_PRODUCTS, ...customCarbonMaterials].find(product => product.id === id);
     const newProduct = {
-      id: newProductId,
-      name: '新固碳产品',
-      emissionFactor: 0
+      id: `${newProductId}-${Date.now()}`,
+      name: DEFAULT_CARBONATE_PRODUCT?.name || '新碳酸盐',
+      emissionFactor: DEFAULT_CARBONATE_PRODUCT?.emissionFactor || 0
     };
     
     const initializedNewProduct = initializeCarbonProductData(newProduct);
     setCarbonProducts(prevProducts => [...prevProducts, initializedNewProduct]);
-  }, []);
+  }, [customCarbonMaterials]);
   
   // 移除固碳产品（仅支持移除非默认产品）
   const removeCarbonProduct = useCallback((productId) => {
     setCarbonProducts(prevProducts => {
       const productToRemove = prevProducts.find(product => product.id === productId);
       // 只允许移除非默认产品
-      if (productToRemove && !productToRemove.isDefault) {
+      if (productToRemove) {
         return prevProducts.filter(product => product.id !== productId);
       }
       return prevProducts;
@@ -560,6 +565,20 @@ function CarbonSequestrationProductEmission({ onEmissionChange }) {
       </table>
     );
   };
+
+  const generateId = () => {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  };
+
+  const addCustomCarbonMaterial = useCallback((materialData) => {
+      const customMaterial = {
+        id: `custom-${generateId()}`,
+        name: materialData.name,
+        emissionFactor: parseFloat(materialData.emissionFactor) || 0,
+        isCustom: true,
+      };
+      setCustomCarbonMaterials([...customCarbonMaterials, customMaterial]);
+    }, [customCarbonMaterials]);
   
   return (
     <div style={{ padding: '20px', backgroundColor: '#fff' }}>
@@ -571,12 +590,46 @@ function CarbonSequestrationProductEmission({ onEmissionChange }) {
       {/* 固碳产品部分 */}
       <div style={{ marginTop: '20px',marginBottom: '40px' }}>
         <div style={{ marginBottom: '20px' }}>
-          <h3 style={{ marginBottom: '16px' }}>固碳产品排放计算说明</h3>
+          <h3 style={{ marginBottom: '16px' }}>计算说明</h3>
           <div style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '4px', lineHeight: '1.6' }}>
             <p>固碳产品隐含的排放计算方法：排放量（tCO₂） = 固碳产品产量（t） × 固碳产品排放因子（tCO₂/t）</p>
             <p>- 产量单位为 t，保留两位小数</p>
             <p>- 排放因子单位为 tCO₂/t，保留四位小数</p>
             <p>- 排放量单位为 tCO₂，保留两位小数</p>
+          </div>
+        </div>
+
+        <div style={{ marginTop: '24px', backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', marginBottom: '24px' }}>
+          <h3 style={{ marginBottom: '20px', color: '#1890ff', fontWeight: 'bold', fontSize: '18px' }}>添加固碳产品隐含排放记录</h3>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '16px', alignItems: 'end' }}>
+            <div>
+              <label htmlFor="carbonateProductType" style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#333' }}>添加固碳产品 <span style={{ color: '#ff4d4f' }}>*</span></label>
+            <select
+              onChange={(e) => {
+                const fuelId = e.target.value;
+                if (fuelId) {
+                  addNewCarbonProduct(fuelId);
+                  e.target.value = '';
+                }
+              }}
+              style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+            >
+              <option value="">请选择</option>
+              {DEFAULT_CARBON_PRODUCTS.map(fuel => (
+                <option key={fuel.id} value={fuel.id}>{fuel.name}</option>
+              ))}
+              {customCarbonMaterials && customCarbonMaterials.length > 0 && (
+                    <>
+                      <option disabled>--------------------</option>
+                      {customCarbonMaterials.map(fuel => (
+                        <option key={fuel.id} value={fuel.id}>{fuel.name}</option>
+                      ))}
+                    </>
+                  )}
+            </select>
+            </div>
+            
           </div>
         </div>
         
@@ -586,20 +639,9 @@ function CarbonSequestrationProductEmission({ onEmissionChange }) {
             <div key={product.id} style={{ marginBottom: '32px', border: '1px solid #e8e8e8', padding: '16px', borderRadius: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <h3 style={{ margin: 0, marginRight: '16px' }}>固碳产品 {index + 1}</h3>
-                  <input
-                    type="text"
-                    value={product.name}
-                    onChange={(e) => updateCarbonProductName(product.id, e.target.value)}
-                    style={{
-                      padding: '6px 12px',
-                      border: '1px solid #d9d9d9',
-                      borderRadius: '4px',
-                      width: '150px'
-                    }}
-                  />
+                  <h3 style={{ margin: 0, marginRight: '16px' }}>固碳产品 {index + 1}: {product.name}</h3>
                 </div>
-                {!product.isDefault && (
+                { (
                   <button
                     onClick={() => removeCarbonProduct(product.id)}
                     style={{
@@ -618,21 +660,18 @@ function CarbonSequestrationProductEmission({ onEmissionChange }) {
               {renderVerticalLayoutTable(product)}
             </div>
           ))}
-          
-          <button
-            onClick={addNewCarbonProduct}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#1890ff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              marginTop: '8px'
-            }}
-          >
-            添加固碳产品
-          </button>
+        </div>
+
+        <div style={{ marginTop: '20px', marginBottom: '20px', padding: '15px', border: '1px solid #e8e8e8', borderRadius: '4px' }}>
+          <CustomCarbonateDecompositionForm
+            onAddCustomMaterial={addCustomCarbonMaterial}
+            name="固碳产品"
+          />
+          <CustomCarbonateDecompositionList
+            customCarbonMaterials={customCarbonMaterials}
+            setCustomCarbonMaterials={setCustomCarbonMaterials}
+            name="固碳产品"
+          />
         </div>
       </div>
     </div>
