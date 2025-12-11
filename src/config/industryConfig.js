@@ -7,6 +7,7 @@ export const INDUSTRY_TYPES = {
   ELECTRIC_GRID_COMPANY: '电网企业（待确认）',
   COKING: '独立焦化企业（待确认）',
   CHEMICAL_PRODUCTION: '化工生产企业（待确认）',
+  COAL_PRODUCTION: '煤碳生产企业（待确认）',
   PAPER: '造纸及纸制品业',
   FOOD: '食品、烟草及酒、饮料和精制茶行业',
   NON_FERROUS_METALS: '其他有色金属冶炼和压延加工业',

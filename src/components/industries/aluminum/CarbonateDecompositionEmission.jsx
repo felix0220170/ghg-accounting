@@ -37,6 +37,14 @@ const CARBONATE_INDICATORS = [
     decimalPlaces: 4
   },
   {
+    key: 'purity',
+    name: '碳酸盐纯度',
+    unit: '%',
+    isCalculated: false,
+    decimalPlaces: 0,
+    defaultValue: 100
+  },
+  {
     key: 'emission',
     name: '碳酸盐分解排放量',
     unit: 'tCO₂',
@@ -54,7 +62,7 @@ const createInitialIndicatorData = () => {
     acc[indicator.key] = MONTHS.map((month, index) => ({
       month: index + 1,
       monthName: month,
-      value: indicator.isCalculated ? 0 : (indicator.key === 'emissionFactor' ? 0 : ''),
+      value: indicator.defaultValue || (indicator.isCalculated ? 0 : (indicator.key === 'emissionFactor' ? 0 : '')),
       unit: indicator.unit
     }));
     return acc;
@@ -167,9 +175,13 @@ function CarbonateDecompositionEmission({ onEmissionChange }) {
           
           const emissionFactorData = product.data.emissionFactor?.find(m => m.month === month);
           const emissionFactorValue = emissionFactorData?.value || product.emissionFactor || 0;
+
+          // 获取当月的纯度
+          const purityData = product.data.purity?.find(m => m.month === month);
+          const purityValue = purityData?.value ? parseFloat(purityData.value) : 100;
           
-          // 计算排放量：消耗量 * 排放因子
-          const emissionValue = Math.max(0, consumptionAmountValue) * emissionFactorValue;
+          // 计算排放量：消耗量 * 排放因子 * 纯度%
+          const emissionValue = Math.max(0, consumptionAmountValue) * emissionFactorValue * purityValue / 100;
           
           // 更新排放量数据
           const currentEmissionData = updatedProduct.data.emission || [];
@@ -597,9 +609,10 @@ function CarbonateDecompositionEmission({ onEmissionChange }) {
         <div style={{ marginBottom: '20px' }}>
           <h3 style={{ marginBottom: '16px' }}>计算说明</h3>
           <div style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '4px', lineHeight: '1.6' }}>
-            <p>碳酸盐的排放计算方法：排放量（tCO₂） = 碳酸盐消耗量（t） × 碳酸盐排放因子（tCO₂/t）</p>
+            <p>碳酸盐的排放计算方法：排放量（tCO₂） = 碳酸盐消耗量（t） × 碳酸盐排放因子（tCO₂/t） ×  纯度%</p>
             <p>- 产量单位为 t，保留两位小数</p>
             <p>- 排放因子单位为 tCO₂/t，保留四位小数</p>
+            <p>- 纯度单位为 %，保留零位小数</p>
             <p>- 排放量单位为 tCO₂，保留两位小数</p>
           </div>
         </div>

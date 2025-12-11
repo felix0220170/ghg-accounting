@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import './App.css'
 import 'antd/dist/reset.css'
+import { Modal, Button } from 'antd'
+import { SettingOutlined } from '@ant-design/icons'
+import ConstantConfig from './components/ConstantConfig'
 
 import OtherIndustry from './components/industries/OtherIndustry'
 import PaperIndustry from './components/industries/PaperIndustry'
@@ -18,12 +21,14 @@ import AluminumIndustryPage from './components/industries/aluminum/AluminumIndus
 import ElectricIndustry from './components/industries/electric/ElectricIndustry'
 import CokingIndustry from './components/industries/coking/CokingIndustry'
 import ChemicalIndustry from './components/industries/chemical/ChemicalIndustry'
+import CoalIndustry from './components/industries/coal/CoalIndustry'
 import { INDUSTRY_TYPES } from './config/industryConfig' 
 
 function App() {
   // 使用INDUSTRY_TYPES中的默认值作为初始选择
-  // add some logs
-  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.CHEMICAL_PRODUCTION);
+  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.COAL_PRODUCTION);
+  // 配置弹窗状态
+  const [configModalVisible, setConfigModalVisible] = useState(false);
 
   // 从INDUSTRY_TYPES常量生成行业列表
   //const industries = Object.values(INDUSTRY_TYPES);
@@ -33,7 +38,8 @@ function App() {
     INDUSTRY_TYPES.ALUMINUM_SMELTING,
     INDUSTRY_TYPES.ELECTRIC_GRID_COMPANY,
     INDUSTRY_TYPES.COKING,
-    INDUSTRY_TYPES.CHEMICAL_PRODUCTION
+    INDUSTRY_TYPES.CHEMICAL_PRODUCTION,
+    INDUSTRY_TYPES.COAL_PRODUCTION
   ];
 
   // 根据选择的行业动态加载相应的组件
@@ -71,16 +77,28 @@ function App() {
         return <CokingIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.CHEMICAL_PRODUCTION: // 添加化学行业
         return <ChemicalIndustry industry={selectedIndustry} />;
+      case INDUSTRY_TYPES.COAL_PRODUCTION: // 添加煤炭行业
+        return <CoalIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.OTHER:
       default:
         return <OtherIndustry industry={selectedIndustry} />;
     }
   };
 
+
+
   return (
     <div className="app">
       <header className="app-header">
         <h1>温室气体排放计算系统</h1>
+        <Button
+          type="text"
+          icon={<SettingOutlined />}
+          onClick={() => setConfigModalVisible(true)}
+          style={{ position: 'absolute', right: 20, top: 20 }}
+        >
+          配置
+        </Button>
       </header>
       
       {/* 行业选择器放在最前面，优先选择行业 */}
@@ -101,6 +119,17 @@ function App() {
       <div className="industry-container">
         {renderIndustryComponent()}
       </div>
+
+      {/* 配置弹窗 */}
+      <Modal
+        title="系统常量配置"
+        open={configModalVisible}
+        onCancel={() => setConfigModalVisible(false)}
+        footer={null}
+        width={1000}
+      >
+        <ConstantConfig />
+      </Modal>
     </div>
   );
 }

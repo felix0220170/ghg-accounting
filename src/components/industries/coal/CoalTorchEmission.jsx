@@ -1,55 +1,48 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import CustomCarbonateDecompositionForm from './CustomCarbonateDecompositionForm';
-import CustomCarbonateDecompositionList from './CustomCarbonateDecompositionList';
 
 // 月份列表
 const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
 
-// 默认碳酸盐配置
-const DEFAULT_CARBONATE_PRODUCTS = [
-  { id: 'carbonate-product-1', name: '碳酸钙 (CaCO₃) - 俗称：石灰石', formula: 'CaCO₃', emissionFactor: 0.4400 },
-  { id: 'carbonate-product-2', name: '碳酸镁 (MgCO₃) - 俗称：菱镁矿', formula: 'MgCO₃', emissionFactor: 0.5220 },
-  { id: 'carbonate-product-3', name: '碳酸钠 (Na₂CO₃) - 俗称：纯碱、苏打', formula: 'Na₂CO₃', emissionFactor: 0.4149 },
-  { id: 'carbonate-product-4', name: '碳酸氢钠 (NaHCO₃) - 俗称：小苏打', formula: 'NaHCO₃', emissionFactor: 0.5237 },
-  { id: 'carbonate-product-5', name: '碳酸亚铁 (FeCO₃) - 俗称：菱铁矿', formula: 'FeCO₃', emissionFactor: 0.3799 },
-  { id: 'carbonate-product-6', name: '碳酸锰 (MnCO₃) - 俗称：菱锰矿', formula: 'MnCO₃', emissionFactor: 0.3829 }, 
-  { id: 'carbonate-product-7', name: '碳酸钡 (BaCO₃) - 俗称：碳酸钡矿', formula: 'BaCO₃', emissionFactor: 0.2230 },
-  { id: 'carbonate-product-8', name: '碳酸锂 (Li₂CO₃) - 俗称：锂矿产品', formula: 'Li₂CO₃', emissionFactor: 0.5955 },
-  { id: 'carbonate-product-9', name: '碳酸钾 (K₂CO₃) - 俗称：钾碱', formula: 'K₂CO₃', emissionFactor: 0.3184 },
-  { id: 'carbonate-product-10', name: '碳酸锶 (SrCO₃) - 俗称：碳酸锶矿', formula: 'SrCO₃', emissionFactor: 0.2980 },
-  { id: 'carbonate-product-11', name: '碳酸镁钙 (CaMg(CO₃)₂) - 俗称：白云石', formula: 'CaMg(CO₃)₂', emissionFactor: 0.4773 }
+// 默认煤矿瓦斯气体成分列表
+const DEFAULT_GAS_COMPONENTS = [
+  { id: 'gas-1', name: '一氧化碳', formula: 'CO', carbonAtoms: 1 },
+  { id: 'gas-2', name: '甲烷', formula: 'CH4', carbonAtoms: 1 },
+  { id: 'gas-3', name: '乙烷', formula: 'C2H6', carbonAtoms: 2 },
+  { id: 'gas-4', name: '丙烷', formula: 'C3H8', carbonAtoms: 3 },
 ];
 
-// 碳酸盐分解排放计算指标
+// 煤矿瓦斯火炬燃烧排放计算指标
 const CARBONATE_INDICATORS = [
   {
-    key: 'consumptionAmount',
-    name: '碳酸盐消耗量',
-    unit: 't',
+    key: 'torchBurningAmount',
+    name: '煤矿瓦斯的火炬燃烧量',
+    unit: '104Nm³',
     isCalculated: false,
-    decimalPlaces: 2
+    decimalPlaces: 2,
+    isFullYear: true
   },
   {
-    key: 'emissionFactor',
-    name: '碳酸盐分解的二氧化碳排放因子',
-    unit: 'tCO₂/t',
-    isCalculated: false,
-    decimalPlaces: 4
-  },
-  {
-    key: 'purity',
-    name: '碳酸盐纯度',
+    key: 'carbonOxidationRate',
+    name: '火炬燃烧的碳氧化率',
     unit: '%',
     isCalculated: false,
     decimalPlaces: 0,
-    defaultValue: 100
+    defaultValue: 98
+  },
+  {
+    key: 'totalCarbonContent',
+    name: '除CO2外其他含碳化合物的总含碳量',
+    unit: '吨碳/104Nm³',
+    isCalculated: true,
+    decimalPlaces: 4
   },
   {
     key: 'emission',
-    name: '碳酸盐分解排放量',
+    name: '排放量',
     unit: 'tCO₂',
     isCalculated: true,
-    decimalPlaces: 2
+    decimalPlaces: 2,
+    isFullYear: true
   }
 ];
 
@@ -62,53 +55,96 @@ const createInitialIndicatorData = () => {
     acc[indicator.key] = MONTHS.map((month, index) => ({
       month: index + 1,
       monthName: month,
-      value: indicator.defaultValue || (indicator.isCalculated ? 0 : (indicator.key === 'emissionFactor' ? 0 : '')),
+      value: indicator.isCalculated ? 0 : (indicator.defaultValue !== undefined ? indicator.defaultValue : ''),
       unit: indicator.unit
     }));
     return acc;
   }, {});
 };
 
-const generateId = () => {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
-};
-
-// 为碳酸盐初始化数据（纵向布局）
+// 为煤矿瓦斯火炬燃烧初始化数据（纵向布局）
 const initializeCarbonateProductData = (product) => {
   const initialData = createInitialIndicatorData();
   
-  // 为排放因子设置默认值和额外字段
-  initialData.emissionFactor = initialData.emissionFactor.map(item => ({
-    ...item,
-    value: product.emissionFactor,
-    dataSource: '', // 数据来源
-    supportingMaterial: null // 支撑材料
-  }));
-  
-  // 为消耗量初始化额外字段
-  initialData.consumptionAmount = initialData.consumptionAmount.map(item => ({
-    ...item,
-    value: item.value,
-    dataSource: '', // 数据来源
-    supportingMaterial: null // 支撑材料
-  }));
+  // 为每个指标添加额外字段
+  Object.keys(initialData).forEach(indicatorKey => {
+    initialData[indicatorKey] = initialData[indicatorKey].map(item => ({
+      ...item,
+      dataSource: '', // 数据来源
+      supportingMaterial: null // 支撑材料
+    }));
+  });
   
   return {
     ...product,
     data: initialData,
     files: {},
-    isDefault: product.id === 'carbonate-product-1' || product.id === 'carbonate-product-2' // 标记默认碳酸盐
+    gasComponents: product.gasComponents || [],
+    gasConcentrations: product.gasConcentrations || {},
+    isDefault: false // 不再有默认的产品
   };
 };
 
-function ChemicalCarbonateDecompositionEmission({ onEmissionChange }) {
-  // 碳酸盐列表状态
+function CoalTorchEmission({ onEmissionChange }) {
+  // 火炬燃烧列表状态
   const [carbonateProducts, setCarbonateProducts] = useState([]);
-
-  const [customCarbonMaterials, setCustomCarbonMaterials] = useState([]);
   
   // 保存上一次的总排放量，用于比较是否真正发生变化
   const previousEmissionRef = useRef(null);
+  
+  // 气体成分状态
+  const [gasComponents, setGasComponents] = useState(DEFAULT_GAS_COMPONENTS);
+  
+  // 体积浓度状态
+  const [gasConcentrations, setGasConcentrations] = useState({
+    'gas-1': '', // CO
+    'gas-2': '', // CH4
+    'gas-3': '', // C2H6
+    'gas-4': '', // C3H8
+  });
+  
+  // 自定义气体状态
+  const [customGas, setCustomGas] = useState({
+    name: '',
+    formula: '',
+    carbonAtoms: '',
+    concentration: ''
+  });
+  
+  // 处理气体浓度变化
+  const handleGasConcentrationChange = (gasId, value) => {
+    setGasConcentrations(prev => ({
+      ...prev,
+      [gasId]: value
+    }));
+  };
+  
+  // 添加自定义气体
+  const addCustomGas = () => {
+    if (!customGas.name || !customGas.formula || !customGas.carbonAtoms || !customGas.concentration) return;
+    
+    const newGasId = `gas-custom-${Date.now()}`;
+    const newGas = {
+      id: newGasId,
+      name: customGas.name,
+      formula: customGas.formula,
+      carbonAtoms: parseInt(customGas.carbonAtoms)
+    };
+    
+    setGasComponents(prev => [...prev, newGas]);
+    setGasConcentrations(prev => ({
+      ...prev,
+      [newGasId]: customGas.concentration
+    }));
+    
+    // 重置自定义气体表单
+    setCustomGas({
+      name: '',
+      formula: '',
+      carbonAtoms: '',
+      concentration: ''
+    });
+  };
   
   // 初始化默认数据
   useEffect(() => {
@@ -116,20 +152,29 @@ function ChemicalCarbonateDecompositionEmission({ onEmissionChange }) {
     setCarbonateProducts(initializedProducts);
   }, []);
   
-  // 添加新的自定义碳酸盐
-  const addNewCarbonateProduct = useCallback((id) => {
-    //const newProductId = `carbonate-product-${Date.now()}`;
-    const newProductId = `${id}`;
-    const DEFAULT_CARBONATE_PRODUCT = [...DEFAULT_CARBONATE_PRODUCTS, ...customCarbonMaterials].find(product => product.id === id);
+  // 添加新的煤矿瓦斯火炬燃烧记录
+  const addNewCarbonateProduct = useCallback(() => {
+    // 验证至少有一种气体浓度大于0
+    const hasValidGasConcentration = gasComponents.some(gas => gasConcentrations[gas.id] !== '' && parseFloat(gasConcentrations[gas.id]) > 0);
+    
+    if (!hasValidGasConcentration) {
+      alert('请至少输入一种气体的体积浓度（大于0）');
+      return;
+    }
+    
+    const newProductId = `torch-burning-${Date.now()}`;
+    
+    // 创建新的产品对象，包含气体成分和浓度数据
     const newProduct = {
-      id: `${newProductId}-${Date.now()}`,
-      name: DEFAULT_CARBONATE_PRODUCT?.name || '新碳酸盐',
-      emissionFactor: DEFAULT_CARBONATE_PRODUCT?.emissionFactor || 0
+      id: newProductId,
+      name: '煤矿瓦斯火炬燃烧',
+      gasComponents: gasComponents.filter(gas => gasConcentrations[gas.id] !== '' && parseFloat(gasConcentrations[gas.id]) > 0),
+      gasConcentrations: gasConcentrations
     };
     
     const initializedNewProduct = initializeCarbonateProductData(newProduct);
     setCarbonateProducts(prevProducts => [...prevProducts, initializedNewProduct]);
-  }, [customCarbonMaterials]);
+  }, [gasComponents, gasConcentrations]);
   
   // 移除碳酸盐（仅支持移除非默认产品）
   const removeCarbonateProduct = useCallback((productId) => {
@@ -153,7 +198,7 @@ function ChemicalCarbonateDecompositionEmission({ onEmissionChange }) {
   
   // 更新计算值 - 实现排放量计算逻辑
   const updateCalculatedValues = useCallback(() => {
-    // 处理碳酸盐数据计算
+    // 处理煤矿瓦斯火炬燃烧数据计算
     setCarbonateProducts(prevProducts => {
       let hasChanges = false;
       const updatedProducts = prevProducts.map(product => {
@@ -166,19 +211,41 @@ function ChemicalCarbonateDecompositionEmission({ onEmissionChange }) {
         for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
           const month = monthIndex + 1;
           
-          // 获取当月的消耗量和排放因子
-          const consumptionAmountData = product.data.consumptionAmount?.find(m => m.month === month);
-          const consumptionAmountValue = consumptionAmountData?.value ? parseFloat(consumptionAmountData.value) : 0;
-          
-          const emissionFactorData = product.data.emissionFactor?.find(m => m.month === month);
-          const emissionFactorValue = emissionFactorData?.value || product.emissionFactor || 0;
+          // 获取当月的煤矿瓦斯燃烧量
+          const torchBurningAmountData = product.data.torchBurningAmount?.find(m => m.month === month);
+          const torchBurningAmountValue = torchBurningAmountData?.value ? parseFloat(torchBurningAmountData.value) : 0;
 
-          // 获取当月的纯度
-          const purityData = product.data.purity?.find(m => m.month === month);
-          const purityValue = purityData?.value ? parseFloat(purityData.value) : 100;
+          // 获取碳氧化率
+          const carbonOxidationRateData = product.data.carbonOxidationRate?.find(m => m.month === month);
+          const carbonOxidationRateValue = carbonOxidationRateData?.value || 98;
           
-          // 计算排放量：消耗量 * 排放因子
-          const emissionValue = Math.max(0, consumptionAmountValue) * emissionFactorValue * purityValue / 100;  
+          // 计算总含碳量：Sum(12 * 气体碳原子数量 * 浓度 * 10 / 22.4)
+          let totalCarbonContentValue = 0;
+          product.gasComponents?.forEach(gas => {
+            const concentration = product.gasConcentrations?.[gas.id] || 0;
+            if (concentration > 0) {
+              totalCarbonContentValue += (12 * gas.carbonAtoms * concentration * 10) / 22.4;
+            }
+          });
+          
+          // 计算排放量：煤矿瓦斯燃烧量 * 含碳量 * 碳氧化率 * 44/12
+          const emissionValue = Math.max(0, torchBurningAmountValue) * totalCarbonContentValue * (carbonOxidationRateValue / 100) * (44 / 12);
+          
+          // 更新总含碳量数据
+          const currentTotalCarbonContentData = updatedProduct.data.totalCarbonContent || [];
+          const totalCarbonContentMonthIndex = currentTotalCarbonContentData.findIndex(m => m.month === month);
+          const newTotalCarbonContentData = [...currentTotalCarbonContentData];
+          
+          if (totalCarbonContentMonthIndex !== -1) {
+            if (parseFloat(newTotalCarbonContentData[totalCarbonContentMonthIndex].value) !== totalCarbonContentValue) {
+              newTotalCarbonContentData[totalCarbonContentMonthIndex] = {
+                ...newTotalCarbonContentData[totalCarbonContentMonthIndex],
+                value: totalCarbonContentValue,
+                unit: 't碳/104Nm³'
+              };
+              productChanged = true;
+            }
+          }
           
           // 更新排放量数据
           const currentEmissionData = updatedProduct.data.emission || [];
@@ -211,6 +278,7 @@ function ChemicalCarbonateDecompositionEmission({ onEmissionChange }) {
             ...updatedProduct,
             data: {
               ...updatedProduct.data,
+              totalCarbonContent: newTotalCarbonContentData,
               emission: newEmissionData
             }
           };
@@ -232,6 +300,21 @@ function ChemicalCarbonateDecompositionEmission({ onEmissionChange }) {
   useEffect(() => {
     updateCalculatedValues();
   }, [updateCalculatedValues, carbonateProducts]);
+
+  // 处理技术选择变化
+  const handleTechChange = useCallback((productId, selectedTech) => {
+    setCarbonateProducts(prevProducts => {
+      return prevProducts.map(product => {
+        if (product.id === productId) {
+          return {
+            ...product,
+            selectedTech
+          };
+        }
+        return product;
+      });
+    });
+  }, [setCarbonateProducts]);
   
   // 处理数据变化（纵向布局）
   const handleDataChange = useCallback((id, indicatorKey, month, field, value, type = 'carbonate-product') => {
@@ -270,7 +353,7 @@ function ChemicalCarbonateDecompositionEmission({ onEmissionChange }) {
             const indicatorDefinition = indicators.find(ind => ind.key === indicatorKey);
             
             updatedIndicatorData.push({
-              month,
+              month, 
               monthName: MONTHS[month - 1],
               value: field === 'value' ? formattedValue : '',
               dataSource: '',
@@ -422,7 +505,7 @@ function ChemicalCarbonateDecompositionEmission({ onEmissionChange }) {
           
           // 计算全年值
           let yearlyValue = 0;
-          if (indicator.isCalculated || indicator.key === 'consumptionAmount') {
+          if (indicator.isFullYear) {
             yearlyValue = indicatorData.reduce((sum, monthData) => {
               const value = parseFloat(monthData.value) || 0;
               return sum + value;
@@ -462,7 +545,7 @@ function ChemicalCarbonateDecompositionEmission({ onEmissionChange }) {
                   );
                 })}
                 <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>
-                  {indicator.isCalculated || indicator.key === 'consumptionAmount' ? (
+                  {indicator.isFullYear ? (
                     formatValue(yearlyValue, indicator.decimalPlaces)
                   ) : (
                     '-' // 排放因子不显示全年值
@@ -568,7 +651,7 @@ function ChemicalCarbonateDecompositionEmission({ onEmissionChange }) {
         </thead>
         <tbody>
           <tr>
-            <td style={{ border: '1px solid #d9d9d9', padding: '8px', fontWeight: 'bold' }}>碳酸盐分解排放总量</td>
+            <td style={{ border: '1px solid #d9d9d9', padding: '8px', fontWeight: 'bold' }}>煤矿瓦斯火炬燃烧的排放总量</td>
             {totalEmissions.map((value, index) => (
               <td key={index} style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>
                 {formatValue(value, 2)}
@@ -583,29 +666,21 @@ function ChemicalCarbonateDecompositionEmission({ onEmissionChange }) {
     );
   };
 
-  const addCustomCarbonMaterial = useCallback((materialData) => {
-      const customMaterial = {
-        id: `custom-${generateId()}`,
-        name: materialData.name,
-        emissionFactor: parseFloat(materialData.emissionFactor) || 0,
-        isCustom: true,
-      };
-      setCustomCarbonMaterials([...customCarbonMaterials, customMaterial]);
-    }, [customCarbonMaterials]);
-
   return (
     <div style={{ padding: '16px' }}>
-      <h2 style={{ marginBottom: '24px', fontSize: '20px', color: '#333' }}>碳酸盐分解排放</h2>
-
-      {/* 碳酸盐 */}
+      <h2 style={{ marginBottom: '24px', fontSize: '20px', color: '#333' }}>煤矿瓦斯火炬燃烧排放</h2>
+      {/* 煤矿瓦斯火炬燃烧 */}
       <div style={{ marginTop: '20px',marginBottom: '40px' }}>
         <div style={{ marginBottom: '20px' }}>
           <div style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '4px', lineHeight: '1.2' }}>
-            <h3 style={{ marginBottom: '12px' }}>计算说明</h3>
-            <p>碳酸盐的排放计算方法：排放量（tCO₂） = 碳酸盐消耗量（t） × 碳酸盐排放因子（tCO₂/t） ×  纯度%</p>
-            <p>- 消费量单位为 t，保留两位小数</p>
-            <p>- 排放因子单位为 tCO₂/t，保留四位小数</p>
-            <p>- 纯度单位为 %，保留零位小数</p>
+            <h3 style={{ marginBottom: '16px' }}>计算说明</h3>
+            <p>煤矿瓦斯火炬燃烧过程中，含碳气体（如CO、CH₄、C₂H₆、C₃H₈等）燃烧生成CO₂，排放量根据瓦斯燃烧量、气体成分、碳氧化率等计算。</p>
+            <p>煤矿瓦斯火炬燃烧排放量 = 煤矿瓦斯燃烧量 × 除CO₂外其他含碳化合物的总含碳量 × 碳氧化率 × 44/12</p>
+            <p>除CO₂外其他含碳化合物的总含碳量 = Sum(12 × 气体碳原子数量 × 浓度 × 10 / 22.4)</p>
+            <p>其中：12为碳的摩尔质量（12 g/mol），22.4为标准状况下的摩尔体积（0.022414 Nm³/mol）</p>
+            <p>- 煤矿瓦斯燃烧量单位为 10<sup>4</sup>Nm³，保留两位小数</p>
+            <p>- 碳氧化率单位为 %，默认值为98%</p>
+            <p>- 除CO₂外其他含碳化合物的总含碳量单位为 t碳/10<sup>4</sup>Nm³，保留两位小数</p>
             <p>- 排放量单位为 tCO₂，保留两位小数</p>
           </div>
         </div>
@@ -613,46 +688,137 @@ function ChemicalCarbonateDecompositionEmission({ onEmissionChange }) {
         {renderTotalEmissionTable()}
 
         <div style={{ marginTop: '24px', backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', marginBottom: '24px' }}>
-          <h3 style={{ marginBottom: '20px', color: '#1890ff', fontWeight: 'bold', fontSize: '18px' }}>添加碳酸盐分解排放记录</h3>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '16px', alignItems: 'end' }}>
-            <div>
-              <label htmlFor="carbonateProductType" style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#333' }}>添加碳酸盐 <span style={{ color: '#ff4d4f' }}>*</span></label>
-            <select
-              onChange={(e) => {
-                const fuelId = e.target.value;
-                if (fuelId) {
-                  addNewCarbonateProduct(fuelId);
-                  e.target.value = '';
-                }
-              }}
-              style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-            >
-              <option value="">请选择</option>
-              {DEFAULT_CARBONATE_PRODUCTS.map(fuel => (
-                <option key={fuel.id} value={fuel.id}>{fuel.name}</option>
-              ))}
-              {customCarbonMaterials && customCarbonMaterials.length > 0 && (
-                    <>
-                      <option disabled>--------------------</option>
-                      {customCarbonMaterials.map(fuel => (
-                        <option key={fuel.id} value={fuel.id}>{fuel.name}</option>
-                      ))}
-                    </>
-                  )}
-            </select>
+            <h3 style={{ marginBottom: '20px', color: '#1890ff', fontWeight: 'bold', fontSize: '18px' }}>添加火炬燃烧生产排放记录</h3>
+            
+            <div style={{ marginBottom: '20px' }}>
+                <h4 style={{ marginBottom: '12px', color: '#333' }}>煤矿瓦斯气体成分（体积浓度%）</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+                    {gasComponents.map((gas) => (
+                        <div key={gas.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between', padding: '8px 0' }}>
+                            <label style={{ flex: 1, fontWeight: 'bold', color: '#555', fontSize: '14px' }}>{gas.name} ({gas.formula})</label>
+                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <input
+                                    type="number"
+                                    placeholder="请输入"
+                                    value={gasConcentrations[gas.id] || ''}
+                                    onChange={(e) => handleGasConcentrationChange(gas.id, e.target.value)}
+                                    style={{ flex: 1, padding: '8px 12px', border: '1px solid #d9d9d9', borderRadius: '4px', fontSize: '14px', minWidth: '100px' }}
+                                    min="0"
+                                    max="100"
+                                    step="0.1"
+                                />
+                                <span style={{ color: '#888', fontSize: '14px' }}>%</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
             
-          </div>
+            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+                <h4 style={{ marginBottom: '12px', color: '#333' }}>添加自定义气体</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>气体名称</label>
+                        <input
+                            type="text"
+                            placeholder="如：丁烷"
+                            value={customGas.name}
+                            onChange={(e) => setCustomGas(prev => ({ ...prev, name: e.target.value }))}
+                            style={{ width: '100%', padding: '6px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>化学式</label>
+                        <input
+                            type="text"
+                            placeholder="如：C4H10"
+                            value={customGas.formula}
+                            onChange={(e) => setCustomGas(prev => ({ ...prev, formula: e.target.value }))}
+                            style={{ width: '100%', padding: '6px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>碳原子数目</label>
+                        <input
+                            type="number"
+                            placeholder="如：4"
+                            value={customGas.carbonAtoms}
+                            onChange={(e) => setCustomGas(prev => ({ ...prev, carbonAtoms: e.target.value }))}
+                            style={{ width: '100%', padding: '6px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+                            min="1"
+                            step="1"
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>体积浓度%</label>
+                        <input
+                            type="number"
+                            placeholder="如：5"
+                            value={customGas.concentration}
+                            onChange={(e) => setCustomGas(prev => ({ ...prev, concentration: e.target.value }))}
+                            style={{ width: '100%', padding: '6px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+                            min="0"
+                            max="100"
+                            step="0.1"
+                        />
+                    </div>
+                    <button
+                        onClick={addCustomGas}
+                        style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#52c41a',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            alignSelf: 'end'
+                        }}
+                    >
+                        添加气体
+                    </button>
+                </div>
+            </div>
+            
+            <button
+                onClick={addNewCarbonateProduct}
+                style={{
+                    padding: '10px 24px',
+                    backgroundColor: '#1890ff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    transition: 'all 0.3s',
+                    boxShadow: '0 2px 4px rgba(24, 144, 255, 0.3)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#40a9ff'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1890ff'}
+            >
+                添加排放记录
+            </button>
         </div>
+
         <div>
           {carbonateProducts.map((product, index) => (
             <div key={product.id} style={{ marginBottom: '32px', border: '1px solid #e8e8e8', padding: '16px', borderRadius: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <h3 style={{ margin: 0, fontSize: '16px', marginRight: '16px' }}>碳酸盐({index + 1}):  {product.name}</h3>
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <h3 style={{ margin: 0, fontSize: '16px', marginRight: '16px' }}>{product.name}</h3>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {product.gasComponents.map((gas, idx) => {
+                      const concentration = product.gasConcentrations[gas.id];
+                      return (
+                        <span key={gas.id} style={{ fontSize: '14px', color: '#666' }}>
+                          {gas.name}({gas.formula}): {concentration}%{idx < product.gasComponents.length - 1 ? '，' : ''}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
-                {(
+                {!product.isDefault && (
                   <button
                     onClick={() => removeCarbonateProduct(product.id)}
                     style={{
@@ -673,23 +839,11 @@ function ChemicalCarbonateDecompositionEmission({ onEmissionChange }) {
               {renderVerticalLayoutTable(product)}
             </div>
           ))}
+          
         </div>
-
-        <div style={{ marginTop: '20px', marginBottom: '20px', padding: '15px', border: '1px solid #e8e8e8', borderRadius: '4px' }}>
-          <CustomCarbonateDecompositionForm
-            onAddCustomMaterial={addCustomCarbonMaterial}
-            name="碳酸盐"
-          />
-          <CustomCarbonateDecompositionList
-            customCarbonMaterials={customCarbonMaterials}
-            setCustomCarbonMaterials={setCustomCarbonMaterials}
-            name="碳酸盐"
-          />
-        </div>
-
       </div>
     </div>
   );
 }
 
-export default ChemicalCarbonateDecompositionEmission;
+export default CoalTorchEmission;

@@ -117,7 +117,7 @@ function CO2RecyclingEmission({ onEmissionChange, industry }) {
   return (
     <Card title={`表6：CO2回收和利用量（${industry}）`} style={{ marginBottom: 20 }}>
       <Paragraph type="secondary" style={{ marginBottom: 20 }}>
-        CO2气体的密度（吨/万Nm³）为常量 19.77 为标准状况下 CO2 气体的密度
+        CO2气体的密度（吨/10<sup>4</sup>Nm³）为常量 19.77 为标准状况下 CO2 气体的密度
       </Paragraph>
       
       {/* 添加计算结果显示区域 */}
@@ -248,7 +248,7 @@ function CO2RecyclingEmission({ onEmissionChange, industry }) {
         <div className="calculation-description">
           <p><strong>计算公式：</strong></p>
           <p>CO2回收和利用量（吨） = （CO2 回收外供量 × 外供气体 CO2 体积浓度百分比/100 + CO2 回收作原料量 × 原料气 CO2 体积浓度百分比/100） × 19.77</p>
-          <p><strong>单位说明：</strong>CO2 回收外供量和回收作原料量单位为万 Nm³，浓度为百分比，19.77 为标准状况下 CO2 气体的密度（吨/万Nm³）。</p>
+          <p><strong>单位说明：</strong>CO2 回收外供量和回收作原料量单位为104 Nm³，浓度为百分比，19.77 为标准状况下 CO2 气体的密度（吨/104Nm³）。</p>
           <p><strong>证明材料：</strong>1、请企业提供台帐或统计报表来证明CO2气体回收外供量以及回收自用作生产原料的 CO2 量。
 2、请企业提供台帐记录来证明CO2外供气体的CO2 气体的 CO2 体积浓度以及回收自用作生产原料的 CO2 气体的 CO2 体积浓度。</p>
         </div>
