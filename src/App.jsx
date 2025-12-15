@@ -22,11 +22,12 @@ import ElectricIndustry from './components/industries/electric/ElectricIndustry'
 import CokingIndustry from './components/industries/coking/CokingIndustry'
 import ChemicalIndustry from './components/industries/chemical/ChemicalIndustry'
 import CoalIndustry from './components/industries/coal/CoalIndustry'
+import ManganeseIndustry from './components/industries/manganese/ManganeseIndustry'
 import { INDUSTRY_TYPES } from './config/industryConfig' 
 
 function App() {
   // 使用INDUSTRY_TYPES中的默认值作为初始选择
-  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.COAL_PRODUCTION);
+  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.MANGANESE_SMELTING);
   // 配置弹窗状态
   const [configModalVisible, setConfigModalVisible] = useState(false);
 
@@ -39,7 +40,8 @@ function App() {
     INDUSTRY_TYPES.ELECTRIC_GRID_COMPANY,
     INDUSTRY_TYPES.COKING,
     INDUSTRY_TYPES.CHEMICAL_PRODUCTION,
-    INDUSTRY_TYPES.COAL_PRODUCTION
+    INDUSTRY_TYPES.COAL_PRODUCTION,
+    INDUSTRY_TYPES.MANGANESE_SMELTING,
   ];
 
   // 根据选择的行业动态加载相应的组件
@@ -79,6 +81,8 @@ function App() {
         return <ChemicalIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.COAL_PRODUCTION: // 添加煤炭行业
         return <CoalIndustry industry={selectedIndustry} />;
+      case INDUSTRY_TYPES.MANGANESE_SMELTING: // 添加镁冶炼行业
+        return <ManganeseIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.OTHER:
       default:
         return <OtherIndustry industry={selectedIndustry} />;
