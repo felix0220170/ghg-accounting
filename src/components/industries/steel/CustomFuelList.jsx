@@ -41,9 +41,12 @@ const CustomFuelList = ({ customFuels = [], setCustomFuels }) => {
           >
             <div>
               <span style={{ fontWeight: 'bold', marginRight: '12px' }}>{fuel.name}</span>
-              <span style={{ marginRight: '8px' }}>类型: {fuel.type === 'solid' ? '固体' : fuel.type === 'liquid' ? '液体' : '气体'}</span>
-              <span style={{ marginRight: '8px' }}>低位发热量: {fuel.calorificValue} {fuel.type === 'gas' ? 'GJ/10⁴Nm³' : 'GJ/t'}</span>
-              <span>单位热值含碳量: {fuel.carbonContent} tC/GJ</span>
+              <span style={{ marginRight: '8px' }}>类型: {fuel.type === 'solid' ? '固体' : fuel.type === 'liquid' ? '液体' : fuel.type === 'gas' ? '气体' : '生物质混合'}</span>
+              <span style={{ marginRight: '8px' }}>低位发热量: {fuel.calorificValue} {fuel.unit || (fuel.type === 'gas' ? 'GJ/10⁴Nm³' : 'GJ/t')}</span>
+              <span style={{ marginRight: '8px' }}>单位热值含碳量: {fuel.carbonContent} tC/GJ</span>
+              {fuel.type === 'mix' && fuel.biomassContent && (
+                <span style={{ marginRight: '8px' }}>生物质含量: {fuel.biomassContent} %</span>
+              )}
             </div>
             <button
               onClick={() => handleRemoveFuel(fuel.id)}

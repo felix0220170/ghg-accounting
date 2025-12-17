@@ -39,6 +39,8 @@ const ConstantConfig = () => {
     { id: 'gasoline', name: '汽油', calorificValue: 43.070, carbonContent: 0.01890, type: 'liquid', oxidationRate: 98 },
     { id: 'diesel', name: '柴油', calorificValue: 42.652, carbonContent: 0.02020, type: 'liquid', oxidationRate: 98 },
     { id: 'kerosene', name: '煤油', calorificValue: 43.070, carbonContent: 0.01960, type: 'liquid', oxidationRate: 98 },
+    { id: 'aeroGasoline', name: '航空汽油', calorificValue: 44.300 , carbonContent: 0.01910, type: 'liquid', oxidationRate: 100 },
+    { id: 'aeroKerosene', name: '航空煤油', calorificValue: 44.100, carbonContent: 0.01950, type: 'liquid', oxidationRate: 100 },
     { id: 'lng', name: '液化天然气', calorificValue: 51.498, carbonContent: 0.01720, type: 'liquid', oxidationRate: 98 },
     { id: 'lpg', name: '液化石油气', calorificValue: 50.179, carbonContent: 0.01720, type: 'liquid', oxidationRate: 98 },
     { id: 'coalTar', name: '煤焦油', calorificValue: 33.453, carbonContent: 0.02200, type: 'liquid', oxidationRate: 98 },
