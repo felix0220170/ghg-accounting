@@ -18,7 +18,9 @@ const ConstantConfig = () => {
     '常见化工产品',
     '碳酸盐排放因子',
     '露天煤矿和矿后活动的CH4逃逸排放因子',
-    '硝酸生产技术类型的排放因子'
+    '硝酸生产技术类型的排放因子',
+    '气体密度常量',
+    '油气开采CH4排放因子'
   ];
 
   // 固体燃料数据
@@ -108,6 +110,53 @@ const ConstantConfig = () => {
     { id: 'process-4', name: '双加压法', emissionFactor: 0.0080 },
     { id: 'process-5', name: '综合法', emissionFactor: 0.0075 },
     { id: 'process-6', name: '低压法', emissionFactor: 0.0050 }
+  ];
+
+  // 气体密度常量数据
+  const GAS_DENSITY_CONSTANTS = [
+    { id: 'co2-density', name: '二氧化碳 (CO₂)', density: 19.7, unit: '吨/万Nm³' },
+    { id: 'ch4-density', name: '甲烷 (CH₄)', density: 7.17, unit: '吨/万Nm³' }
+  ];
+
+  // 工艺放空排放装置类型及默认排放因子（吨CH4/(年·个)）
+  const PROCESS_VENTING_DEVICES = [
+    // 原油开采装置
+    { id: 'crude-oil-wellhead', name: '原油开采-井口装置', factor: null },
+    { id: 'crude-oil-single-well-storage', name: '原油开采-单井储油装置', factor: 0.22 },
+    { id: 'crude-oil-transfer-station', name: '原油开采-接转站', factor: 0.11 },
+    { id: 'crude-oil-combined-station', name: '原油开采-联合站', factor: 0.45 },
+    // 天然气开采装置
+    { id: 'natural-gas-wellhead', name: '天然气开采-井口装置', factor: null },
+    { id: 'natural-gas-collection-station', name: '天然气开采-集气站', factor: 23.6 },
+    { id: 'natural-gas-metering-station', name: '天然气开采-计量/配气站', factor: null },
+    { id: 'natural-gas-storage-station', name: '天然气开采-储气站', factor: 10.0 },
+    // 油气储运装置
+    { id: 'gas-oil-transport-compressor-station', name: '天然气输送-压气站/增压站', factor: 10.05 },
+    { id: 'gas-oil-transport-metering-station', name: '天然气输送-计量站/分输站', factor: 13.52 },
+    { id: 'gas-oil-transport-pipeline-check-valve', name: '天然气输送-管线(逆止阀) ', factor: 5.49 },
+    { id: 'gas-oil-transport-pigging-station', name: '天然气输送-清管站', factor: 0.001 },
+  ];
+
+  // CH4逃逸排放装置类型及默认排放因子
+  // type: 'count'表示按设备个数计算，'volume'表示按输送量计算
+  const METHANE_ESCAPE_DEVICES = [
+    // 原油开采装置
+    { id: 'crude-oil-wellhead-escape', name: '原油开采-井口装置', factor: 0.23, type: 'count', unit: '个', factorUnit: '吨CH4/(年·个)' },
+    { id: 'crude-oil-single-well-storage-escape', name: '原油开采-单井储油装置', factor: 0.38, type: 'count', unit: '个', factorUnit: '吨CH4/(年·个)' },
+    { id: 'crude-oil-transfer-station-escape', name: '原油开采-接转站', factor: 0.18, type: 'count', unit: '个', factorUnit: '吨CH4/(年·个)' },
+    { id: 'crude-oil-combined-station-escape', name: '原油开采-联合站', factor: 1.40, type: 'count', unit: '个', factorUnit: '吨CH4/(年·个)' },
+    // 天然气开采装置
+    { id: 'natural-gas-wellhead-escape', name: '天然气开采-井口装置', factor: 2.50, type: 'count', unit: '个', factorUnit: '吨CH4/(年·个)' },
+    { id: 'natural-gas-collection-station-escape', name: '天然气开采-集气站', factor: 27.9, type: 'count', unit: '个', factorUnit: '吨CH4/(年·个)' },
+    { id: 'natural-gas-metering-station-escape', name: '天然气开采-计量/配气站', factor: 8.47, type: 'count', unit: '个', factorUnit: '吨CH4/(年·个)' },
+    { id: 'natural-gas-storage-station-escape', name: '天然气开采-储气站', factor: 58.37, type: 'count', unit: '个', factorUnit: '吨CH4/(年·个)' },
+    // 原油储运装置
+    { id: 'crude-oil-transport-pipeline-escape', name: '原油输送-原油输送管道', factor: 753.29, type: 'volume', unit: '亿吨', factorUnit: '吨CH4/亿吨' },
+    // 天然气储运装置
+    { id: 'natural-gas-transport-compressor-station-escape', name: '天然气输送-压气站/增压站', factor: 85.05, type: 'count', unit: '个', factorUnit: '吨CH4/(年·个)' },
+    { id: 'natural-gas-transport-metering-station-escape', name: '天然气输送-计量站/分输站', factor: 31.5, type: 'count', unit: '个', factorUnit: '吨CH4/(年·个)' },
+    { id: 'natural-gas-transport-pipeline-check-valve-escape', name: '天然气输送-管线(逆止阀) ', factor: 0.85, type: 'count', unit: '个', factorUnit: '吨CH4/(年·个)' },
+    { id: 'natural-gas-transport-pigging-station-escape', name: '天然气输送-清管站', factor: 0, type: 'count', unit: '个', factorUnit: '吨CH4/(年·个)' },
   ];
 
   // 渲染常量内容
@@ -420,6 +469,115 @@ const ConstantConfig = () => {
               </div>
               <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: '400px', overflowY: 'auto', backgroundColor: '#f5f5f5', padding: '10px', borderRadius: '4px' }}>
                 {nitricAcidProcessEmissionFactorsJson}
+              </pre>
+            </Card>
+          </div>
+        );
+      case '气体密度常量':
+        // 准备气体密度常量数据的JSON格式
+        const gasDensityConstantsJson = JSON.stringify(GAS_DENSITY_CONSTANTS, null, 2);
+        
+        // 复制JSON到剪贴板
+        const copyGasDensityConstantsJson = () => {
+          navigator.clipboard.writeText(gasDensityConstantsJson)
+            .then(() => {
+              alert('气体密度常量数据已复制到剪贴板');
+            })
+            .catch(err => {
+              console.error('复制失败:', err);
+            });
+        };
+        
+        return (
+          <div>
+            <Title level={5}>气体密度常量</Title>
+            <div style={{ marginBottom: '16px', color: '#666', fontSize: '14px' }}>
+              <Text type="secondary">适用行业：所有需要计算气体密度的企业</Text>
+            </div>
+            <List
+              bordered
+              dataSource={GAS_DENSITY_CONSTANTS}
+              renderItem={gas => (
+                <List.Item>
+                  <div>
+                    <Text strong>{gas.name}</Text>
+                    <div>密度: {gas.density} {gas.unit}</div>
+                  </div>
+                </List.Item>
+              )}
+            />
+            
+            <Title level={5} style={{ marginTop: '20px' }}>JSON格式数据</Title>
+            <Card style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: 16 }}>
+                <Button type="primary" onClick={copyGasDensityConstantsJson}>复制JSON</Button>
+              </div>
+              <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: '400px', overflowY: 'auto', backgroundColor: '#f5f5f5', padding: '10px', borderRadius: '4px' }}>
+                {gasDensityConstantsJson}
+              </pre>
+            </Card>
+          </div>
+        );
+
+      case '油气开采CH4排放因子':
+        // 准备油气开采CH4排放因子数据的JSON格式
+        const oilGasCH4EmissionFactorsJson = JSON.stringify({
+          processVentingDevices: PROCESS_VENTING_DEVICES,
+          methaneEscapeDevices: METHANE_ESCAPE_DEVICES
+        }, null, 2);
+        
+        // 复制JSON到剪贴板
+        const copyOilGasCH4EmissionFactorsJson = () => {
+          navigator.clipboard.writeText(oilGasCH4EmissionFactorsJson)
+            .then(() => {
+              alert('油气开采CH4排放因子数据已复制到剪贴板');
+            })
+            .catch(err => {
+              console.error('复制失败:', err);
+            });
+        };
+        
+        return (
+          <div>
+            <Title level={5}>工艺放空排放装置</Title>
+            <div style={{ marginBottom: '16px', color: '#666', fontSize: '14px' }}>
+              <Text type="secondary">适用行业：石油和天然气生产企业</Text>
+            </div>
+            <List
+              bordered
+              dataSource={PROCESS_VENTING_DEVICES}
+              renderItem={device => (
+                <List.Item>
+                  <div>
+                    <Text strong>{device.name}</Text>
+                    <div>排放因子: {device.factor !== null ? `${device.factor} 吨CH4/(年·个)` : '无默认值'}</div>
+                  </div>
+                </List.Item>
+              )}
+            />
+            
+            <Title level={5} style={{ marginTop: '20px' }}>CH4逃逸排放装置</Title>
+            <List
+              bordered
+              dataSource={METHANE_ESCAPE_DEVICES}
+              renderItem={device => (
+                <List.Item>
+                  <div>
+                    <Text strong>{device.name}</Text>
+                    <div>排放因子: {device.factor} {device.factorUnit || '吨CH4/(年·个)'}</div>
+                    <div>计算类型: {device.type === 'count' ? '按设备个数计算' : '按输送量计算'}</div>
+                  </div>
+                </List.Item>
+              )}
+            />
+            
+            <Title level={5} style={{ marginTop: '20px' }}>JSON格式数据</Title>
+            <Card style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: 16 }}>
+                <Button type="primary" onClick={copyOilGasCH4EmissionFactorsJson}>复制JSON</Button>
+              </div>
+              <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: '400px', overflowY: 'auto', backgroundColor: '#f5f5f5', padding: '10px', borderRadius: '4px' }}>
+                {oilGasCH4EmissionFactorsJson}
               </pre>
             </Card>
           </div>
