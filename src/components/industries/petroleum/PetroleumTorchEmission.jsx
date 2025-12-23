@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 // 月份列表
 const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
 
-// 石油天然气企业火炬燃烧排放相关常量
+// 石油化工企业火炬燃烧排放相关常量
 
 // 正常火炬燃烧排放计算指标
 const NORMAL_TORCH_INDICATORS = [
@@ -38,37 +38,6 @@ const NORMAL_TORCH_INDICATORS = [
     decimalPlaces: 0
   },
   {
-    key: 'co2Emission',
-    name: 'CO2 排放量',
-    unit: '吨CO₂',
-    isCalculated: true,
-    decimalPlaces: 2,
-    isFullYear: true,
-    getValue: (monthData) => {
-      const { torchGasFlowRate, carbonOxidationRate, totalCarbonContent, co2VolumeConcentration } = monthData;
-      return torchGasFlowRate * (totalCarbonContent *  carbonOxidationRate/100 * 44 /12 + co2VolumeConcentration/100 * 19.7);
-    }
-  },
-  {
-    key: 'ch4VolumeConcentration',
-    name: 'CH4 的体积浓度',
-    unit: '%',
-    isCalculated: false,
-    decimalPlaces: 0
-  },
-  {
-    key: 'ch4Emission',
-    name: 'CH4 排放量',
-    unit: '吨CO₂',
-    isCalculated: true,
-    decimalPlaces: 2,
-    isFullYear: true,
-    getValue: (monthData) => {
-      const { torchGasFlowRate, carbonOxidationRate, ch4VolumeConcentration } = monthData;
-      return torchGasFlowRate * ch4VolumeConcentration /100 * ( 1- carbonOxidationRate/100) * 7.17 * 21
-    }
-  },
-  {
     key: 'emission',
     name: '排放量',
     unit: 'tCO₂',
@@ -76,8 +45,8 @@ const NORMAL_TORCH_INDICATORS = [
     decimalPlaces: 2,
     isFullYear: true,
     getValue: (monthData) => {
-      const { co2Emission, ch4Emission } = monthData;
-      return co2Emission + ch4Emission;
+      const { torchGasFlowRate, carbonOxidationRate, totalCarbonContent, co2VolumeConcentration } = monthData;
+      return torchGasFlowRate * (totalCarbonContent *  carbonOxidationRate/100 * 44 /12 + co2VolumeConcentration/100 * 19.7);
     }
   }
 ];
@@ -106,49 +75,11 @@ const ACCIDENT_TORCH_INDICATORS = [
     defaultValue: 98
   },
   {
-    key: 'totalCarbonContent',
-    name: '除CO2外其他含碳化合物的总含碳量',
-    unit: '吨碳/10⁴Nm³',
+    key: 'averageCarbonNumber',
+    name: '火炬气体摩尔组分的平均碳原子数目',
+    unit: '个',
     isCalculated: false,
     decimalPlaces: 4
-  },
-  {
-    key: 'co2VolumeConcentration',
-    name: 'CO2 的体积浓度',
-    unit: '%',
-    isCalculated: false,
-    decimalPlaces: 0
-  },
-  {
-    key: 'co2Emission',
-    name: 'CO2 排放量',
-    unit: '吨CO₂',
-    isCalculated: true,
-    decimalPlaces: 2,
-    isFullYear: true,
-    getValue: (monthData) => {
-      const { accidentTorchGasFlowRate, accidentDuration, carbonOxidationRate, totalCarbonContent, co2VolumeConcentration } = monthData;
-      return accidentTorchGasFlowRate * accidentDuration * (totalCarbonContent *  carbonOxidationRate/100 * 44 /12 + co2VolumeConcentration/100 * 19.7);
-    }
-  },
-  {
-    key: 'ch4VolumeConcentration',
-    name: 'CH4 的体积浓度',
-    unit: '%',
-    isCalculated: false,
-    decimalPlaces: 0
-  },
-  {
-    key: 'ch4Emission',
-    name: 'CH4 排放量',
-    unit: '吨CO₂',
-    isCalculated: true,
-    decimalPlaces: 2,
-    isFullYear: true,
-    getValue: (monthData) => {
-      const { accidentTorchGasFlowRate, accidentDuration, carbonOxidationRate, ch4VolumeConcentration } = monthData;
-      return accidentTorchGasFlowRate * accidentDuration * ch4VolumeConcentration /100 * ( 1- carbonOxidationRate/100) * 7.17 * 21
-    }
   },
   {
     key: 'emission',
@@ -158,8 +89,8 @@ const ACCIDENT_TORCH_INDICATORS = [
     decimalPlaces: 2,
     isFullYear: true,
     getValue: (monthData) => {
-      const { co2Emission, ch4Emission } = monthData;
-      return co2Emission + ch4Emission;
+      const { accidentTorchGasFlowRate, accidentDuration, carbonOxidationRate, averageCarbonNumber } = monthData;
+      return accidentTorchGasFlowRate * accidentDuration * (averageCarbonNumber *  carbonOxidationRate/100 * 44 / 22.4 * 10);
     }
   }
 ];
@@ -179,11 +110,26 @@ const createInitialIndicatorData = (indicators) => {
   }, {});
 };
 
-// 为石油天然气火炬燃烧初始化数据（纵向布局）
+// 为石油化工火炬燃烧初始化数据（纵向布局）
 const initializeTorchData = (torch) => {
   // 根据火炬类型选择对应的指标列表
   const indicators = torch.torchType === 'normal' ? NORMAL_TORCH_INDICATORS : ACCIDENT_TORCH_INDICATORS;
-  const initialData = createInitialIndicatorData(indicators);
+  
+  // 为事故火炬设置不同的平均碳原子数目默认值
+  let customizedIndicators = indicators;
+  if (torch.torchType === 'accident') {
+    customizedIndicators = indicators.map(indicator => {
+      if (indicator.key === 'averageCarbonNumber') {
+        return {
+          ...indicator,
+          defaultValue: torch.systemType === 'refining' ? 5 : 3
+        };
+      }
+      return indicator;
+    });
+  }
+  
+  const initialData = createInitialIndicatorData(customizedIndicators);
   
   // 为每个指标添加额外字段
   Object.keys(initialData).forEach(indicatorKey => {
@@ -198,12 +144,12 @@ const initializeTorchData = (torch) => {
     ...torch,
     data: initialData,
     files: {},
-    indicators: indicators,
+    indicators: customizedIndicators,
     isDefault: false // 不再有默认的火炬
   };
 };
 
-function GasTorchEmission({ onEmissionChange }) {
+function PetroleumTorchEmission({ onEmissionChange }) {
   // 火炬燃烧列表状态
   const [torchEmissions, setTorchEmissions] = useState([]);
   
@@ -213,6 +159,7 @@ function GasTorchEmission({ onEmissionChange }) {
   // 添加火炬时的表单状态
   const [newTorch, setNewTorch] = useState({
     torchType: 'normal', // 默认正常工况
+    systemType: 'refining', // 默认石油炼制系统
     name: '' // 火炬名称
   });
   
@@ -231,13 +178,8 @@ function GasTorchEmission({ onEmissionChange }) {
     selectedMonths: [] // 存储选中的月份索引(0-11)
   });
   
-  // 处理气体浓度变化
-  const handleGasConcentrationChange = (gasId, value) => {
-    setGasConcentrations(prev => ({
-      ...prev,
-      [gasId]: value
-    }));
-  };
+  // 保存每个火炬的气体成分信息
+  const [torchGasComponents, setTorchGasComponents] = useState({});
   
   // 初始化默认数据
   useEffect(() => {
@@ -259,7 +201,8 @@ function GasTorchEmission({ onEmissionChange }) {
     const newTorchData = {
       id: newTorchId,
       name: newTorch.name.trim(),
-      torchType: newTorch.torchType
+      torchType: newTorch.torchType,
+      systemType: newTorch.systemType // 添加系统类型
     };
     
     const initializedTorch = initializeTorchData(newTorchData);
@@ -268,6 +211,7 @@ function GasTorchEmission({ onEmissionChange }) {
     // 重置表单
     setNewTorch({
       torchType: 'normal',
+      systemType: 'refining',
       name: ''
     });
   }, [newTorch]);
@@ -369,20 +313,7 @@ function GasTorchEmission({ onEmissionChange }) {
     updateCalculatedValues();
   }, [updateCalculatedValues, torchEmissions]);
 
-  // 处理技术选择变化
-  const handleTechChange = useCallback((torchId, selectedTech) => {
-    setTorchEmissions(prevTorches => {
-      return prevTorches.map(torch => {
-        if (torch.id === torchId) {
-          return {
-            ...torch,
-            selectedTech
-          };
-        }
-        return torch;
-      });
-    });
-  }, [setTorchEmissions]);
+
   
   // 处理数据变化（纵向布局）
   const handleDataChange = useCallback((id, indicatorKey, month, field, value, type = 'torch-emission') => {
@@ -542,125 +473,100 @@ function GasTorchEmission({ onEmissionChange }) {
   }, [totalEmission, onEmissionChange]);
   
   // 打开总含碳量计算器
-  const openCarbonContentCalculator = (torchId, month) => {
+  const openCarbonContentCalculator = (torchId) => {
+    // 加载之前保存的气体成分信息，如果没有则使用默认值
+    const savedGasComponents = torchGasComponents[torchId] || [
+      { id: 1, name: '', volumeConcentration: '', carbonNumber: '' }
+    ];
+    
     setCarbonContentCalculatorData({
       torchId,
-      month,
-      gasComponents: [
-        { id: 1, name: '', volumeConcentration: '', carbonNumber: '' }
-      ]
+      gasComponents: savedGasComponents
     });
+    
+    // 重置应用范围选择（默认不选任何月份）
     setApplicationRange({
-      selectedMonths: month ? [month - 1] : []
+      selectedMonths: []
     });
+    
     setShowCarbonContentCalculator(true);
   };
-
+  
   // 关闭总含碳量计算器
   const closeCarbonContentCalculator = () => {
     setShowCarbonContentCalculator(false);
   };
-
+  
   // 添加气体组分
   const addGasComponent = () => {
-    setCarbonContentCalculatorData(prev => {
-      const newId = Math.max(...prev.gasComponents.map(c => c.id)) + 1;
-      return {
-        ...prev,
-        gasComponents: [...prev.gasComponents, { id: newId, name: '', volumeConcentration: '', carbonNumber: '' }]
-      };
-    });
+    setCarbonContentCalculatorData(prev => ({
+      ...prev,
+      gasComponents: [
+        ...prev.gasComponents,
+        { id: Date.now(), name: '', volumeConcentration: '', carbonNumber: '' }
+      ]
+    }));
   };
-
-  // 移除气体组分
+  
+  // 删除气体组分
   const removeGasComponent = (id) => {
-    setCarbonContentCalculatorData(prev => {
-      if (prev.gasComponents.length <= 1) return prev;
-      return {
-        ...prev,
-        gasComponents: prev.gasComponents.filter(c => c.id !== id)
-      };
-    });
+    setCarbonContentCalculatorData(prev => ({
+      ...prev,
+      gasComponents: prev.gasComponents.filter(component => component.id !== id)
+    }));
   };
-
-  // 更新气体组分
+  
+  // 更新气体组分数据
   const updateGasComponent = (id, field, value) => {
-    setCarbonContentCalculatorData(prev => {
-      return {
-        ...prev,
-        gasComponents: prev.gasComponents.map(c => 
-          c.id === id ? { ...c, [field]: value } : c
-        )
-      };
-    });
+    setCarbonContentCalculatorData(prev => ({
+      ...prev,
+      gasComponents: prev.gasComponents.map(component => 
+        component.id === id ? { ...component, [field]: value } : component
+      )
+    }));
   };
-
+  
   // 计算总含碳量
   const calculateTotalCarbonContent = () => {
     let total = 0;
+    
     carbonContentCalculatorData.gasComponents.forEach(component => {
-      const volumeConcentration = parseFloat(component.volumeConcentration) || 0;
-      const carbonNumber = parseFloat(component.carbonNumber) || 0;
-      if (volumeConcentration > 0 && carbonNumber > 0) {
-        // 计算公式：12（碳的摩尔质量） × Vn（体积浓度%） × Cn（碳原子数目） × 10 / 22.4
-        total += (12 * volumeConcentration/100 * carbonNumber * 10) / 22.4;
+      const v = parseFloat(component.volumeConcentration) || 0;
+      const cn = parseFloat(component.carbonNumber) || 0;
+      if (v > 0 && cn > 0) {
+        const carbonContent = (12 * v / 100 * cn * 10) / 22.4;
+        total += carbonContent;
       }
     });
+    
     return total;
   };
-
-  // 应用总含碳量计算结果
+  
+  // 应用计算结果
   const applyCarbonContentResult = () => {
     const { torchId } = carbonContentCalculatorData;
     const totalCarbonContent = calculateTotalCarbonContent();
     
-    // 更新选中月份的总含碳量数据
-    setTorchEmissions(prevTorches => {
-      return prevTorches.map(torch => {
-        if (torch.id === torchId) {
-          const updatedTorch = { ...torch, data: { ...torch.data } };
-          
-          // 获取总含碳量指标的数据
-          const totalCarbonData = updatedTorch.data['totalCarbonContent'] || [];
-          
-          // 更新选中月份的数据
-          const updatedTotalCarbonData = [...totalCarbonData];
-          applicationRange.selectedMonths.forEach(monthIndex => {
-            const month = monthIndex + 1;
-            const monthIndexInData = updatedTotalCarbonData.findIndex(m => m.month === month);
-            
-            if (monthIndexInData !== -1) {
-              // 更新现有月份数据
-              updatedTotalCarbonData[monthIndexInData] = {
-                ...updatedTotalCarbonData[monthIndexInData],
-                value: totalCarbonContent
-              };
-            } else {
-              // 创建新月份数据
-              updatedTotalCarbonData.push({
-                month,
-                monthName: MONTHS[monthIndex],
-                value: totalCarbonContent,
-                dataSource: '',
-                supportingMaterial: null,
-                unit: '吨碳/104Nm³'
-              });
-            }
-          });
-          
-          // 更新火炬数据
-          updatedTorch.data['totalCarbonContent'] = updatedTotalCarbonData;
-          
-          return updatedTorch;
-        }
-        return torch;
-      });
-    });
+    if (torchId) {
+      // 保存当前的气体成分信息
+      setTorchGasComponents(prev => ({
+        ...prev,
+        [torchId]: carbonContentCalculatorData.gasComponents
+      }));
+      
+      // 应用到选中的月份
+      if (applicationRange.selectedMonths.length > 0) {
+        applicationRange.selectedMonths.forEach(monthIndex => {
+          // 将0-11的索引转换为1-12的月份编号
+          const monthNum = monthIndex + 1;
+          handleDataChange(torchId, 'totalCarbonContent', monthNum, 'value', totalCarbonContent.toFixed(4));
+        });
+      }
+    }
     
-    // 关闭计算器
     closeCarbonContentCalculator();
   };
-
+  
   // 渲染纵向布局的表格
   const renderVerticalLayoutTable = (item) => {
     if (!item.data) return null;
@@ -703,26 +609,7 @@ function GasTorchEmission({ onEmissionChange }) {
           
           return (
               <tr key={indicator.key}>
-                <td style={{ border: '1px solid #d9d9d9', padding: '8px' }}>
-                  {indicator.name}
-                  {indicator.key === 'totalCarbonContent' && (
-                    <button
-                      onClick={() => openCarbonContentCalculator(item.id)}
-                      style={{
-                        marginLeft: '8px',
-                        padding: '2px 8px',
-                        fontSize: '12px',
-                        backgroundColor: '#1890ff',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      计算
-                    </button>
-                  )}
-                </td>
+                <td style={{ border: '1px solid #d9d9d9', padding: '8px' }}>                    {indicator.name}                    {indicator.key === 'totalCarbonContent' && (                        <button                            onClick={() => openCarbonContentCalculator(item.id)}                            style={{                              marginLeft: '10px',                              padding: '4px 8px',                              fontSize: '12px',                              backgroundColor: '#1890ff',                              color: 'white',                              border: 'none',                              borderRadius: '4px',                              cursor: 'pointer'                            }}                        >                          计算                        </button>                    )}                </td>
                 <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>{indicator.unit}</td>
                 
                 {MONTHS.map((month, index) => {
@@ -859,7 +746,7 @@ function GasTorchEmission({ onEmissionChange }) {
         </thead>
         <tbody>
           <tr>
-            <td style={{ border: '1px solid #d9d9d9', padding: '8px', fontWeight: 'bold' }}>石油天然气企业火炬燃烧的排放总量</td>
+            <td style={{ border: '1px solid #d9d9d9', padding: '8px', fontWeight: 'bold' }}>石油化工企业火炬燃烧的排放总量</td>
             {totalEmissions.map((value, index) => (
               <td key={index} style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>
                 {formatValue(value, 2)}
@@ -876,26 +763,23 @@ function GasTorchEmission({ onEmissionChange }) {
 
   return (
     <div style={{ padding: '16px' }}>
-      <h2 style={{ marginBottom: '24px', fontSize: '20px', color: '#333' }}>石油天然气企业火炬燃烧排放</h2>
-      {/* 石油天然气火炬燃烧 */}
+      <h2 style={{ marginBottom: '24px', fontSize: '20px', color: '#333' }}>石油化工企业火炬燃烧排放</h2>
+      {/* 石油化工火炬燃烧 */}
       <div style={{ marginTop: '20px',marginBottom: '40px' }}>
         <div style={{ marginBottom: '20px' }}>
           <div style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '4px', lineHeight: '1.2' }}>
             <h3 style={{ marginBottom: '16px' }}>计算说明</h3>
-            <p>石油天然气企业火炬燃烧过程中，含碳气体燃烧生成CO₂和CH₄，排放量根据火炬类型和相关指标计算。</p>
+            <p>石油化工企业火炬燃烧过程中，含碳气体燃烧生成CO₂，排放量根据火炬类型和相关指标计算。</p>
             <p>火炬燃烧可分为正常工况和事故工况两种类型，根据不同工况选择相应的计算指标。</p>
             <h4 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px' }}>正常工况火炬计算公式：</h4>
-            <p>1. CO₂排放量（吨CO₂） = 火炬气流量（10⁴Nm³） × [除CO₂外其他含碳化合物的总含碳量（吨碳/10⁴Nm³） × 碳氧化率（%） × 44/12 + CO₂体积浓度（%） × 19.7]</p>
-            <p>2. CH₄排放量（吨CO₂） = 火炬气流量（10⁴Nm³） × CH₄体积浓度（%） × (1 - 碳氧化率（%）) × 7.17 × 21</p>
-            <p>3. 总排放量（吨CO₂） = CO₂排放量 + CH₄排放量</p>
+            <p>排放量（吨CO₂） = 火炬气流量（10⁴Nm³） × [除CO₂外其他含碳化合物的总含碳量（吨碳/10⁴Nm³） × 碳氧化率（%） × 44/12 + CO₂体积浓度（%） × 19.7]</p>
             <h4 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px' }}>事故工况火炬计算公式：</h4>
-            <p>1. CO₂排放量（吨CO₂） = 事故状态时的火炬气流速度（10⁴Nm³/小时） × 事故持续时间（小时） × [除CO₂外其他含碳化合物的总含碳量（吨碳/10⁴Nm³） × 碳氧化率（%） × 44/12 + CO₂体积浓度（%） × 19.7]</p>
-            <p>2. CH₄排放量（吨CO₂） = 事故状态时的火炬气流速度（10⁴Nm³/小时） × 事故持续时间（小时） × CH₄体积浓度（%） × (1 - 碳氧化率（%）) × 7.17 × 21</p>
-            <p>3. 总排放量（吨CO₂） = CO₂排放量 + CH₄排放量</p>
+            <p>排放量（吨CO₂） = 事故状态时的火炬气流速度（10⁴Nm³/小时） × 事故持续时间（小时） × [火炬气体摩尔组分的平均碳原子数目（个） × 碳氧化率（%） × 44/22.4 × 10]</p>
             <h4 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '16px' }}>系数说明：</h4>
-            <p>1. 19.7：CO₂体积浓度转换系数，用于将CO₂体积浓度（%）转换为吨CO₂/10⁴Nm³</p>
-            <p>2. 7.17：CH₄密度转换系数，用于将CH₄体积浓度（%）转换为吨CH₄/10⁴Nm³</p>
-            <p>3. 21：CH₄的全球变暖潜势(GWP)值（100年时间尺度），用于将CH₄排放量转换为CO₂当量</p>
+            <p>19.7：CO₂体积浓度转换系数，用于将CO₂体积浓度（%）转换为吨CO₂/10⁴Nm³</p>
+            <p>44/12：CO₂摩尔质量（44g/mol）与碳摩尔质量（12g/mol）的比值，用于将碳的质量转换为CO₂的质量</p>
+            <p>44/22.4：CO₂摩尔质量（44g/mol）与标准状况下1摩尔气体体积（22.4L/mol）的比值，用于将气体体积转换为质量的转换系数</p>
+            <p>10：单位转换系数，来源于10⁴Nm³到吨之间的单位转换。具体计算为：10⁴Nm³ = 10⁷ L，转换为吨时，先除以22.4L/mol得到摩尔数，乘以44g/mol得到克数（g），最后除以10⁶g/t转换为吨数，综合起来就是10⁷/10⁶ = 10</p>
           </div>
         </div>
 
@@ -930,6 +814,34 @@ function GasTorchEmission({ onEmissionChange }) {
                         </div>
                     </div>
                 </div>
+                
+                {newTorch.torchType === 'accident' && (
+                    <div style={{ marginBottom: '16px' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>系统类型</label>
+                        <div style={{ display: 'flex', gap: '20px', marginBottom: '16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <input
+                                    type="radio"
+                                    id="refining-system"
+                                    value="refining"
+                                    checked={newTorch.systemType === 'refining'}
+                                    onChange={(e) => setNewTorch(prev => ({ ...prev, systemType: e.target.value }))}
+                                />
+                                <label htmlFor="refining-system" style={{ cursor: 'pointer', fontSize: '14px' }}>石油炼制系统</label>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <input
+                                    type="radio"
+                                    id="petrochemical-system"
+                                    value="petrochemical"
+                                    checked={newTorch.systemType === 'petrochemical'}
+                                    onChange={(e) => setNewTorch(prev => ({ ...prev, systemType: e.target.value }))}
+                                />
+                                <label htmlFor="petrochemical-system" style={{ cursor: 'pointer', fontSize: '14px' }}>石油化工系统</label>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <div style={{ marginBottom: '20px' }}>
                     <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>火炬名称</label>
@@ -1002,7 +914,9 @@ function GasTorchEmission({ onEmissionChange }) {
                       <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                         <h3 style={{ margin: 0, fontSize: '16px' }}>{torch.name}</h3>
                         <span style={{ fontSize: '14px', color: '#666', padding: '2px 8px', backgroundColor: torch.torchType === 'normal' ? '#e6f7ff' : '#fff7e6', borderRadius: '4px', border: '1px solid #91d5ff' }}>
-                          {torch.torchType === 'normal' ? '正常工况' : '事故工况'}
+                          {torch.torchType === 'normal' 
+                            ? '正常工况'
+                            : `事故工况 - ${torch.systemType === 'refining' ? '石油炼制系统' : '石油化工系统'}`}
                         </span>
                       </div>
                       {!torch.isDefault && (
@@ -1057,7 +971,9 @@ function GasTorchEmission({ onEmissionChange }) {
                       <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                         <h3 style={{ margin: 0, fontSize: '16px' }}>{torch.name}</h3>
                         <span style={{ fontSize: '14px', color: '#666', padding: '2px 8px', backgroundColor: torch.torchType === 'normal' ? '#e6f7ff' : '#fff7e6', borderRadius: '4px', border: '1px solid #91d5ff' }}>
-                          {torch.torchType === 'normal' ? '正常工况' : '事故工况'}
+                          {torch.torchType === 'normal' 
+                            ? '正常工况'
+                            : `事故工况 - ${torch.systemType === 'refining' ? '石油炼制系统' : '石油化工系统'}`}
                         </span>
                       </div>
                       {!torch.isDefault && (
@@ -1294,4 +1210,4 @@ function GasTorchEmission({ onEmissionChange }) {
   );
 }
 
-export default GasTorchEmission;
+export default PetroleumTorchEmission;

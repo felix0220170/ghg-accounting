@@ -112,10 +112,10 @@ function GasIndustry({ onEmissionChange }) {
       </Card>
 
       <Tabs defaultActiveKey="summary">
-        <TabPane tab="企业级排放汇总" key="summary">
+        <TabPane tab="排放汇总" key="summary">
           <GasIndustrySummary emissionData={prepareSummaryData()} />
         </TabPane>
-        <TabPane tab="企业级化石燃料燃烧排放" key="fossilFuel">
+        <TabPane tab="化石燃料燃烧排放" key="fossilFuel">
             <GasFossilFuelEmission 
               onEmissionChange={(value) => handleEmissionChange('fossilFuel', value)}
               productionLines={fuelProcesses} 

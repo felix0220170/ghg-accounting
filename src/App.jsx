@@ -26,11 +26,12 @@ import ManganeseIndustry from './components/industries/manganese/ManganeseIndust
 import AeroIndustry from './components/industries/aeronautics/AeroIndustry'
 import GlassIndustry from './components/industries/glass/GlassIndustry'
 import GasIndustry from './components/industries/gas/GasIndustry'
+import PetroleumIndustry from './components/industries/petroleum/PetroleumIndustry'
 import { INDUSTRY_TYPES } from './config/industryConfig' 
 
 function App() {
   // 使用INDUSTRY_TYPES中的默认值作为初始选择
-  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.PETROLEUM_GAS);
+  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.PETROLEUM_CHEMICAL);
   // 配置弹窗状态
   const [configModalVisible, setConfigModalVisible] = useState(false);
 
@@ -48,6 +49,7 @@ function App() {
     INDUSTRY_TYPES.AERONAUTICS,
     INDUSTRY_TYPES.GLASS,
     INDUSTRY_TYPES.PETROLEUM_GAS,
+    INDUSTRY_TYPES.PETROLEUM_CHEMICAL,
   ];
 
   // 根据选择的行业动态加载相应的组件
@@ -94,8 +96,9 @@ function App() {
       case INDUSTRY_TYPES.GLASS: // 添加玻璃行业
         return <GlassIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.PETROLEUM_GAS: // 添加气体行业
-        return <GasIndustry industry={selectedIndustry} />;
-      
+        return <GasIndustry industry={selectedIndustry} />; 
+      case INDUSTRY_TYPES.PETROLEUM_CHEMICAL: // 添加石油化工企业
+        return <PetroleumIndustry industry={selectedIndustry} />; 
       case INDUSTRY_TYPES.OTHER:
       default:
         return <OtherIndustry industry={selectedIndustry} />;
