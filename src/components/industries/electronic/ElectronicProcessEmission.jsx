@@ -46,7 +46,8 @@ const INDICATORS = [
     name: '全球变暖潜势',
     unit: '',
     isCalculated: false,
-    decimalPlaces: 0
+    decimalPlaces: 0,
+    readOnly: true
   },
   {
     key: 'leakageEmission',
@@ -94,7 +95,8 @@ const BYPRODUCT_INDICATORS = [
     name: '全球变暖潜势',
     unit: '',
     isCalculated: false,
-    decimalPlaces: 0
+    decimalPlaces: 0,
+    readOnly: true
   },
   {
     key: 'byproductEmission',
@@ -246,7 +248,7 @@ const generateId = () => {
 };
 
 // 为自定义电子原料气初始化数据（纵向布局）
-const initializeCustomElectronicMaterialData = (gasName) => {
+const initializeCustomElectronicMaterialData = (gasName, gwpValue) => {
   const initialData = createInitialIndicatorData(INDICATORS);
   
   // 为所有指标初始化额外字段
@@ -264,7 +266,8 @@ const initializeCustomElectronicMaterialData = (gasName) => {
   initialData.utilizationRate = initialData.utilizationRate.map(item => ({ ...item, value: '' })); // 空值，用户需输入
   initialData.collectionEfficiency = initialData.collectionEfficiency.map(item => ({ ...item, value: '' })); // 空值，用户需输入
   initialData.removalEfficiency = initialData.removalEfficiency.map(item => ({ ...item, value: '' })); // 空值，用户需输入
-  initialData.gwp = initialData.gwp.map(item => ({ ...item, value: '' })); // 空值，用户需输入
+  // 自定义气体需要用户输入GWP值
+  initialData.gwp = initialData.gwp.map(item => ({ ...item, value: gwpValue })); // 使用用户输入的GWP值
   
   return {
     id: `custom-electronic-material-${Date.now()}`,
@@ -321,9 +324,9 @@ const initializeElectronicMaterialData = (gasType) => {
 };
 
 // 为副产品初始化数据
-const initializeByproductData = (byproductType, parentGasType, customByproductName = null) => {
+const initializeByproductData = (byproductType, parentGasType, customByproductName = null, customByproductGwp = null) => {
   // 如果是自定义副产品，使用自定义名称，否则从预设列表中查找
-  const isCustomByproduct = customByproductName !== null;
+  const isCustomByproduct = customByproductName !== null && customByproductGwp !== null;
   const byproduct = !isCustomByproduct ? BYPRODUCT_TYPES.find(b => b.value === byproductType) : null;
   
   const initialData = createInitialIndicatorData(BYPRODUCT_INDICATORS);
@@ -341,7 +344,7 @@ const initializeByproductData = (byproductType, parentGasType, customByproductNa
   // 设置默认值
   initialData.byproductGwp = initialData.byproductGwp.map(item => ({ 
     ...item, 
-    value: isCustomByproduct ? '' : (byproduct?.gwp || 0) // 自定义副产品需要用户输入GWP值
+    value: isCustomByproduct ? customByproductGwp : (byproduct?.gwp || 0) // 自定义副产品的GWP值在添加时带入
   }));
   
   // 根据原料气类型和副产品类型获取转化因子默认值
@@ -388,8 +391,9 @@ function ElectronicProcessEmission({ onEmissionChange }) {
   const [electronicMaterials, setElectronicMaterials] = useState([]);
   // 选中的原料气类型
   const [selectedGasType, setSelectedGasType] = useState('');
-  // 自定义原料气名称
+  // 自定义原料气名称和GWP
   const [customGasName, setCustomGasName] = useState('');
+  const [customGasGwp, setCustomGasGwp] = useState('');
   // 自定义副产品名称
   const [customByproductName, setCustomByproductName] = useState('');
   
@@ -414,8 +418,8 @@ function ElectronicProcessEmission({ onEmissionChange }) {
       setElectronicMaterials(prevMaterials => [...prevMaterials, newElectronicMaterial]);
       setSelectedGasType(''); // 重置选择
     } 
-    // 如果输入了自定义气体名称
-    else if (customGasName.trim()) {
+    // 如果输入了自定义气体名称和GWP
+    else if (customGasName.trim() && customGasGwp.trim()) {
       const customGasKey = `custom-${customGasName.trim()}`;
       
       // 检查该自定义气体是否已存在
@@ -425,11 +429,18 @@ function ElectronicProcessEmission({ onEmissionChange }) {
         return;
       }
       
-      const newElectronicMaterial = initializeCustomElectronicMaterialData(customGasName.trim());
+      const gwpValue = parseFloat(customGasGwp.trim());
+      if (isNaN(gwpValue)) {
+        alert('请输入有效的GWP值');
+        return;
+      }
+      
+      const newElectronicMaterial = initializeCustomElectronicMaterialData(customGasName.trim(), gwpValue);
       setElectronicMaterials(prevMaterials => [...prevMaterials, newElectronicMaterial]);
       setCustomGasName(''); // 重置输入
+      setCustomGasGwp(''); // 重置GWP输入
     }
-  }, [electronicMaterials, selectedGasType, customGasName]);
+  }, [electronicMaterials, selectedGasType, customGasName, customGasGwp]);
   
   // 移除电子原料气
   const removeElectronicMaterial = useCallback((materialId) => {
@@ -437,7 +448,7 @@ function ElectronicProcessEmission({ onEmissionChange }) {
   }, []);
   
   // 添加副产品
-  const addByproduct = useCallback((materialId, byproductType, customByproductName = null) => {
+  const addByproduct = useCallback((materialId, byproductType, customByproductName = null, customByproductGwp = null) => {
     setElectronicMaterials(prevMaterials => {
       return prevMaterials.map(material => {
         if (material.id === materialId) {
@@ -458,7 +469,7 @@ function ElectronicProcessEmission({ onEmissionChange }) {
           }
           
           // 传递当前原料气的 gasType 以获取转化因子默认值
-          const newByproduct = initializeByproductData(finalByproductType, material.gasType, finalByproductName);
+          const newByproduct = initializeByproductData(finalByproductType, material.gasType, finalByproductName, customByproductGwp);
           return {
             ...material,
             byproducts: [...(material.byproducts || []), newByproduct]
@@ -622,6 +633,7 @@ function ElectronicProcessEmission({ onEmissionChange }) {
             
             // 应用更新
             if (byproductChanged) {
+              unitChanged = true;
               return {
                 ...updatedByproduct,
                 data: {
@@ -672,8 +684,8 @@ function ElectronicProcessEmission({ onEmissionChange }) {
     setState(prevItems => {
       let hasChanges = false;
       const updatedItems = prevItems.map(item => {
-        if (item.id === id) {
-          if (type === 'byproduct') {
+        if (item.id === id || item.id === parentId) {
+          if (type === 'byproduct' && item.id === parentId) {
             // 处理副产品数据变化
             const updatedByproducts = item.byproducts.map(byproduct => {
               if (byproduct.id === id) {
@@ -791,7 +803,7 @@ function ElectronicProcessEmission({ onEmissionChange }) {
           if (type === 'byproduct') {
             // 处理副产品文件上传
             const updatedByproducts = item.byproducts.map(byproduct => {
-              if (byproduct.id === id) {
+              if (byproduct.id === parentId) {
                 const currentData = byproduct.data || {};
                 const currentIndicatorData = currentData[indicatorKey] || [];
                 
@@ -995,6 +1007,9 @@ function ElectronicProcessEmission({ onEmissionChange }) {
                     <td key={monthNum} style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>
                       {indicator.isCalculated ? (
                         // 计算值，只显示
+                        <span>{formatValue(value, indicator.decimalPlaces)}</span>
+                      ) : indicator.readOnly ? (
+                        // 只读值，显示文本
                         <span>{formatValue(value, indicator.decimalPlaces)}</span>
                       ) : (
                         // 输入值
@@ -1280,9 +1295,22 @@ function ElectronicProcessEmission({ onEmissionChange }) {
                   width: '200px'
                 }}
               />
+              <input
+                type="number"
+                value={customGasGwp}
+                onChange={(e) => setCustomGasGwp(e.target.value)}
+                placeholder="GWP值"
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid #d9d9d9',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  width: '100px'
+                }}
+              />
               <button
                 onClick={addNewElectronicMaterial}
-                disabled={!customGasName.trim()}
+                disabled={!customGasName.trim() || !customGasGwp.trim()}
                 style={{
                   padding: '8px 16px',
                   backgroundColor: '#52c41a',
@@ -1292,7 +1320,7 @@ function ElectronicProcessEmission({ onEmissionChange }) {
                   cursor: 'pointer',
                   fontSize: '14px',
                   fontWeight: 'bold',
-                  opacity: customGasName.trim() ? 1 : 0.6
+                  opacity: (customGasName.trim() && customGasGwp.trim()) ? 1 : 0.6
                 }}
               >
                 添加自定义原料气
@@ -1391,21 +1419,55 @@ function ElectronicProcessEmission({ onEmissionChange }) {
                           }
                         }}
                       />
-                      <button
-                        onClick={() => {
-                          if (material.customByproductName?.trim()) {
-                            addByproduct(material.id, null, material.customByproductName.trim());
+                      <input
+                        type="text"
+                        value={material.customByproductGwp || ''}
+                        onChange={(e) => {
+                          setElectronicMaterials(prevMaterials =>
+                            prevMaterials.map(m => 
+                              m.id === material.id 
+                                ? { ...m, customByproductGwp: e.target.value }
+                                : m
+                            )
+                          );
+                        }}
+                        placeholder="副产品GWP值"
+                        style={{
+                          padding: '4px 8px',
+                          border: '1px solid #d9d9d9',
+                          borderRadius: '4px',
+                          fontSize: '14px',
+                          width: '150px'
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && material.customByproductGwp?.trim() && material.customByproductName?.trim()) {
+                            addByproduct(material.id, null, material.customByproductName.trim(), material.customByproductGwp.trim());
                             // 清除输入
                             setElectronicMaterials(prevMaterials =>
                               prevMaterials.map(m => 
                                 m.id === material.id 
-                                  ? { ...m, customByproductName: '' }
+                                  ? { ...m, customByproductGwp: '' }
                                   : m
                               )
                             );
                           }
                         }}
-                        disabled={!material.customByproductName?.trim()}
+                      />
+                      <button
+                        onClick={() => {
+                          if (material.customByproductName?.trim() && material.customByproductGwp?.trim()) {
+                            addByproduct(material.id, null, material.customByproductName.trim(), material.customByproductGwp.trim());
+                            // 清除输入
+                            setElectronicMaterials(prevMaterials =>
+                              prevMaterials.map(m => 
+                                m.id === material.id 
+                                  ? { ...m, customByproductName: '', customByproductGwp: '' }
+                                  : m
+                              )
+                            );
+                          }
+                        }}
+                        disabled={!material.customByproductName?.trim() || !material.customByproductGwp?.trim()}
                         style={{
                           padding: '4px 8px',
                           backgroundColor: '#722ed1',
@@ -1414,7 +1476,7 @@ function ElectronicProcessEmission({ onEmissionChange }) {
                           borderRadius: '4px',
                           cursor: 'pointer',
                           fontSize: '12px',
-                          opacity: material.customByproductName?.trim() ? 1 : 0.6
+                          opacity: material.customByproductName?.trim() && material.customByproductGwp?.trim() ? 1 : 0.6
                         }}
                       >
                         添加
