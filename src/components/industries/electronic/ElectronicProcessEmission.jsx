@@ -1420,7 +1420,7 @@ function ElectronicProcessEmission({ onEmissionChange }) {
                         }}
                       />
                       <input
-                        type="text"
+                        type="number"
                         value={material.customByproductGwp || ''}
                         onChange={(e) => {
                           setElectronicMaterials(prevMaterials =>
@@ -1597,6 +1597,7 @@ function ElectronicProcessEmission({ onEmissionChange }) {
                     <th style={{ border: '1px solid #d9d9d9', padding: '12px 8px', textAlign: 'center', fontWeight: '600' }}>收集效率(%)</th>
                     <th style={{ border: '1px solid #d9d9d9', padding: '12px 8px', textAlign: 'center', fontWeight: '600' }}>去除效率(%)</th>
                     <th style={{ border: '1px solid #d9d9d9', padding: '12px 8px', textAlign: 'center', fontWeight: '600' }}>转化因子默认值</th>
+                    <th style={{ border: '1px solid #d9d9d9', padding: '12px 8px', textAlign: 'center', fontWeight: '600' }}>GWP默认值</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1633,6 +1634,9 @@ function ElectronicProcessEmission({ onEmissionChange }) {
                           <td style={{ border: '1px solid #d9d9d9', padding: '12px 8px', textAlign: 'center' }}>
                             {byproductLabel}: {factor}
                           </td>
+                          <td style={{ border: '1px solid #d9d9d9', padding: '12px 8px', textAlign: 'center' }}>
+                            {MATERIAL_GASES.find(g => g.value === gasType)?.gwp || '-'}
+                          </td>
                         </tr>
                       );
                     }) : (
@@ -1653,6 +1657,9 @@ function ElectronicProcessEmission({ onEmissionChange }) {
                           {factors.removalEfficiency || '-'}
                         </td>
                         <td style={{ border: '1px solid #d9d9d9', padding: '12px 8px', textAlign: 'center' }}>-</td>
+                        <td style={{ border: '1px solid #d9d9d9', padding: '12px 8px', textAlign: 'center' }}>
+                          {MATERIAL_GASES.find(g => g.value === gasType)?.gwp || '-'}
+                        </td>
                       </tr>
                     );
                   })}
