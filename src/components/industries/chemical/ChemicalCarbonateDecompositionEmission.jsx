@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, Fragment } from 'react';
 import CustomCarbonateDecompositionForm from './CustomCarbonateDecompositionForm';
 import CustomCarbonateDecompositionList from './CustomCarbonateDecompositionList';
 
@@ -101,7 +101,7 @@ const initializeCarbonateProductData = (product) => {
   };
 };
 
-function ChemicalCarbonateDecompositionEmission({ onEmissionChange }) {
+function ChemicalCarbonateDecompositionEmission({ onEmissionChange, title='' }) {
   // 碳酸盐列表状态
   const [carbonateProducts, setCarbonateProducts] = useState([]);
 
@@ -601,6 +601,12 @@ function ChemicalCarbonateDecompositionEmission({ onEmissionChange }) {
       <div style={{ marginTop: '20px',marginBottom: '40px' }}>
         <div style={{ marginBottom: '20px' }}>
           <div style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '4px', lineHeight: '1.2' }}>
+            {title && (
+              <Fragment>
+                <h3 style={{ marginBottom: '12px' }}>排放说明</h3> <p style={{ marginBottom: '12px' }}>{title}</p>
+                </Fragment>)
+            }
+
             <h3 style={{ marginBottom: '12px' }}>计算说明</h3>
             <p>碳酸盐的排放计算方法：排放量（tCO₂） = 碳酸盐消耗量（t） × 碳酸盐排放因子（tCO₂/t） ×  纯度%</p>
             <p>- 消费量单位为 t，保留两位小数</p>

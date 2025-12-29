@@ -13,6 +13,8 @@ export const INDUSTRY_TYPES = {
   GLASS: '中国平板玻璃生产企业（待确认）',
   PETROLEUM_GAS: '石油和天然气生产企业（待确认）',
   PETROLEUM_CHEMICAL: '石油化工企业（待确认）',
+  CERAMICS: '中国陶瓷生产企业（待确认）',
+  ELECTRONIC_DEVICE_MANUFACTURING: '电子设备制造企业（待确认）',
   PAPER: '造纸及纸制品业',
   FOOD: '食品、烟草及酒、饮料和精制茶行业',
   NON_FERROUS_METALS: '其他有色金属冶炼和压延加工业',
