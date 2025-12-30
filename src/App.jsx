@@ -6,14 +6,6 @@ import { SettingOutlined } from '@ant-design/icons'
 import ConstantConfig from './components/ConstantConfig'
 
 import OtherIndustry from './components/industries/OtherIndustry'
-import PaperIndustry from './components/industries/PaperIndustry'
-import FoodIndustry from './components/industries/FoodIndustry' 
-import NonFerrousMetalsIndustry from './components/industries/NonFerrousMetalsIndustry' 
-import LandTransportationIndustry from './components/industries/LandTransportationIndustry';
-import MiningIndustry from './components/industries/MiningIndustry';
-import MachineryManufacturingIndustry from './components/industries/MachineryManufacturingIndustry';
-import PublicBuildingIndustry from './components/industries/PublicBuildingIndustry';
-import FluorineChemicalIndustry from './components/industries/FluorineChemicalIndustry'; // 导入氟化工企业组件
 import CementIndustry from './components/industries/cement/CementIndustry'; // 导入水泥行业组件
 import PowerPlantIndustry from './components/industries/powerPlant/PowerPlantIndustry';
 import SteelIndustry from './components/industries/steel/SteelIndustry';
@@ -29,12 +21,15 @@ import GasIndustry from './components/industries/gas/GasIndustry'
 import PetroleumIndustry from './components/industries/petroleum/PetroleumIndustry'
 import CeramicsIndustry from './components/industries/ceramics/CeramicsIndustry'
 import ElectronicIndustry from './components/industries/electronic/ElectronicIndustry'
+import FluorineIndustry from './components/industries/fluorine/FluorineIndustry'
+
+
 
 import { INDUSTRY_TYPES } from './config/industryConfig' 
 
 function App() {
   // 使用INDUSTRY_TYPES中的默认值作为初始选择
-  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.ELECTRONIC_DEVICE_MANUFACTURING);
+  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.FLUORINE_CHEMICAL);
   // 配置弹窗状态
   const [configModalVisible, setConfigModalVisible] = useState(false);
 
@@ -55,28 +50,13 @@ function App() {
     INDUSTRY_TYPES.PETROLEUM_CHEMICAL,
     INDUSTRY_TYPES.CERAMICS,
     INDUSTRY_TYPES.ELECTRONIC_DEVICE_MANUFACTURING,
+    INDUSTRY_TYPES.FLUORINE_CHEMICAL,
   ];
 
   // 根据选择的行业动态加载相应的组件
   // 渲染行业组件的函数
   const renderIndustryComponent = () => {
     switch (selectedIndustry) {
-      case INDUSTRY_TYPES.PAPER:
-        return <PaperIndustry industry={selectedIndustry} />;
-      case INDUSTRY_TYPES.FOOD:
-        return <FoodIndustry industry={selectedIndustry} />;
-      case INDUSTRY_TYPES.NON_FERROUS_METALS:
-        return <NonFerrousMetalsIndustry industry={selectedIndustry} />;
-      case INDUSTRY_TYPES.LAND_TRANSPORTATION: 
-        return <LandTransportationIndustry industry={selectedIndustry} />;
-      case INDUSTRY_TYPES.MINING:
-        return <MiningIndustry industry={selectedIndustry} />;
-      case INDUSTRY_TYPES.MACHINERY_MANUFACTURING:
-        return <MachineryManufacturingIndustry industry={selectedIndustry} />;
-      case INDUSTRY_TYPES.PUBLIC_BUILDING:
-        return <PublicBuildingIndustry industry={selectedIndustry} />;
-      case INDUSTRY_TYPES.FLUORINE_CHEMICAL: // 添加氟化工企业
-        return <FluorineChemicalIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.CEMENT: // 添加水泥行业
         return <CementIndustry industry={selectedIndustry} />;
       case INDUSTRY_TYPES.POWER_PLANT: // 添加发电设施
@@ -108,6 +88,8 @@ function App() {
         return <CeramicsIndustry industry={selectedIndustry} />; 
       case INDUSTRY_TYPES.ELECTRONIC_DEVICE_MANUFACTURING: // 添加半导体行业
         return <ElectronicIndustry industry={selectedIndustry} />; 
+      case INDUSTRY_TYPES.FLUORINE_CHEMICAL: // 添加氟化工行业
+        return <FluorineIndustry industry={selectedIndustry} />; 
       case INDUSTRY_TYPES.OTHER:
       default:
         return <OtherIndustry industry={selectedIndustry} />;

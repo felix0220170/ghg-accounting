@@ -4,34 +4,34 @@ import { Typography } from 'antd';
 
 const { Title } = Typography;
 
-const FluorineChemicalIndustrySummary = ({ data, industry, onDataChange }) => {
+const FluorineIndustrySummary = ({ emissionData, industry, onDataChange }) => {
   // 确保data不为undefined
-  const safeData = data || {};
+  const safeData = emissionData || {};
   
   // 计算各项排放量
   const calculateEmission = (key, conversionFactor = 1) => {
-    // 从简化的数据结构中获取排放量
-    return (safeData[key] || 0) * conversionFactor;
+    // 从数据结构中获取排放量，确保不会因为undefined而报错
+    return (emissionData[key] || 0) * conversionFactor;
   };
 
-  // 计算基础排放量（不包括电力和热力排放）
+  // 计算基准年总排放量（不包括电力和热力）
   const calculateBaseTotal = () => {
     return (
-      calculateEmission('fossilFuelEmission') +
-      calculateEmission('hcfc22ProductionEmission') +
-      calculateEmission('hfcsPfcSf6Emission') // 添加新的排放项
+      calculateEmission('fossilFuelEmission') + // 化石燃料燃烧排放
+      calculateEmission('processEmission') + // HCFC-22 生产过程 HFC-23 排放
+      calculateEmission('HFCsPFCsSF6Emission') // HFCs/PFCs/SF6 生产过程副产物及逃逸排放
     );
   };
 
-  // 计算包括电力和热力的总排放量
+  // 计算包含电力和热力的总排放量
   const calculateTotalWithElectricity = () => {
     return calculateBaseTotal() + calculateEmission('electricityHeatEmission');
   };
 
   // 计算CO2e值（用于温室气体排放量列）
+  // 注意：在实际组件中，methaneN2OEmission可能已经是换算后的CO2e值
   const calculateCO2e = (type, value) => {
-    // 氟化工企业主要是CO2排放，HCFC-22生产过程HFC-23排放和HFCs/PFCs/SF6排放已经转换为CO2e
-    return value;
+    return value; // 假设所有值已经是CO2e值
   };
 
   // 表格数据
@@ -43,16 +43,16 @@ const FluorineChemicalIndustrySummary = ({ data, industry, onDataChange }) => {
       co2e: calculateCO2e('fossilFuelEmission', safeData.fossilFuelEmission || 0)
     },
     {
-      key: 'hcfc22-production',
+      key: 'process-emission',
       name: 'HCFC-22 生产过程 HFC-23 排放',
-      value: safeData.hcfc22ProductionEmission || 0,
-      co2e: calculateCO2e('hcfc22ProductionEmission', safeData.hcfc22ProductionEmission || 0)
+      value: safeData.processEmission || 0,
+      co2e: calculateCO2e('processEmission', safeData.processEmission || 0)
     },
     {
-      key: 'hfcs-pfcs-sf6',
+      key: 'HFCsPFCsSF6-emission',
       name: 'HFCs/PFCs/SF6 生产过程副产物及逃逸排放',
-      value: safeData.hfcsPfcSf6Emission || 0,
-      co2e: calculateCO2e('hfcsPfcSf6Emission', safeData.hfcsPfcSf6Emission || 0)
+      value: safeData.HFCsPFCsSF6Emission || 0,
+      co2e: calculateCO2e('HFCsPFCsSF6Emission', safeData.HFCsPFCsSF6Emission || 0)
     },
     {
       key: 'electricity-heat',
@@ -83,7 +83,10 @@ const FluorineChemicalIndustrySummary = ({ data, industry, onDataChange }) => {
       dataIndex: 'name',
       key: 'name',
       render: (text, record) => (
-        <span style={record.isTotal ? { fontWeight: 'bold' } : {}}>
+        <span style={{ 
+          fontWeight: record.isTotal ? 'bold' : (record.highlight ? 'bold' : 'normal'), 
+          color: record.highlight ? '#1890ff' : 'inherit' // 蓝色突出显示能源作为原材料用途的排放
+        }}>
           {text}
         </span>
       )
@@ -92,7 +95,20 @@ const FluorineChemicalIndustrySummary = ({ data, industry, onDataChange }) => {
       title: '排放量（单位：吨）',
       dataIndex: 'value',
       key: 'value',
-      render: (text) => {
+      render: (text, record) => {
+        if (record.highlight) {
+          return (
+            <span style={{
+              fontWeight: 'bold',
+              color: '#1890ff',
+              backgroundColor: '#e6f7ff',
+              padding: '2px 6px',
+              borderRadius: '4px'
+            }}>
+              {typeof text === 'number' ? text.toFixed(4) : text}
+            </span>
+          );
+        }
         if (typeof text === 'number') {
           return text.toFixed(4);
         }
@@ -104,7 +120,13 @@ const FluorineChemicalIndustrySummary = ({ data, industry, onDataChange }) => {
       dataIndex: 'co2e',
       key: 'co2e',
       render: (text, record) => (
-        <span style={record.isTotal ? { fontWeight: 'bold' } : {}}>
+        <span style={{ 
+          fontWeight: record.isTotal ? 'bold' : (record.highlight ? 'bold' : 'normal'), 
+          color: record.highlight ? '#1890ff' : 'inherit',
+          backgroundColor: record.highlight ? '#e6f7ff' : 'transparent',
+          padding: record.highlight ? '2px 6px' : '0',
+          borderRadius: record.highlight ? '4px' : '0'
+        }}>
           {typeof text === 'number' ? text.toFixed(4) : text}
         </span>
       )
@@ -117,7 +139,6 @@ const FluorineChemicalIndustrySummary = ({ data, industry, onDataChange }) => {
         <Title level={5}>计算公式</Title>
         <p><strong>基础排放量（不含电力和热力）</strong> = 化石燃料燃烧CO2排放 + HCFC-22生产过程HFC-23排放 + HFCs/PFCs/SF6生产过程副产物及逃逸排放</p>
         <p><strong>总排放量（含电力和热力）</strong> = 基础排放量（不含电力和热力） + 净购入电力和热力隐含的CO2排放</p>
-        <p>注：HFC-23的全球变暖潜能值为11700，HFCs/PFCs/SF6各气体的GWP值已在相应排放组件中完成CO2e转换</p>
       </div>
       
       <Table 
@@ -131,4 +152,4 @@ const FluorineChemicalIndustrySummary = ({ data, industry, onDataChange }) => {
   );
 };
 
-export default FluorineChemicalIndustrySummary;
+export default FluorineIndustrySummary;
