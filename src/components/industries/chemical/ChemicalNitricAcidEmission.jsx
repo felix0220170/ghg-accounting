@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Modal, Table } from 'antd';
 
 // 月份列表
 const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
@@ -14,9 +15,9 @@ const DEFAULT_CARBONATE_PRODUCTS = [
 ];
 
 const DEFAULT_TECH = [
-    { id: 'tech-1', name: '非选择性催化还原 NSCR', rate: 85 },
-    { id: 'tech-2', name: '选择性催化还原 SCR', rate: 0 },
-    { id: 'tech-3', name: '延长吸收', rate: 0  },
+    { id: 'tech-1', name: '非选择性催化还原 NSCR', rate: 85, scope: '80-90%' },
+    { id: 'tech-2', name: '选择性催化还原 SCR', rate: 0, scope: '-' },
+    { id: 'tech-3', name: '延长吸收', rate: 0, scope: '-'  },
 ]
 
 const N2O_GWP = 310;
@@ -115,6 +116,9 @@ const initializeCarbonateProductData = (product) => {
 function ChemicalNitricAcidEmission({ onEmissionChange }) {
   // 碳酸盐列表状态
   const [carbonateProducts, setCarbonateProducts] = useState([]);
+
+  // 弹窗显示状态
+  const [showDefaultsModal, setShowDefaultsModal] = useState(false);
   
   // 保存上一次的总排放量，用于比较是否真正发生变化
   const previousEmissionRef = useRef(null);
@@ -627,7 +631,23 @@ function ChemicalNitricAcidEmission({ onEmissionChange }) {
       <div style={{ marginTop: '20px',marginBottom: '40px' }}>
         <div style={{ marginBottom: '20px' }}>
           <div style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '4px', lineHeight: '1.2' }}>
-            <h3 style={{ marginBottom: '16px' }}>计算说明</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ marginBottom: '16px' }}>计算说明</h3>
+              <button
+                  onClick={() => setShowDefaultsModal(true)}
+                  style={{
+                    padding: '6px 12px',
+                    backgroundColor: '#1890ff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '12px'
+                  }}
+                >
+                  查看缺省值
+                </button>
+            </div>
             <p>硝酸生产过程中氨气高温催化氧化会生成副产品N₂O，N₂O排放量根据硝酸产量、不同生产技术的N₂O生成因子、所安装的NOₓ/N₂O尾气处理设备的N₂O去除效率以及尾气处理设备使用率计算。</p>
             <p>单个生产技术类型的硝酸生产过程N₂O排放量 = 生产技术类型的硝酸产量 × 相应的N₂O的排放因子 × (1 - 尾气处理设备类型的N₂O去除效率 × 尾气处理设备类型的使用率) * {N2O_GWP}</p>
             <p>硝酸生产过程N₂O总排放量 = 所有生产技术类型的排放量之和</p>
@@ -717,6 +737,73 @@ function ChemicalNitricAcidEmission({ onEmissionChange }) {
           
         </div>
       </div>
+
+      {/* 缺省值展示弹窗 */}
+      <Modal
+        title="缺省值详情"
+        open={showDefaultsModal}
+        onCancel={() => setShowDefaultsModal(false)}
+        width={800}
+        footer={null}
+      >
+        <div style={{ marginBottom: '20px' }}>
+          <h4>表1: 硝酸生产技术类型</h4>
+          <Table
+            dataSource={DEFAULT_CARBONATE_PRODUCTS.map((item, index) => ({ ...item, key: index }))}
+            columns={[
+              {
+                title: '技术类型',
+                dataIndex: 'name',
+                key: 'name'
+              },
+              {
+                title: 'N₂O生成因子 (tN₂O/t)',
+                dataIndex: 'emissionFactor',
+                key: 'emissionFactor',
+                render: (value) => value.toFixed(4)
+              }
+            ]}
+            pagination={false}
+            size="small"
+          />
+        </div>
+        
+        <div>
+          <h4>表2 NOₓ/N₂O尾气处理设备类型</h4>
+          <Table
+            dataSource={DEFAULT_TECH.map((item, index) => ({ ...item, key: index }))}
+            columns={[
+              {
+                title: '设备类型',
+                dataIndex: 'name',
+                key: 'name'
+              },
+              {
+                title: 'N₂O去除效率 (%)',
+                dataIndex: 'rate',
+                key: 'rate',
+                render: (value) => `${value}%`
+              },
+              {
+                title: 'N₂O去除效率范围',
+                dataIndex: 'scope',
+                key: 'scope'
+              }
+            ]}
+            pagination={false}
+            size="small"
+          />
+        </div>
+        
+        <div style={{ marginTop: '20px', padding: '12px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+          <p>表1数据来源：《省级温室气体清单指南（试行）》</p>
+          <p>表2数据来源：《IPCC 国家温室气体清单优良作法指南和不确定性管理》</p>
+          <p style={{ margin: 0, fontSize: '14px' }}>
+            <strong>说明：</strong>以上为硝酸生产过程中常用的缺省值，仅供参考。
+            实际核算时应根据企业具体情况选择相应的参数值。
+          </p>
+        </div>
+      </Modal>
     </div>
   );
 }

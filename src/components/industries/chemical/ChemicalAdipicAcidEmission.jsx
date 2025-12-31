@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Modal, Table } from 'antd';
 
 // 月份列表
 const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
@@ -10,10 +11,10 @@ const DEFAULT_CARBONATE_PRODUCTS = [
 ];
 
 const DEFAULT_TECH = [
-    { id: 'tech-1', name: '催化去除', rate: 92.5 },
-    { id: 'tech-2', name: '热去除', rate: 98.5 },
-    { id: 'tech-3', name: '回收为硝酸', rate: 98.5 },
-    { id: 'tech-4', name: '回收用作己二酸的原料', rate: 94 },
+    { id: 'tech-1', name: '催化去除', rate: 92.5, scope: '90-95%' },
+    { id: 'tech-2', name: '热去除', rate: 98.5, scope: '98-99%' },
+    { id: 'tech-3', name: '回收为硝酸', rate: 98.5, scope: '98-99%' },
+    { id: 'tech-4', name: '回收用作己二酸的原料', rate: 94, scope: '90-98%' },
 ]
 
 const N2O_GWP = 310;
@@ -113,6 +114,9 @@ function ChemicalAdipicAcidEmission({ onEmissionChange }) {
   // 碳酸盐列表状态
   const [carbonateProducts, setCarbonateProducts] = useState([]);
   
+  // 弹窗显示状态
+  const [showDefaultsModal, setShowDefaultsModal] = useState(false);
+  
   // 保存上一次的总排放量，用于比较是否真正发生变化
   const previousEmissionRef = useRef(null);
   
@@ -124,8 +128,8 @@ function ChemicalAdipicAcidEmission({ onEmissionChange }) {
   
   // 添加新的自定义碳酸盐
   const addNewCarbonateProduct = useCallback(() => {
-    let productType = document.getElementById('carbonateProductType').value;
-    let techType = document.getElementById('techType').value;
+    let productType = document.getElementById('carbonateProductType_adipic').value;
+    let techType = document.getElementById('techType_adipic').value;
 
     let productName = DEFAULT_CARBONATE_PRODUCTS.find(item => item.id === productType)?.name || '新碳酸盐';
     let emissionFactor = DEFAULT_CARBONATE_PRODUCTS.find(item => item.id === productType)?.emissionFactor || 0;
@@ -624,15 +628,31 @@ function ChemicalAdipicAcidEmission({ onEmissionChange }) {
       <div style={{ marginTop: '20px',marginBottom: '40px' }}>
         <div style={{ marginBottom: '20px' }}>
           <div style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '4px', lineHeight: '1.2' }}>
-            <h3 style={{ marginBottom: '16px' }}>计算说明</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0 }}>计算说明</h3>
+              <button
+                onClick={() => setShowDefaultsModal(true)}
+                style={{
+                  padding: '6px 12px',
+                  backgroundColor: '#1890ff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                查看缺省值
+              </button>
+            </div>
             <p>环己酮/环己醇混合物经硝酸氧化制取己二酸会生成副产品N₂O，N₂O排放量可根据己二酸产量、不同生产工艺的N₂O生成因子、所安装的NOx/N₂O尾气处理设备的N₂O去除效率以及尾气处理设备使用率计算。</p>
-            <p>单个生产技术类型的己二酸生产过程N₂O排放量 = 生产技术类型的己二酸产量 × 相应的N₂O的排放因子 × (1 - 尾气处理设备类型的N₂O去除效率 × 尾气处理设备类型的使用率) * {N2O_GWP}</p>
+            <p>单个生产技术类型的己二酸生产过程N₂O排放量 = 生产技术类型的己二酸产量 × 相应的N₂O的排放因子 × (1 - 尾气处理设备类型的N₂O去除效率 × 尾气处理设备类型的使用率) × ${N2O_GWP}</p>
             <p>己二酸生产过程N₂O总排放量 = 所有生产技术类型的排放量之和</p>
             <p>- 产量单位为 t，保留两位小数</p>
             <p>- 排放因子单位为 tN₂O/t，保留四位小数</p>
             <p>- 排放量单位为 tCO₂，保留两位小数</p>
             <p>- 尾气处理设备类型的N₂O去除效率 单位为 %, 尾气处理设备类型的使用率 单位为 %</p>
-            <p>- N₂O的全球变暖潜势（GWP）值为 {N2O_GWP}</p>
+            <p>- N₂O的全球变暖潜势（GWP）值为 ${N2O_GWP}</p>
           </div>
         </div>
 
@@ -643,8 +663,8 @@ function ChemicalAdipicAcidEmission({ onEmissionChange }) {
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '16px', alignItems: 'end' }}>
                 <div>
-                    <label htmlFor="carbonateProductType" style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#333' }}>己二酸生产技术类型 <span style={{ color: '#ff4d4f' }}>*</span></label>
-                    <select id="carbonateProductType" style={{ width: '100%', padding: '10px 12px', borderRadius: '4px', border: '1px solid #d9d9d9', fontSize: '14px', transition: 'all 0.3s', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' }}>
+                    <label htmlFor="carbonateProductType_adipic" style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#333' }}>己二酸生产技术类型 <span style={{ color: '#ff4d4f' }}>*</span></label>
+                    <select id="carbonateProductType_adipic" style={{ width: '100%', padding: '10px 12px', borderRadius: '4px', border: '1px solid #d9d9d9', fontSize: '14px', transition: 'all 0.3s', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' }}>
                         {DEFAULT_CARBONATE_PRODUCTS.map((item) => (
                             <option key={item.id} value={item.id}>{item.name}</option>
                         ))}
@@ -652,8 +672,8 @@ function ChemicalAdipicAcidEmission({ onEmissionChange }) {
                 </div>
                 
                 <div>
-                    <label htmlFor="techType" style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#333' }}>NOₓ/N₂O尾气处理设备类型 <span style={{ color: '#ff4d4f' }}>*</span></label>
-                    <select id="techType" style={{ width: '100%', padding: '10px 12px', borderRadius: '4px', border: '1px solid #d9d9d9', fontSize: '14px', transition: 'all 0.3s', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' }}>
+                    <label htmlFor="techType_adipic" style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#333' }}>NOₓ/N₂O尾气处理设备类型 <span style={{ color: '#ff4d4f' }}>*</span></label>
+                    <select id="techType_adipic" style={{ width: '100%', padding: '10px 12px', borderRadius: '4px', border: '1px solid #d9d9d9', fontSize: '14px', transition: 'all 0.3s', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' }}>
                         {DEFAULT_TECH.map((item) => (
                             <option key={item.id} value={item.id}>{item.name}</option>
                         ))}
@@ -714,7 +734,74 @@ function ChemicalAdipicAcidEmission({ onEmissionChange }) {
           
         </div>
       </div>
+
+      {/* 缺省值展示弹窗 */}
+      <Modal
+        title="缺省值详情"
+        open={showDefaultsModal}
+        onCancel={() => setShowDefaultsModal(false)}
+        width={800}
+        footer={null}
+      >
+        <div style={{ marginBottom: '20px' }}>
+          <h4>己二酸生产技术类型</h4>
+          <Table
+            dataSource={DEFAULT_CARBONATE_PRODUCTS.map((item, index) => ({ ...item, key: index }))}
+            columns={[
+              {
+                title: '技术类型',
+                dataIndex: 'name',
+                key: 'name'
+              },
+              {
+                title: 'N₂O生成因子 (tN₂O/t)',
+                dataIndex: 'emissionFactor',
+                key: 'emissionFactor',
+                render: (value) => value.toFixed(4)
+              }
+            ]}
+            pagination={false}
+            size="small"
+          />
+        </div>
+        
+        <div>
+          <h4>NOₓ/N₂O尾气处理设备类型</h4>
+          <Table
+            dataSource={DEFAULT_TECH.map((item, index) => ({ ...item, key: index }))}
+            columns={[
+              {
+                title: '设备类型',
+                dataIndex: 'name',
+                key: 'name'
+              },
+              {
+                title: 'N₂O去除效率 (%)',
+                dataIndex: 'rate',
+                key: 'rate',
+                render: (value) => `${value}%`
+              },
+              {
+                title: 'N₂O去除效率范围',
+                dataIndex: 'scope',
+                key: 'scope'
+              }
+            ]}
+            pagination={false}
+            size="small"
+          />
+        </div>
+        
+        <div style={{ marginTop: '20px', padding: '12px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+          <p>数据来源：《2006 年 IPCC 国家温室气体清单指南》 ；《IPCC 国家温室气体清单优良作法指南和不确定性管理》</p>
+          <p style={{ margin: 0, fontSize: '14px' }}>
+            <strong>说明：</strong>以上为己二酸生产过程中常用的缺省值，仅供参考。
+            实际核算时应根据企业具体情况选择相应的参数值。
+          </p>
+        </div>
+      </Modal>
     </div>
+
   );
 }
 
