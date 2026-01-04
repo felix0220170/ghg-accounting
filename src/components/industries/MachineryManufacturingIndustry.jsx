@@ -3,7 +3,6 @@ import { Tabs } from 'antd';
 import FossilFuelEmission from '../FossilFuelEmission';
 import ElectricityHeatEmission from '../ElectricityHeatEmission';
 import ElectricalRefrigerationEmission from '../ElectricalRefrigerationEmission';
-import WeldingCO2Emission from '../WeldingCO2Emission'; // 导入新组件
 import MachineryManufacturingIndustrySummary from './MachineryManufacturingIndustrySummary';
 
 function MachineryManufacturingIndustry({ industry = '机械设备制造企业' }) {

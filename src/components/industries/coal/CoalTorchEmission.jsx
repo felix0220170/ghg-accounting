@@ -224,7 +224,7 @@ function CoalTorchEmission({ onEmissionChange }) {
           product.gasComponents?.forEach(gas => {
             const concentration = product.gasConcentrations?.[gas.id] || 0;
             if (concentration > 0) {
-              totalCarbonContentValue += (12 * gas.carbonAtoms * concentration * 10) / 22.4;
+              totalCarbonContentValue += (12 * gas.carbonAtoms * concentration /100 * 10) / 22.4;
             }
           });
           
