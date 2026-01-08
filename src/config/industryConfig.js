@@ -15,9 +15,10 @@ export const INDUSTRY_TYPES = {
   PETROLEUM_CHEMICAL: '石油化工企业',
   CERAMICS: '中国陶瓷生产企业',
   ELECTRONIC_DEVICE_MANUFACTURING: '电子设备制造企业',
-  FLUORINE_CHEMICAL: '氟化工企业（待确认）',
-  PUBLIC_BUILDING: '公共建筑运营单位（企业）（待确认）',
-  MACHINERY_MANUFACTURING: '机械设备制造企业（待确认）',
+  FLUORINE_CHEMICAL: '氟化工企业',
+  PUBLIC_BUILDING: '公共建筑运营单位（企业）',
+  MACHINERY_MANUFACTURING: '机械设备制造企业',
+  
   PAPER: '造纸及纸制品业',
   FOOD: '食品、烟草及酒、饮料和精制茶行业',
   NON_FERROUS_METALS: '其他有色金属冶炼和压延加工业',
