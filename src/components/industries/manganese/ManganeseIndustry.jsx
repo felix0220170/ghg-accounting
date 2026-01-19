@@ -113,7 +113,7 @@ function ManganeseIndustry({ onEmissionChange }) {
         <TabPane tab="企业级排放汇总" key="summary">
           <ManganeseIndustrySummary emissionData={prepareSummaryData()} />
         </TabPane>
-        <TabPane tab="企业级化石燃料燃烧排放" key="fossilFuel">
+        <TabPane tab="化石燃料燃烧排放" key="fossilFuel">
               <ManganeseFossilFuelEmission 
                 onEmissionChange={(value) => handleEmissionChange('fossilFuel', value)}
                 productionLines={fuelProcesses} 

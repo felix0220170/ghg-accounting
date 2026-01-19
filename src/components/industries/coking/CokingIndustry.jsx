@@ -125,7 +125,7 @@ function CokingIndustry({ onEmissionChange }) {
         <TabPane tab="企业级排放汇总" key="summary">
           <CokingIndustrySummary emissionData={prepareSummaryData()} />
         </TabPane>
-        <TabPane tab="企业级化石燃料燃烧排放" key="fossilFuel">
+        <TabPane tab="化石燃料燃烧排放" key="fossilFuel">
               <CokingProcessFossilFuelEmission 
                 onEmissionChange={(value) => handleEmissionChange('fossilFuel', value)}
                 productionLines={fuelProcesses} 

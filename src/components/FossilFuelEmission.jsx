@@ -467,7 +467,7 @@ function FossilFuelEmission({ industry = INDUSTRY_TYPES.OTHER, onEmissionChange,
       <h2>化石燃料燃烧排放量</h2>
       
       <div className="calculation-description" style={{ marginBottom: '20px', padding: '15px', border: '1px solid #e0e0e0', borderRadius: '6px', backgroundColor: '#fafafa' }}>
-        <p><strong>企业级化石燃料燃烧排放：</strong></p>
+        <p><strong>化石燃料燃烧排放：</strong></p>
         <p>化石燃料在各种类型的固定燃烧设备（生产线）和其他（移动燃烧设备）中燃烧产生的二氧化碳排放。</p>
         <p><strong>计算公式：</strong></p>
         <p>1. 单条生产线的CO2排放量 = Σ(该生产线各化石燃料消耗量 × 化石燃料收到基低位发热量 × 化石燃料单位热值含碳量 × 化石燃料碳氧化率 × 44/12)</p>

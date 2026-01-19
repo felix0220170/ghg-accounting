@@ -107,7 +107,7 @@ function CoalIndustry({ onEmissionChange }) {
           其碳排放主要来自化石燃料燃烧、煤矿瓦斯排放、煤矿井工开采逃逸排放等环节。
         </Paragraph>
         <Paragraph>
-          核算范围包括：企业级化石燃料燃烧排放、煤矿瓦斯火炬燃烧排放、井工开采的CH4逃逸排放、井工开采的CO2逃逸排放、
+          核算范围包括：化石燃料燃烧排放、煤矿瓦斯火炬燃烧排放、井工开采的CH4逃逸排放、井工开采的CO2逃逸排放、
           露天煤矿和矿后活动的CH4逃逸排放、购入净电（化石）和净热排放等。
         </Paragraph>
       </Card>
@@ -116,7 +116,7 @@ function CoalIndustry({ onEmissionChange }) {
         <TabPane tab="企业级排放汇总" key="summary">
           <CoalIndustrySummary emissionData={prepareSummaryData()} />
         </TabPane>
-        <TabPane tab="企业级化石燃料燃烧排放" key="fossilFuel">
+        <TabPane tab="化石燃料燃烧排放" key="fossilFuel">
               <CoalFossilFuelEmission 
                 onEmissionChange={(value) => handleEmissionChange('fossilFuel', value)}
                 productionLines={fuelProcesses} 

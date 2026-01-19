@@ -16,7 +16,7 @@ const SteelIndustrySummary = ({ emissionData }) => {
   const tableData = [
     {
       key: 'steel-fossil-fuel',
-      排放来源: '企业级化石燃料燃烧排放',
+      排放来源: '化石燃料燃烧排放',
       排放量: (emissionData.steelFossilFuelEmission || 0).toFixed(2),
       单位: 'tCO2',
       占比: totalEmission > 0 ? ((emissionData.steelFossilFuelEmission || 0) / totalEmission * 100).toFixed(2) : '0.00'

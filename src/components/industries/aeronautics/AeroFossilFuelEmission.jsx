@@ -493,7 +493,7 @@ function AeroFossilFuelEmission({ onEmissionChange, productionLines = [], onProd
       <h2>化石燃料燃烧排放量</h2>
       
       <div className="calculation-description" style={{ marginBottom: '20px', padding: '15px', border: '1px solid #e0e0e0', borderRadius: '6px', backgroundColor: '#fafafa' }}>
-        <p><strong>企业级化石燃料燃烧排放：</strong></p>
+        <p><strong>化石燃料燃烧排放：</strong></p>
         <p>民用航空企业的燃料燃烧的二氧化碳排放包括公共航空运输和通用航空企业运输飞行中航空器消耗的航空汽油、航空煤油和生物质混合燃料燃烧的二氧化碳排放，以及民用航空企业地面活动涉及的其他移动源及固定源消耗的化石燃料燃烧的二氧化碳排放</p>
         <p><strong>计算公式：</strong></p>
         <p>国内航班/国际航班/地面活动CO2排放量 = Σ(国内航班/国际航班/地面活动各化石燃料消耗量 × （化石燃料收到基元素碳含量[如有] 或 （化石燃料收到基低位发热量 × 化石燃料单位热值含碳量）） × 化石燃料碳氧化率 × 44/12)</p>

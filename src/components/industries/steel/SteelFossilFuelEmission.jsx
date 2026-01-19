@@ -426,7 +426,7 @@ function SteelFossilFuelEmission({ onEmissionChange, productionLines = [], onPro
       <h2>化石燃料燃烧排放量</h2>
       
       <div className="calculation-description" style={{ marginBottom: '20px', padding: '15px', border: '1px solid #e0e0e0', borderRadius: '6px', backgroundColor: '#fafafa' }}>
-        <p><strong>企业级化石燃料燃烧排放：</strong></p>
+        <p><strong>化石燃料燃烧排放：</strong></p>
         <p>外购燃料在各种类型的生产设备（如焦炉、高炉等）中用作原料或燃料用途产生的二氧化碳排放，不包括点火助燃、运输设施和附属生产系统使用的化石燃料排放。</p>
         <p><strong>计算公式：</strong></p>
         <p>总CO2排放量 = Σ(各化石燃料消耗量 × （化石燃料收到基元素碳含量[如有] 或 （化石燃料收到基低位发热量 × 化石燃料单位热值含碳量）） × 化石燃料碳氧化率 × 44/12)</p>
