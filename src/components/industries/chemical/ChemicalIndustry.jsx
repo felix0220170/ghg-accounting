@@ -101,10 +101,10 @@ function ChemicalIndustry({ onEmissionChange }) {
 
   return (
     <div className="coking-industry">
-      <Card title="化工行业温室气体排放核算" style={{ marginBottom: '20px' }}>
+      <Card title="中国化工行业温室气体排放核算" style={{ marginBottom: '20px' }}>
         <Title level={4}>行业说明</Title>
         <Paragraph>
-          本模块适用于化工行业企业开展温室气体排放核算。化工行业是重要的基础原材料产业，
+          本模块适用于中国化工行业企业开展温室气体排放核算。化工行业是重要的基础原材料产业，
           其碳排放主要来自化石燃料燃烧、生产过程等环节。
         </Paragraph>
         <Paragraph>

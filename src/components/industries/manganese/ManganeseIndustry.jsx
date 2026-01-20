@@ -98,10 +98,10 @@ function ManganeseIndustry({ onEmissionChange }) {
 
   return (
     <div className="coking-industry">
-      <Card title="镁冶炼企业温室气体排放核算" style={{ marginBottom: '20px' }}>
+      <Card title="中国镁冶炼企业温室气体排放核算" style={{ marginBottom: '20px' }}>
         <Title level={4}>行业说明</Title>
         <Paragraph>
-          本模块适用于镁冶炼企业开展温室气体排放核算。镁冶炼行业是重要的金属材料产业，
+          本模块适用于中国镁冶炼企业开展温室气体排放核算。镁冶炼行业是重要的金属材料产业，
           其碳排放主要来自化石燃料燃烧、能源作为原材料使用、生产过程等环节。
         </Paragraph>
         <Paragraph>

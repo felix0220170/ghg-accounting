@@ -78,10 +78,10 @@ function AeroIndustry({ onEmissionChange }) {
 
   return (
     <div className="aero-industry">
-      <Card title="民航企业温室气体排放核算" style={{ marginBottom: '20px' }}>
+      <Card title="中国民航企业温室气体排放核算" style={{ marginBottom: '20px' }}>
         <Title level={4}>行业说明</Title>
         <Paragraph>
-          本模块适用于民航企业开展温室气体排放核算。民用航空企业的温室气体排放总量等于企业核算边界内燃料燃烧的二氧化碳排放以及净购入使用电力及热力产生的二氧化碳排放。
+          本模块适用于中国民航企业开展温室气体排放核算。民用航空企业的温室气体排放总量等于企业核算边界内燃料燃烧的二氧化碳排放以及净购入使用电力及热力产生的二氧化碳排放。
         </Paragraph>
         <Paragraph>
           核算范围包括：化石燃料燃烧排放、净购入电力和热力隐含的CO2排放。

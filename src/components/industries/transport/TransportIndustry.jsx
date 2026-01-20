@@ -97,7 +97,7 @@ function TransportIndustry({ onEmissionChange }) {
 
   return (
     <div className="mine-industry">
-      <Card title="交通运输企业温室气体排放核算" style={{ marginBottom: '20px' }}>
+      <Card title="陆上交通运输企业温室气体排放核算" style={{ marginBottom: '20px' }}>
         <Title level={4}>行业说明</Title>
         <Paragraph>
           适用于中国陆上交通运输企业温室气体排放量的核算和报告。 <br/>
