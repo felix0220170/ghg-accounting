@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Table, InputNumber, Button, Card, Typography, Upload, message, Divider } from 'antd';
-import { UploadOutlined, FileTextOutlined } from '@ant-design/icons';
+import { UploadOutlined, FileTextOutlined, InboxOutlined } from '@ant-design/icons';
+const { Dragger } = Upload;
 
 const { Title, Paragraph } = Typography;
 
@@ -411,26 +412,7 @@ const TransportFossilFuelGHGEmission = ({ onEmissionChange }) => {
     <div style={{ padding: '20px' }}>
       <Title level={3}>化石燃料燃烧甲烷和氧化亚氮排放量</Title>
       
-      {/* 数据上传演示组件 */}
-      <Card style={{ marginBottom: '20px' }}>
-        <Title level={4}>数据上传</Title>
-        <Paragraph>
-          运输车辆的行驶里程应以企业统计数据为准，企业须提供相关的汽车里程表数据
-          或 GPS 行车记录仪数据，以及维修记录、每班次出车原始记录
-          或运输合同等辅助材料。
-        </Paragraph>
-        <Divider />
-        <Upload
-          fileList={fileList}
-          beforeUpload={handleUpload}
-          onRemove={handleRemove}
-          accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-          listType="text"
-          maxCount={5}
-        >
-          <Button icon={<UploadOutlined />}>选择文件</Button>
-        </Upload>
-      </Card>
+
       
       <Card style={{ marginBottom: '20px' }}>
         <Paragraph>根据化石燃料燃烧产生的甲烷和氧化亚氮排放量，计算其二氧化碳当量。</Paragraph>
@@ -440,7 +422,7 @@ const TransportFossilFuelGHGEmission = ({ onEmissionChange }) => {
         <Paragraph>• 氧化亚氮CO₂当量(mgCO₂e) = 氧化亚氮排放量(mg) × GWP值(310)</Paragraph>
         <Paragraph>• 甲烷CO₂当量(mgCO₂e) = 甲烷排放量(mg) × GWP值(21)</Paragraph>
         <Paragraph>• 总CO₂当量(mgCO₂e) = 氧化亚氮CO₂当量 + 甲烷CO₂当量</Paragraph>
-        <Paragraph>• 总CO₂当量(tCO₂e) = 总CO₂当量(mgCO₂e) / 1000000000</Paragraph>
+        <Paragraph>• 总CO₂当量(tCO₂e) = 总CO₂当量(mgCO₂e) × 10<sup>-9</sup></Paragraph>
       </Card>
       
       <Table
@@ -460,6 +442,35 @@ const TransportFossilFuelGHGEmission = ({ onEmissionChange }) => {
         <Paragraph>
           注：CO₂当量计算基于IPCC第二次评估报告的GWP值（N₂O: 310, CH₄: 21）
         </Paragraph>
+      </Card>
+      
+      {/* 数据上传演示组件 */}
+      <Card style={{ marginBottom: '20px', marginTop: '20px' }}>
+        <Title level={4}>数据上传</Title>
+        <Paragraph>
+          运输车辆的行驶里程应以企业统计数据为准，企业须提供相关的汽车里程表数据
+          或 GPS 行车记录仪数据，以及维修记录、每班次出车原始记录
+          或运输合同等辅助材料。
+        </Paragraph>
+        <Divider />
+        <Dragger
+          name="file"
+          multiple={true}
+          beforeUpload={handleUpload}
+          showUploadList={true}
+          fileList={fileList}
+          onRemove={handleRemove}
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+          style={{ width: '400px' }}
+        >
+          <p className="ant-upload-drag-icon">
+            <InboxOutlined />
+          </p>
+          <p className="ant-upload-text">点击或拖拽文件到此区域上传</p>
+          <p className="ant-upload-hint">
+            支持多个文件同时上传
+          </p>
+        </Dragger>
       </Card>
     </div>
   );
