@@ -196,7 +196,7 @@ const PetroleumIndustrySummary = ({ emissionData }) => {
       }
     },
     {
-      title: '温室气体排放量（单位：吨 CO2e）',
+      title: '温室气体排放量（单位：tCO₂e）',
       dataIndex: 'co2e',
       key: 'co2e',
       render: (text, record) => (

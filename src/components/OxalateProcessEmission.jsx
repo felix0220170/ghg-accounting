@@ -96,7 +96,7 @@ function OxalateProcessEmission({ industry, onEmissionChange }) {
           <Col xs={24}>
             <Paragraph style={{ fontSize: '16px' }}>
               <strong>总排放量（E 草酸）：</strong>
-              {calculateEmission().toFixed(4)} 吨 CO2e
+              {calculateEmission().toFixed(4)} tCO₂e
             </Paragraph>
           </Col>
         </Row>

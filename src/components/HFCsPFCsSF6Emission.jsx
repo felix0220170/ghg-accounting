@@ -152,7 +152,7 @@ const HFCsPFCsSF6Emission = ({ industry, onEmissionChange }) => {
       )
     },
     {
-      title: '排放量（单位：吨 CO2e）',
+      title: '排放量（单位：tCO₂e）',
       key: 'emission',
       render: (_, record) => {
         const { co2e } = calculateProductEmission(record, productData[record.id]);
@@ -190,7 +190,7 @@ const HFCsPFCsSF6Emission = ({ industry, onEmissionChange }) => {
       <Card style={{ marginBottom: 20 }}>
         <Title level={5}>计算公式</Title>
         <Text>
-          排放量（吨 CO2e）= 产量（吨）× 排放因子（%）/ 100 × 全球变暖潜能值（GWP）
+          排放量（tCO₂e）= 产量（吨）× 排放因子（%）/ 100 × 全球变暖潜能值（GWP）
         </Text>
       </Card>
       
@@ -251,7 +251,7 @@ const HFCsPFCsSF6Emission = ({ industry, onEmissionChange }) => {
         <Row justify="end">
           <Col>
             <Text strong>总排放量：</Text>
-            <Text strong style={{ color: '#ff4d4f' }}>{totalEmission.toFixed(4)} 吨 CO2e</Text>
+            <Text strong style={{ color: '#ff4d4f' }}>{totalEmission.toFixed(4)} tCO₂e</Text>
           </Col>
         </Row>
       </Card>

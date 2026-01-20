@@ -69,7 +69,7 @@ function NonFerrousMetalsIndustrySummary({ data, industry, onDataChange }) {
       render: (text, record) => <div style={record.style || {}}>{text}</div>,
     },
     {
-      title: '排放量（吨 CO2e）',
+      title: '排放量（tCO₂e）',
       dataIndex: 'value',
       key: 'value',
       render: (text, record) => <div style={record.style || {}}>{formatNumber(text)}</div>,

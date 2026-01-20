@@ -116,7 +116,7 @@ function OtherIndustrySummary({ data, onOtherEmissionChange }) {
       }
     },
     {
-      title: '温室气体排放量（单位：吨 CO2e）',
+      title: '温室气体排放量（单位：tCO₂e）',
       dataIndex: 'value',
       key: 'co2e',
       render: (value, record) => {
