@@ -18,12 +18,11 @@ export const INDUSTRY_TYPES = {
   FLUORINE_CHEMICAL: '氟化工企业',
   PUBLIC_BUILDING: '公共建筑运营单位（企业）',
   MACHINERY_MANUFACTURING: '机械设备制造企业',
-  MINING: '矿山企业（待）',
-
+  MINING: '矿山企业（待确认）',
+  LAND_TRANSPORTATION: '陆上交通运输企业（待确认）',
   PAPER: '造纸及纸制品业',
   FOOD: '食品、烟草及酒、饮料和精制茶行业',
   NON_FERROUS_METALS: '其他有色金属冶炼和压延加工业',
-  LAND_TRANSPORTATION: '陆上交通运输行业',
   OTHER: '其他行业'
 };
 

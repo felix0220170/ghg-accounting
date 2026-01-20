@@ -361,18 +361,35 @@ const initializeByproductData = (byproductType, parentGasType, customByproductNa
       value: conversionFactor 
     }));
     
-    // 副产品继承父原料气的收集效率和去除效率默认值
-    if (defaultFactors.collectionEfficiency !== null && defaultFactors.collectionEfficiency !== undefined) {
+    // 为副产品设置收集效率默认值
+    let collectionEfficiency;
+    let removalEfficiency;
+    
+    // 对于自定义副产品，继承父原料气的默认值
+    // 对于预设副产品，从DEFAULT_EMISSION_FACTORS找到相应气体的默认值
+    if (isCustomByproduct) {
+      collectionEfficiency = defaultFactors.collectionEfficiency;
+      removalEfficiency = defaultFactors.removalEfficiency;
+    } else {
+      // 从DEFAULT_EMISSION_FACTORS中查找副产品类型对应的默认值
+      const byproductFactors = DEFAULT_EMISSION_FACTORS[byproductType] || {};
+      collectionEfficiency = byproductFactors.collectionEfficiency || defaultFactors.collectionEfficiency || '';
+      removalEfficiency = byproductFactors.removalEfficiency || defaultFactors.removalEfficiency || '';
+    }
+    
+    // 应用收集效率默认值
+    if (collectionEfficiency !== null && collectionEfficiency !== undefined) {
       initialData.byproductCollectionEfficiency = initialData.byproductCollectionEfficiency.map(item => ({
         ...item,
-        value: defaultFactors.collectionEfficiency
+        value: collectionEfficiency
       }));
     }
     
-    if (defaultFactors.removalEfficiency !== null && defaultFactors.removalEfficiency !== undefined) {
+    // 应用去除效率默认值
+    if (removalEfficiency !== null && removalEfficiency !== undefined) {
       initialData.byproductRemovalEfficiency = initialData.byproductRemovalEfficiency.map(item => ({
         ...item,
-        value: defaultFactors.removalEfficiency
+        value: removalEfficiency
       }));
     }
   }
