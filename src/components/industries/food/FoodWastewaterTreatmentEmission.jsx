@@ -31,7 +31,7 @@ const MCF_RECOMMENDATIONS = {
 
 // 废水处理相关常量
 const METHANE_PRODUCTION_CAPACITY = 0.25; // 甲烷最大生产能力 (千克 CH4/千克 COD)
-const DEFAULT_MCF = 0.8; // 默认甲烷修正因子
+const DEFAULT_MCF = 0.5; // 默认甲烷修正因子
 const GWP_CH4 = 21; // 甲烷的全球变暖潜势 (GWP)
 const DEFAULT_INDUSTRY = INDUSTRIES.FOOD_MANUFACTURING; // 默认行业
 
@@ -156,7 +156,7 @@ const initializeWastewaterRecordData = (industry = DEFAULT_INDUSTRY) => {
   };
 };
 
-function FoodWastewaterTreatmentEmission({ onEmissionChange, title='' }) {
+function FoodWastewaterTreatmentEmission({ onEmissionChange, title='', isPaper = false }) {
   // 废水处理记录状态
   const [wastewaterRecords, setWastewaterRecords] = useState([]);
 
@@ -164,7 +164,7 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='' }) {
   const previousEmissionRef = useRef(null);
 
   // 行业选择状态
-  const [selectedIndustry, setSelectedIndustry] = useState(DEFAULT_INDUSTRY);
+  const [selectedIndustry, setSelectedIndustry] = useState(isPaper ? "PAPER" : DEFAULT_INDUSTRY);
 
   // 处理行业选择变化
   const handleIndustryChange = (e) => {
@@ -774,7 +774,7 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='' }) {
             <p>- 进水/出水 COD 浓度单位为 kg COD/m³，保留三位小数</p>
             <p>- 去除的 COD 量/污泥 COD 量单位为 kg COD，保留一位小数</p>
             <p>- 甲烷最大生产能力单位为 kg CH₄/kg COD，保留两位小数，默认值为 0.25</p>
-            <p>- 甲烷修正因子 (MCF) 无单位，保留两位小数，默认值为 0.8</p>
+            <p>- 甲烷修正因子 (MCF) 无单位，保留两位小数，{isPaper ? '默认值为 0.5' : '根据不同行业，有不同的默认值'}, 具备条件的企业可开展实测， 或委托有资质的专业机构进行检测 </p>
             <p>- 甲烷回收量单位为 kg，保留两位小数</p>
             <p>- 甲烷的全球变暖潜势 (GWP) 无单位，值为 21</p>
             <p>- CH₄ 排放量单位为 kg CH₄，保留两位小数</p>
@@ -784,6 +784,7 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='' }) {
 
         {renderTotalEmissionTable()}
 
+        {isPaper ? null : (
         <div style={{ marginTop: '24px', backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', marginBottom: '24px' }}>
           <h3 style={{ marginBottom: '20px', color: '#1890ff', fontWeight: 'bold', fontSize: '18px' }}>行业选择</h3>
           
@@ -817,7 +818,7 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='' }) {
             )}
           </div>
         </div>
-
+        )}
         <div style={{ marginTop: '24px', backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', marginBottom: '24px' }}>
           <h3 style={{ marginBottom: '20px', color: '#1890ff', fontWeight: 'bold', fontSize: '18px' }}>添加废水厌氧处理排放记录</h3>
 
