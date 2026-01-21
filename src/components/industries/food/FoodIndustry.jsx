@@ -2,14 +2,15 @@ import { useState, useCallback } from 'react';
 import { Card, Tabs, Typography } from 'antd';
 const { Title, Paragraph } = Typography;
 const { TabPane } = Tabs;
-import IndustrySummary from './MineIndustrySummary';
+import IndustrySummary from './FoodIndustrySummary';
 import NetElectricityHeatEmission from '../common/NetElectricityHeatEmission';
-import CarbonInventory from './MineCarbonInventory';
+import CarbonInventory from './FoodCarbonInventory';
 import FossilFuelEmission from '../chemical/ChemicalFossilFuelEmission';
-import MineCarbonateDecompositionEmission from './MineCarbonateDecompositionEmission';
-import MineCarbonationCO2Absorption from './MineCarbonationCO2Absorption';
+import FoodProcessEmission from './FoodProcessEmission';
+import FoodWastewaterTreatmentEmission from './FoodWastewaterTreatmentEmission';
 
-function MineIndustry({ onEmissionChange }) {    
+
+function FoodIndustry({ onEmissionChange }) {    
   const [fuelProcesses, setFuelProcesses] = useState([{
       id: 'fule-process-1',
       processName: '化石燃料工序placeholder',
@@ -88,24 +89,27 @@ function MineIndustry({ onEmissionChange }) {
   // 准备传递给Summary组件的数据格式
   const prepareSummaryData = () => ({
     fossilFuelEmission: emissionData.fossilFuel || 0,
-    carbonateDecompositionEmission: emissionData.carbonateDecompositionEmission || 0,
-    carbonationCO2Absorption: emissionData.carbonationCO2Emission || 0, // 使用正确的键名
+    processEmission: emissionData.processEmission || 0,
+    wastewaterTreatmentEmission: emissionData.wastewaterTreatmentEmission || 0,
     electricityHeatEmission: emissionData.electricityHeatEmission || 0
   });
 
   return (
-    <div className="mine-industry">
-      <Card title="矿山企业温室气体排放核算" style={{ marginBottom: '20px' }}>
+    <div className="food-industry">
+      <Card title="食品、烟草及酒、饮料和精制茶企业温室气体排放核算" style={{ marginBottom: '20px' }}>
         <Title level={4}>行业说明</Title>
         <Paragraph>
-          本模块适用于我国矿山企业温室气体排放量的核算和报告。
-在中国境内从事黑色金属矿、有色金属矿、非金属矿和其他矿物
-的采矿、选矿和加工活动的企业可按照本指南提供的方法核算企
-业的温室气体排放量，并编制企业温室气体排放报告
+          本模块适用于我国食品、烟草及酒、饮料和精制茶企业温室气体排放量的核算和报告。任何在中国境内从事食品、烟草及酒、饮料和精制茶生产的企业，均可参考本指南提供的方法核算企业的温室气体排放量，并编制企业温室气体排放报告。
         </Paragraph>
         <Paragraph>
-          核算范围包括：化石燃料燃烧排放、碳酸盐分解排放、碳化工艺吸收的CO₂量、净购入电力和热力隐含的CO2排放。
+          核算范围包括：
         </Paragraph>
+        <ul style={{ marginLeft: '20px', marginBottom: '15px' }}>
+          <li>化石燃料燃烧排放：包括蒸汽锅炉、气化炉等设备消耗的燃料燃烧的二氧化碳排放，以及原料运输与中间产品转运涉及的其他移动源及固定源消耗的化石燃料燃烧的二氧化碳排放</li>
+          <li>工业生产过程中排放：过程排放量是企业消耗的各种碳酸盐发生分解反应以及外购工业生产的二氧化碳作为原料在使用过程中损耗导致的排放量之和</li>
+          <li>废水厌氧处理排放：包括废水厌氧处理过程中产生的甲烷排放，以及折算成二氧化碳的排放量</li>
+          <li>净购入电力和热力隐含的CO₂排放：包括企业从外部购入的电力和热力所隐含的二氧化碳排放</li>
+        </ul>
       </Card>
 
       <Tabs defaultActiveKey="summary" onChange={() => calculateTotalEmission()}>
@@ -117,21 +121,22 @@ function MineIndustry({ onEmissionChange }) {
                 onEmissionChange={(value) => handleEmissionChange('fossilFuel', value)}
                 productionLines={fuelProcesses} 
                 onProductionLinesChange={handleFuelProcessesChange}
-                title='指化石燃料在各种类型的固定或
-移动燃烧设备中与氧气充分燃烧生成的CO₂排放。 矿山企业涉及
-化石燃料燃烧的装置或设备主要有工业锅炉、窑炉、焙烧炉、链
-篦机、烧结机、干燥机、灶具、内燃凿岩机、铲车、推土机、自
-卸汽车等。'
+                title='食品、烟草及酒、饮料和精制茶生产企业的燃料燃烧的二氧化碳排放包括蒸汽锅炉和气化炉等设备消耗的燃料燃烧的二氧化
+碳排放，以及原料运输与中间产品转运涉及的其他移动源及固定
+源消耗的化石燃料燃烧的二氧化碳排放。对于生物质混合燃料燃
+烧的二氧化碳排放，仅统计混合燃料中化石燃料（如燃煤）的二氧化碳排放。纯生物质燃料燃烧的二氧化碳排放计算为零。'
               />
           </TabPane>
-          <TabPane tab="碳酸盐分解排放" key="carbonDecomposition">
-            <MineCarbonateDecompositionEmission 
-              onEmissionChange={(value) => handleEmissionChange('carbonateDecompositionEmission', value)}
-            />
+          <TabPane tab="工业生产过程中排放" key="processEmission">
+            <FoodProcessEmission 
+              onEmissionChange={(value) => handleEmissionChange('processEmission', value)}
+              productionLines={processes} 
+              onProductionLinesChange={handleProcessesChange}
+              />
           </TabPane>
-          <TabPane tab="碳化工艺吸收的CO₂量" key="carbonationCO2">
-            <MineCarbonationCO2Absorption 
-              onEmissionChange={(value) => handleEmissionChange('carbonationCO2Emission', value)}
+          <TabPane tab="废水厌氧处理排放" key="wastewaterTreatment">
+            <FoodWastewaterTreatmentEmission 
+              onEmissionChange={(value) => handleEmissionChange('wastewaterTreatmentEmission', value)}
             />
           </TabPane>
           <TabPane tab="购入净电（化石）和净热" key="electricityHeat">
@@ -149,4 +154,4 @@ function MineIndustry({ onEmissionChange }) {
   );
 }
 
-export default MineIndustry;
+export default FoodIndustry;

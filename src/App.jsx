@@ -26,6 +26,8 @@ import BuildingIndustry from './components/industries/building/BuildingIndustry'
 import MachineryIndustry from './components/industries/machinery/MachineryIndustry'
 import MineIndustry from './components/industries/mine/MineIndustry'
 import TransportIndustry from './components/industries/transport/TransportIndustry'
+import NoneFerrousMetalsIndustry from './components/industries/noneFerrous/NoneFerrousMetalsIndustry'
+import FoodIndustry from './components/industries/food/FoodIndustry'
 
 
 
@@ -33,7 +35,7 @@ import { INDUSTRY_TYPES } from './config/industryConfig'
 
 function App() {
   // 使用INDUSTRY_TYPES中的默认值作为初始选择
-  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.LAND_TRANSPORTATION);
+  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.FOOD_AND_BEVERAGE);
   // 配置弹窗状态
   const [configModalVisible, setConfigModalVisible] = useState(false);
 
@@ -59,6 +61,8 @@ function App() {
     INDUSTRY_TYPES.MACHINERY_MANUFACTURING,
     INDUSTRY_TYPES.MINING,
     INDUSTRY_TYPES.LAND_TRANSPORTATION,
+    INDUSTRY_TYPES.NON_FERROUS_METALS,
+    INDUSTRY_TYPES.FOOD_AND_BEVERAGE,
   ];
 
   // 根据选择的行业动态加载相应的组件
@@ -106,6 +110,10 @@ function App() {
         return <MineIndustry industry={selectedIndustry} />; 
       case INDUSTRY_TYPES.LAND_TRANSPORTATION: // 添加陆地运输行业
         return <TransportIndustry industry={selectedIndustry} />; 
+      case INDUSTRY_TYPES.NON_FERROUS_METALS: // 添加非Ferrous金属行业
+        return <NoneFerrousMetalsIndustry industry={selectedIndustry} />; 
+      case INDUSTRY_TYPES.FOOD_AND_BEVERAGE: // 添加食品行业
+        return <FoodIndustry industry={selectedIndustry} />; 
       case INDUSTRY_TYPES.OTHER:
       default:
         return <OtherIndustry industry={selectedIndustry} />;

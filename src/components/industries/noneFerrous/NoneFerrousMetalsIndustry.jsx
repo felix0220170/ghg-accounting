@@ -1,15 +1,15 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { Card, Tabs, Typography } from 'antd';
 const { Title, Paragraph } = Typography;
 const { TabPane } = Tabs;
-import IndustrySummary from './MineIndustrySummary';
+import IndustrySummary from './NoneFerrousMetalsIndustrySummary';
 import NetElectricityHeatEmission from '../common/NetElectricityHeatEmission';
-import CarbonInventory from './MineCarbonInventory';
-import FossilFuelEmission from '../chemical/ChemicalFossilFuelEmission';
-import MineCarbonateDecompositionEmission from './MineCarbonateDecompositionEmission';
-import MineCarbonationCO2Absorption from './MineCarbonationCO2Absorption';
+import NoneFerrousMetalsCarbonInventory from './NoneFerrousMetalsCarbonInventory';
+import NoneFerrousMetalsEnergyEmission from './NoneFerrousMetalsEnergyEmission';
+import NoneFerrousMetalsFossilFuelEmission from '../chemical/ChemicalFossilFuelEmission';
+import NoneFerrousMetalsProcessEmission from './NoneFerrousMetalsProcessEmission';
 
-function MineIndustry({ onEmissionChange }) {    
+function NoneFerrousMetalsIndustry({ onEmissionChange }) {
   const [fuelProcesses, setFuelProcesses] = useState([{
       id: 'fule-process-1',
       processName: '化石燃料工序placeholder',
@@ -26,9 +26,6 @@ function MineIndustry({ onEmissionChange }) {
   });
   
   // 详细排放数据，用于工序排放量汇总组件
-  const [fossilFuelEmissions, setFossilFuelEmissions] = useState({});
-  const [electricityEmissions, setElectricityEmissions] = useState({});
-  const [heatEmissions, setHeatEmissions] = useState({});
   
   const [processes, setProcesses] = useState([{
       id: 'process-1',
@@ -59,17 +56,6 @@ function MineIndustry({ onEmissionChange }) {
       ...prev,
       [key]: typeof value === 'object' && value !== null ? value.totalEmission || 0 : value || 0
     }));
-    
-    // 更新详细排放数据
-    if (typeof value === 'object' && value !== null) {
-      switch (key) {
-        case 'steelFossilFuel':
-          setFossilFuelEmissions(value.processEmissions || {});
-          break;
-        default:
-          break;
-      }
-    }
   };
 
   // 计算总排放量并通知父组件
@@ -87,24 +73,24 @@ function MineIndustry({ onEmissionChange }) {
 
   // 准备传递给Summary组件的数据格式
   const prepareSummaryData = () => ({
-    fossilFuelEmission: emissionData.fossilFuel || 0,
-    carbonateDecompositionEmission: emissionData.carbonateDecompositionEmission || 0,
-    carbonationCO2Absorption: emissionData.carbonationCO2Emission || 0, // 使用正确的键名
-    electricityHeatEmission: emissionData.electricityHeatEmission || 0
+    fossilFuelEmission: emissionData.fossilFuel,
+    processEmission: emissionData.processEmission,
+    energyEmission: emissionData.energyEmission,
+    electricityHeatEmission: emissionData.electricityHeatEmission
   });
 
   return (
-    <div className="mine-industry">
-      <Card title="矿山企业温室气体排放核算" style={{ marginBottom: '20px' }}>
+    <div className="none-ferrous-metals-industry">
+      <Card title="其他有色金属冶炼和压延加工业企业温室气体排放核算" style={{ marginBottom: '20px' }}>
         <Title level={4}>行业说明</Title>
         <Paragraph>
-          本模块适用于我国矿山企业温室气体排放量的核算和报告。
-在中国境内从事黑色金属矿、有色金属矿、非金属矿和其他矿物
-的采矿、选矿和加工活动的企业可按照本指南提供的方法核算企
-业的温室气体排放量，并编制企业温室气体排放报告
+          适用于中国除铝冶炼和镁冶炼之外的其他有色金属冶炼和压延加工业企业温室气体排放量的核算和报告， 
+        </Paragraph>
+        <Paragraph> 
+          中国境内以有色金属冶炼和压延加工（除铝冶炼和镁冶炼之外） 为主营业务的企业可按照本指南提供的方法核算温室气体排放量， 并编制企业温室气体排放报告。
         </Paragraph>
         <Paragraph>
-          核算范围包括：化石燃料燃烧排放、碳酸盐分解排放、碳化工艺吸收的CO₂量、净购入电力和热力隐含的CO2排放。
+          核算范围包括：化石燃料燃烧排放、能源作为原材料用途的排放、工业生产过程排放（主要是各种碳酸盐以及草酸发生分解反应所导致的二氧化碳排放）、净购入电力和热力隐含的CO2排放。
         </Paragraph>
       </Card>
 
@@ -113,25 +99,22 @@ function MineIndustry({ onEmissionChange }) {
           <IndustrySummary emissionData={prepareSummaryData()} />
         </TabPane>
         <TabPane tab="化石燃料燃烧排放" key="fossilFuel">
-              <FossilFuelEmission 
+              <NoneFerrousMetalsFossilFuelEmission 
                 onEmissionChange={(value) => handleEmissionChange('fossilFuel', value)}
                 productionLines={fuelProcesses} 
                 onProductionLinesChange={handleFuelProcessesChange}
-                title='指化石燃料在各种类型的固定或
-移动燃烧设备中与氧气充分燃烧生成的CO₂排放。 矿山企业涉及
-化石燃料燃烧的装置或设备主要有工业锅炉、窑炉、焙烧炉、链
-篦机、烧结机、干燥机、灶具、内燃凿岩机、铲车、推土机、自
-卸汽车等。'
               />
           </TabPane>
-          <TabPane tab="碳酸盐分解排放" key="carbonDecomposition">
-            <MineCarbonateDecompositionEmission 
-              onEmissionChange={(value) => handleEmissionChange('carbonateDecompositionEmission', value)}
+          <TabPane tab="能源作为原材料用途的排放" key="energy">
+            <NoneFerrousMetalsEnergyEmission 
+              onEmissionChange={(value) => handleEmissionChange('energyEmission', value)}
             />
           </TabPane>
-          <TabPane tab="碳化工艺吸收的CO₂量" key="carbonationCO2">
-            <MineCarbonationCO2Absorption 
-              onEmissionChange={(value) => handleEmissionChange('carbonationCO2Emission', value)}
+          <TabPane tab="工业生产过程中排放" key="process">
+            <NoneFerrousMetalsProcessEmission 
+              onEmissionChange={(value) => handleEmissionChange('processEmission', value)}
+              productionLines={processes} 
+              onProductionLinesChange={handleProcessesChange}
             />
           </TabPane>
           <TabPane tab="购入净电（化石）和净热" key="electricityHeat">
@@ -140,7 +123,7 @@ function MineIndustry({ onEmissionChange }) {
             />
           </TabPane>
           <TabPane tab="碳排查材料清单" key="carbonInventory">
-            <CarbonInventory />
+            <NoneFerrousMetalsCarbonInventory />
           </TabPane>
         
       </Tabs>
@@ -149,4 +132,4 @@ function MineIndustry({ onEmissionChange }) {
   );
 }
 
-export default MineIndustry;
+export default NoneFerrousMetalsIndustry;

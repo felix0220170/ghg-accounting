@@ -758,7 +758,7 @@ function FluorineProcessEmission({ onEmissionChange }) {
             <p>HCFC-22生产过程HFC-23排放计算方法：</p>
             <p>1. HFC-23产生量 = HCFC-22产量 × HFC-23生成因子 - HFC-23回收量</p>
             <p>2. HFC-23销毁量 = 进入销毁装置的HFC-23量 - 从销毁装置出口排出的HFC-23量</p>
-            <p>3. 总排放量 = (总HFC-23产生量 - 总销毁量) × 11700 + 销毁装置总HFC-23量 × 44/70</p>
+            <p>3. 总排放量 = (总HFC-23产生量 - 总HFC-23销毁量) × 11700 + 总HFC-23销毁量 × 44/70</p>
             <p>- HCFC-22产量单位为t，保留两位小数</p>
             <p>- HFC-23生成因子单位为tHFC-23/tHCFC-22，默认值为0.015</p>
             <p>- HFC-23回收量和销毁量单位为t，保留两位小数</p>
