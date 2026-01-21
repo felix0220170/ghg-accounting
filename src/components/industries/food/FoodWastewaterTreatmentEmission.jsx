@@ -61,21 +61,21 @@ const WASTEWATER_INDICATORS = [
   {
     key: 'removedCOD',
     name: '厌氧处理系统去除的 COD 量',
-    unit: '千克 COD',
+    unit: 'kg COD',
     isCalculated: false,
     decimalPlaces: 1
   },
   {
     key: 'sludgeCOD',
     name: '以污泥方式清除掉的 COD 量',
-    unit: '千克 COD',
+    unit: 'kg COD',
     isCalculated: false,
     decimalPlaces: 1
   },
   {
     key: 'methaneProductionCapacity',
     name: '甲烷最大生产能力',
-    unit: '千克 CH4/千克 COD',
+    unit: 'kg CH₄/kg COD',
     isCalculated: false,
     decimalPlaces: 2,
     defaultValue: METHANE_PRODUCTION_CAPACITY
@@ -89,11 +89,18 @@ const WASTEWATER_INDICATORS = [
     defaultValue: DEFAULT_MCF
   },
   {
+    key: 'methaneRecovery',
+    name: '甲烷回收量',
+    unit: 'kg',
+    isCalculated: false,
+    decimalPlaces: 2
+  },
+  {
     key: 'ch4Emission',
-    name: 'CH4 排放量',
-    unit: '千克 CH4',
+    name: 'CH₄ 排放量',
+    unit: 'kg CH₄',
     isCalculated: true,
-    decimalPlaces: 4
+    decimalPlaces: 2
   },
   {
     key: 'emission',
@@ -234,14 +241,17 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='' }) {
           const mcfData = record.data.mcf?.find(m => m.month === month);
           const mcf = mcfData?.value ? parseFloat(mcfData.value) : DEFAULT_MCF;
           
+          const methaneRecoveryData = record.data.methaneRecovery?.find(m => m.month === month);
+          const methaneRecovery = methaneRecoveryData?.value ? parseFloat(methaneRecoveryData.value) : 0;
+          
           // 计算实际去除的COD量（如果没有直接提供的话）
           let actualRemovedCOD = removedCOD;
           if (!actualRemovedCOD && wastewaterVolume && inletCOD && outletCOD) {
             actualRemovedCOD = wastewaterVolume * (inletCOD - outletCOD);
           }
           
-          // 计算甲烷排放量
-          const emissionValue = Math.max(0, actualRemovedCOD - sludgeCOD) * methaneProductionCapacity * mcf;
+          // 计算甲烷排放量（扣除回收量）
+          const emissionValue = Math.max(0, (actualRemovedCOD - sludgeCOD) * methaneProductionCapacity * mcf - methaneRecovery);
           
           // 计算二氧化碳排放量 (tCO₂)
           const co2EmissionValue = emissionValue * GWP_CH4 / 1000;
@@ -257,7 +267,7 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='' }) {
               newCh4EmissionData[ch4EmissionMonthIndex] = {
                 ...newCh4EmissionData[ch4EmissionMonthIndex],
                 value: emissionValue,
-                unit: '千克 CH4'
+                unit: 'kg CH₄'
               };
               recordChanged = true;
             }
@@ -267,7 +277,7 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='' }) {
               month,
               monthName: MONTHS[monthIndex],
               value: emissionValue,
-              unit: '千克 CH4'
+              unit: 'kg CH₄'
             });
             recordChanged = true;
           }
@@ -712,14 +722,14 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='' }) {
         </thead>
         <tbody>
           <tr>
-            <td style={{ border: '1px solid #d9d9d9', padding: '8px', fontWeight: 'bold' }}>废水厌氧处理CH4排放总量 (千克 CH4)</td>
+            <td style={{ border: '1px solid #d9d9d9', padding: '8px', fontWeight: 'bold' }}>废水厌氧处理CH₄排放总量 (kg CH₄)</td>
             {totalEmissions.map((value, index) => (
               <td key={index} style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>
-                {formatValue(value, 4)}
+                {formatValue(value, 2)}
               </td>
             ))}
             <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center', fontWeight: 'bold' }}>
-              {formatValue(totalYear, 4)}
+              {formatValue(totalYear, 2)}
             </td>
           </tr>
           <tr>
@@ -753,20 +763,21 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='' }) {
             }
 
             <h3 style={{ marginBottom: '12px' }}>计算说明</h3>
-            <p>废水厌氧处理CH4排放计算方法：</p>
-            <p>CH4 排放量（千克 CH4） = (厌氧处理系统去除的 COD 量 - 以污泥方式清除掉的 COD 量) × 甲烷最大生产能力 × 甲烷修正因子 (MCF)</p>
-            <p>CO₂ 排放量（tCO₂） = CH4 排放量（千克 CH4） × 甲烷的全球变暖潜势 (GWP) / 1000</p>
+            <p>废水厌氧处理CH₄排放计算方法：</p>
+            <p>CH₄ 排放量（kg CH₄） = [(厌氧处理系统去除的 COD 量 - 以污泥方式清除掉的 COD 量) × 甲烷最大生产能力 × 甲烷修正因子 (MCF)] - 甲烷回收量</p>
+            <p>CO₂ 排放量（tCO₂） = CH₄ 排放量（kg CH₄） × 甲烷的全球变暖潜势 (GWP) / 1000</p>
             <p>其中：</p>
             <p>- 厌氧处理系统去除的 COD 量可以通过以下两种方式获取：</p>
             <p>  1. 自动计算：厌氧处理的工业废水量 × (进水 COD 浓度 - 出水 COD 浓度)</p>
             <p>  2. 直接输入：用户可以根据实际情况直接输入去除的 COD 量</p>
-            <p>- 厌氧处理的工业废水量单位为 m³/年，保留一位小数</p>
+            <p>- 厌氧处理的工业废水量单位为 m³，保留一位小数</p>
             <p>- 进水/出水 COD 浓度单位为 kg COD/m³，保留三位小数</p>
-            <p>- 去除的 COD 量/污泥 COD 量单位为 千克 COD，保留一位小数</p>
-            <p>- 甲烷最大生产能力单位为 千克 CH4/千克 COD，保留两位小数，默认值为 0.25</p>
+            <p>- 去除的 COD 量/污泥 COD 量单位为 kg COD，保留一位小数</p>
+            <p>- 甲烷最大生产能力单位为 kg CH₄/kg COD，保留两位小数，默认值为 0.25</p>
             <p>- 甲烷修正因子 (MCF) 无单位，保留两位小数，默认值为 0.8</p>
+            <p>- 甲烷回收量单位为 kg，保留两位小数</p>
             <p>- 甲烷的全球变暖潜势 (GWP) 无单位，值为 21</p>
-            <p>- CH4 排放量单位为 千克 CH4，保留四位小数</p>
+            <p>- CH₄ 排放量单位为 kg CH₄，保留两位小数</p>
             <p>- CO₂ 排放量单位为 tCO₂，保留两位小数</p>
           </div>
         </div>
