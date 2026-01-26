@@ -5,7 +5,6 @@ import { Modal, Button } from 'antd'
 import { SettingOutlined } from '@ant-design/icons'
 import ConstantConfig from './components/ConstantConfig'
 
-import OtherIndustry from './components/industries/OtherIndustry'
 import CementIndustry from './components/industries/cement/CementIndustry'; // 导入水泥行业组件
 import PowerPlantIndustry from './components/industries/powerPlant/PowerPlantIndustry';
 import SteelIndustry from './components/industries/steel/SteelIndustry';
@@ -29,6 +28,7 @@ import TransportIndustry from './components/industries/transport/TransportIndust
 import NoneFerrousMetalsIndustry from './components/industries/noneFerrous/NoneFerrousMetalsIndustry'
 import FoodIndustry from './components/industries/food/FoodIndustry'
 import PaperIndustry from './components/industries/paper/PaperIndustry'
+import OtherIndustry from './components/industries/other/OtherIndustry'
 
 
 
@@ -36,7 +36,7 @@ import { INDUSTRY_TYPES } from './config/industryConfig'
 
 function App() {
   // 使用INDUSTRY_TYPES中的默认值作为初始选择
-  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.PAPER);
+  const [selectedIndustry, setSelectedIndustry] = useState(INDUSTRY_TYPES.OTHER);
   // 配置弹窗状态
   const [configModalVisible, setConfigModalVisible] = useState(false);
 
@@ -65,6 +65,7 @@ function App() {
     INDUSTRY_TYPES.NON_FERROUS_METALS,
     INDUSTRY_TYPES.FOOD_AND_BEVERAGE,
     INDUSTRY_TYPES.PAPER,
+    INDUSTRY_TYPES.OTHER,
   ];
 
   // 根据选择的行业动态加载相应的组件
