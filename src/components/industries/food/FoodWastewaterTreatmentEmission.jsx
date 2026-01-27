@@ -77,6 +77,7 @@ const WASTEWATER_INDICATORS = [
     name: '甲烷最大生产能力',
     unit: 'kg CH₄/kg COD',
     isCalculated: false,
+    isSystemConstant: true,
     decimalPlaces: 2,
     defaultValue: METHANE_PRODUCTION_CAPACITY
   },
@@ -86,7 +87,8 @@ const WASTEWATER_INDICATORS = [
     unit: '',
     isCalculated: false,
     decimalPlaces: 2,
-    defaultValue: DEFAULT_MCF
+    defaultValue: DEFAULT_MCF,
+    hasRecommendedValue: true
   },
   {
     key: 'methaneRecovery',
@@ -165,11 +167,107 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='', isPaper =
 
   // 行业选择状态
   const [selectedIndustry, setSelectedIndustry] = useState(isPaper ? "PAPER" : DEFAULT_INDUSTRY);
+  
+  // MCF 使用方式状态：'recommended' 使用推荐值，'measured' 使用实测值
+  const [mcfUsageMode, setMcfUsageMode] = useState('recommended');
+  
+  // 统一的 MCF 实测值
+  const [customMcf, setCustomMcf] = useState('');
 
   // 处理行业选择变化
   const handleIndustryChange = (e) => {
     const industry = e.target.value;
     setSelectedIndustry(industry);
+    // 切换行业时，重置为使用推荐值
+    setMcfUsageMode('recommended');
+  };
+  
+  // 处理 MCF 使用方式变化
+  const handleMcfUsageModeChange = (e) => {
+    const mode = e.target.value;
+    setMcfUsageMode(mode);
+    
+    // 如果切换到推荐值，更新所有记录的 MCF 值为推荐值
+    if (mode === 'recommended') {
+      let recommendedValue;
+      
+      // 造纸行业使用固定推荐值 0.5
+      if (isPaper) {
+        recommendedValue = 0.5;
+      } else if (MCF_RECOMMENDATIONS[selectedIndustry]) {
+        recommendedValue = MCF_RECOMMENDATIONS[selectedIndustry].recommended;
+      } else {
+        return; // 如果没有推荐值，直接返回
+      }
+      
+      setCustomMcf('');
+      
+      setWastewaterRecords(prevRecords => {
+        let hasChanges = false;
+        const updatedRecords = prevRecords.map(record => {
+          if (!record.data || !record.data.mcf) return record;
+          
+          const updatedMcfData = record.data.mcf.map(monthData => ({
+            ...monthData,
+            value: recommendedValue
+          }));
+          
+          if (JSON.stringify(updatedMcfData) !== JSON.stringify(record.data.mcf)) {
+            hasChanges = true;
+            return {
+              ...record,
+              data: {
+                ...record.data,
+                mcf: updatedMcfData
+              }
+            };
+          }
+          
+          return record;
+        });
+        
+        return hasChanges ? updatedRecords : prevRecords;
+      });
+    }
+  };
+  
+  // 处理自定义 MCF 值变化
+  const handleCustomMcfChange = (e) => {
+    const value = e.target.value;
+    setCustomMcf(value);
+    
+    // 更新所有记录的 MCF 值为自定义值
+    if (value !== '') {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        setWastewaterRecords(prevRecords => {
+          let hasChanges = false;
+          const updatedRecords = prevRecords.map(record => {
+            if (!record.data || !record.data.mcf) return record;
+            
+            const updatedMcfData = record.data.mcf.map(monthData => ({
+              ...monthData,
+              value: numValue
+            }));
+            
+            if (JSON.stringify(updatedMcfData) !== JSON.stringify(record.data.mcf)) {
+              hasChanges = true;
+              return {
+                ...record,
+                data: {
+                  ...record.data,
+                  mcf: updatedMcfData
+                }
+              };
+            }
+            
+            return record;
+          });
+          
+          return hasChanges ? updatedRecords : prevRecords;
+        });
+      }
+    }
   };
   
   // 初始化默认数据
@@ -181,8 +279,20 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='', isPaper =
   // 添加新的废水处理记录
   const addNewWastewaterRecord = useCallback(() => {
     const newRecord = initializeWastewaterRecordData(selectedIndustry);
+    
+    // 如果使用实测值，更新新记录的 MCF 值为自定义值
+    if (mcfUsageMode === 'measured' && customMcf !== '') {
+      const numValue = parseFloat(customMcf);
+      if (!isNaN(numValue)) {
+        newRecord.data.mcf = newRecord.data.mcf.map(monthData => ({
+          ...monthData,
+          value: numValue
+        }));
+      }
+    }
+    
     setWastewaterRecords(prevRecords => [...prevRecords, newRecord]);
-  }, [selectedIndustry]);
+  }, [selectedIndustry, mcfUsageMode, customMcf]);
   
   // 移除废水处理记录
   const removeWastewaterRecord = useCallback((recordId) => {
@@ -201,6 +311,8 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='', isPaper =
     if (value === null || value === undefined || value === '' || isNaN(value)) return '';
     const numValue = parseFloat(value);
     if (isNaN(numValue)) return '';
+    // 处理 0 值的情况，确保显示 "0.00" 而不是空字符串
+    if (numValue === 0) return '0.00';
     return numValue.toFixed(decimalPlaces);
   };
   
@@ -581,6 +693,11 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='', isPaper =
                       {indicator.isCalculated ? (
                         // 计算值，只显示
                         <span>{formatValue(value, indicator.decimalPlaces)}</span>
+                      ) : indicator.key === 'mcf' || indicator.isSystemConstant ? (
+                        // MCF 和系统常量始终显示为只读
+                        <span style={{ color: '#1890ff', fontWeight: 'bold' }}>
+                          {formatValue(value, indicator.decimalPlaces)}
+                        </span>
                       ) : (
                         // 输入值
                         <input
@@ -611,8 +728,8 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='', isPaper =
                   {indicator.isCalculated ? '计算值' : ''}
                 </td>
                 <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>
-                  {indicator.isCalculated ? (
-                    '-' // 计算值不需要数据来源
+                  {indicator.isCalculated || indicator.key === 'mcf' || indicator.isSystemConstant ? (
+                    '-' // 计算值、MCF 和系统常量不需要数据来源
                   ) : (
                     <input
                       type="text"
@@ -633,8 +750,8 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='', isPaper =
                   )}
                 </td>
                 <td style={{ border: '1px solid #d9d9d9', padding: '8px', textAlign: 'center' }}>
-                  {indicator.isCalculated ? (
-                    '-' // 计算值不需要支撑材料
+                  {indicator.isCalculated || indicator.key === 'mcf' || indicator.isSystemConstant ? (
+                    '-' // 计算值、MCF 和系统常量不需要支撑材料
                   ) : (
                     <input
                       type="file"
@@ -773,8 +890,8 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='', isPaper =
             <p>- 厌氧处理的工业废水量单位为 m³，保留一位小数</p>
             <p>- 进水/出水 COD 浓度单位为 kg COD/m³，保留三位小数</p>
             <p>- 去除的 COD 量/污泥 COD 量单位为 kg COD，保留一位小数</p>
-            <p>- 甲烷最大生产能力单位为 kg CH₄/kg COD，保留两位小数，默认值为 0.25</p>
-            <p>- 甲烷修正因子 (MCF) 无单位，保留两位小数，{isPaper ? '默认值为 0.5' : '根据不同行业，有不同的默认值'}, 具备条件的企业可开展实测， 或委托有资质的专业机构进行检测 </p>
+            <p style={{ backgroundColor: '#fff7e6', padding: '8px 12px', borderLeft: '4px solid #faad14', fontWeight: 'bold', color: '#d46b08' }}>- 甲烷最大生产能力单位为 kg CH₄/kg COD，保留两位小数，由系统统一配置（默认值为 0.25），无需用户输入</p>
+            <p>- 甲烷修正因子 (MCF) 无单位，保留两位小数，请在下方"甲烷修正因子 (MCF) 设置"部分进行配置</p>
             <p>- 甲烷回收量单位为 kg，保留两位小数</p>
             <p>- 甲烷的全球变暖潜势 (GWP) 无单位，值为 21</p>
             <p>- CH₄ 排放量单位为 kg CH₄，保留两位小数</p>
@@ -784,9 +901,117 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='', isPaper =
 
         {renderTotalEmissionTable()}
 
-        {isPaper ? null : (
+        {isPaper ? (
         <div style={{ marginTop: '24px', backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', marginBottom: '24px' }}>
-          <h3 style={{ marginBottom: '20px', color: '#1890ff', fontWeight: 'bold', fontSize: '18px' }}>行业选择</h3>
+          <h3 style={{ marginBottom: '20px', color: '#1890ff', fontWeight: 'bold', fontSize: '18px' }}>甲烷修正因子 (MCF) 设置</h3>
+          
+          <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: '#e6f7ff', borderRadius: '4px', borderLeft: '4px solid #1890ff' }}>
+            <p style={{ margin: '8px 0', fontSize: '14px', lineHeight: '1.6' }}>
+              <strong>什么是甲烷修正因子 (MCF)？</strong>
+            </p>
+            <p style={{ margin: '8px 0', fontSize: '14px', lineHeight: '1.6' }}>
+              甲烷修正因子 (MCF) 表示每种废水处理和排放途径或系统类型中厌氧降解的有机物比例，是计算CH₄排放量的重要参数。
+            </p>
+            <p style={{ margin: '8px 0', fontSize: '14px', lineHeight: '1.6' }}>
+              <strong>如何选择 MCF 值？</strong>
+            </p>
+            <p style={{ margin: '8px 0', fontSize: '14px', lineHeight: '1.6' }}>
+              • <strong>使用推荐值</strong>：根据您的废水处理和排放途径或系统类型，系统提供相应的推荐值，适用于大多数企业。
+            </p>
+            <p style={{ margin: '8px 0', fontSize: '14px', lineHeight: '1.6' }}>
+              • <strong>使用实测值</strong>：具备条件的企业可开展实测，或委托有资质的专业机构进行检测。实测值更准确，但需要提供相关证明材料。
+            </p>
+            <p style={{ margin: '8px 0', fontSize: '14px', lineHeight: '1.6' }}>
+              <strong>注意事项：</strong>MCF 值对于同一个企业是统一的，不分记录、不分月度。设置后将应用于所有废水处理记录的所有月份。
+            </p>
+          </div>
+          
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>MCF 使用方式：</label>
+            <select
+              value={mcfUsageMode}
+              onChange={handleMcfUsageModeChange}
+              style={{
+                padding: '8px 12px',
+                border: '1px solid #d9d9d9',
+                borderRadius: '4px',
+                fontSize: '14px',
+                width: '300px'
+              }}
+            >
+              <option value="recommended">使用推荐值</option>
+              <option value="measured">使用实测值</option>
+            </select>
+          </div>
+          
+          <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+            <h4 style={{ marginBottom: '12px', fontWeight: 'bold' }}>MCF推荐值信息</h4>
+            {mcfUsageMode === 'recommended' && (
+              <div>
+                <p style={{ margin: '4px 0' }}><strong>行业：</strong>造纸行业</p>
+                <p style={{ margin: '4px 0' }}><strong>建议MCF值：</strong>0.5</p>
+                <p style={{ margin: '4px 0' }}><strong>MCF范围：</strong>0.4-0.6</p>
+              </div>
+            )}
+            {mcfUsageMode === 'measured' && (
+              <div>
+                <p style={{ margin: '4px 0', color: '#1890ff' }}>您选择了使用实测值，请输入统一的 MCF 实测值，该值将应用于所有废水处理记录的所有月份。</p>
+                <div style={{ marginTop: '12px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>MCF 实测值：</label>
+                  <input
+                    type="text"
+                    value={customMcf}
+                    onChange={handleCustomMcfChange}
+                    placeholder="输入 MCF 实测值"
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d9d9d9',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      width: '200px'
+                    }}
+                  />
+                  <p style={{ marginTop: '8px', fontSize: '12px', color: '#666' }}>注意：MCF 值对于同一个企业是统一的，不分记录、不分月度</p>
+                  <div style={{ marginTop: '12px' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>MCF 实测证明材料：</label>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      style={{
+                        fontSize: '12px'
+                      }}
+                    />
+                    <p style={{ marginTop: '4px', fontSize: '12px', color: '#666' }}>请上传 MCF 实测证明材料（支持 PDF、Word、图片格式）</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        ) : (
+        <div style={{ marginTop: '24px', backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', marginBottom: '24px' }}>
+          <h3 style={{ marginBottom: '20px', color: '#1890ff', fontWeight: 'bold', fontSize: '18px' }}>甲烷修正因子 (MCF) 设置</h3>
+          
+          <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: '#e6f7ff', borderRadius: '4px', borderLeft: '4px solid #1890ff' }}>
+            <p style={{ margin: '8px 0', fontSize: '14px', lineHeight: '1.6' }}>
+              <strong>什么是甲烷修正因子 (MCF)？</strong>
+            </p>
+            <p style={{ margin: '8px 0', fontSize: '14px', lineHeight: '1.6' }}>
+              甲烷修正因子 (MCF) 表示每种废水处理和排放途径或系统类型中厌氧降解的有机物比例，是计算CH₄排放量的重要参数。
+            </p>
+            <p style={{ margin: '8px 0', fontSize: '14px', lineHeight: '1.6' }}>
+              <strong>如何选择 MCF 值？</strong>
+            </p>
+            <p style={{ margin: '8px 0', fontSize: '14px', lineHeight: '1.6' }}>
+              • <strong>使用推荐值</strong>：根据您的废水处理和排放途径或系统类型，系统提供相应的推荐值，适用于大多数企业。
+            </p>
+            <p style={{ margin: '8px 0', fontSize: '14px', lineHeight: '1.6' }}>
+              • <strong>使用实测值</strong>：具备条件的企业可开展实测，或委托有资质的专业机构进行检测。实测值更准确，但需要提供相关证明材料。
+            </p>
+            <p style={{ margin: '8px 0', fontSize: '14px', lineHeight: '1.6' }}>
+              <strong>注意事项：</strong>MCF 值对于同一个企业是统一的，不分记录、不分月度。设置后将应用于所有废水处理记录的所有月份。
+            </p>
+          </div>
           
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>选择行业：</label>
@@ -807,13 +1032,64 @@ function FoodWastewaterTreatmentEmission({ onEmissionChange, title='', isPaper =
             </select>
           </div>
           
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>MCF 使用方式：</label>
+            <select
+              value={mcfUsageMode}
+              onChange={handleMcfUsageModeChange}
+              style={{
+                padding: '8px 12px',
+                border: '1px solid #d9d9d9',
+                borderRadius: '4px',
+                fontSize: '14px',
+                width: '300px'
+              }}
+            >
+              <option value="recommended">使用推荐值</option>
+              <option value="measured">使用实测值</option>
+            </select>
+          </div>
+          
           <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
             <h4 style={{ marginBottom: '12px', fontWeight: 'bold' }}>MCF推荐值信息</h4>
-            {selectedIndustry && MCF_RECOMMENDATIONS[selectedIndustry] && (
+            {selectedIndustry && MCF_RECOMMENDATIONS[selectedIndustry] && mcfUsageMode === 'recommended' && (
               <div>
                 <p style={{ margin: '4px 0' }}><strong>行业：</strong>{MCF_RECOMMENDATIONS[selectedIndustry].name}</p>
                 <p style={{ margin: '4px 0' }}><strong>建议MCF值：</strong>{MCF_RECOMMENDATIONS[selectedIndustry].recommended}</p>
                 <p style={{ margin: '4px 0' }}><strong>MCF范围：</strong>{MCF_RECOMMENDATIONS[selectedIndustry].range}</p>
+              </div>
+            )}
+            {mcfUsageMode === 'measured' && (
+              <div>
+                <p style={{ margin: '4px 0', color: '#1890ff' }}>您选择了使用实测值，请输入统一的 MCF 实测值，该值将应用于所有废水处理记录的所有月份。</p>
+                <div style={{ marginTop: '12px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>MCF 实测值：</label>
+                  <input
+                    type="text"
+                    value={customMcf}
+                    onChange={handleCustomMcfChange}
+                    placeholder="输入 MCF 实测值"
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d9d9d9',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      width: '200px'
+                    }}
+                  />
+                  <p style={{ marginTop: '8px', fontSize: '12px', color: '#666' }}>注意：MCF 值对于同一个企业是统一的，不分记录、不分月度</p>
+                  <div style={{ marginTop: '12px' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>MCF 实测证明材料：</label>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      style={{
+                        fontSize: '12px'
+                      }}
+                    />
+                    <p style={{ marginTop: '4px', fontSize: '12px', color: '#666' }}>请上传 MCF 实测证明材料（支持 PDF、Word、图片格式）</p>
+                  </div>
+                </div>
               </div>
             )}
           </div>

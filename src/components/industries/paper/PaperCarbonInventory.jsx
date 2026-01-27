@@ -32,7 +32,7 @@ function PaperCarbonInventory() {
     { 
       key: '4', 
       name: '废水厌氧处理排放相关资料', 
-      description: '废水量记录、进水和出水COD浓度检测报告、污泥处理记录、厌氧处理工艺参数记录', 
+      description: '废水量记录、进水和出水COD浓度检测报告、污泥处理记录、厌氧处理工艺参数记录、MCF值选择依据或MCF实测证明材料', 
       required: true,
       category: '废水厌氧处理排放'
     },
