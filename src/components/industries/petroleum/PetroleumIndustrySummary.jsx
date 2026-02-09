@@ -214,8 +214,8 @@ const PetroleumIndustrySummary = ({ emissionData }) => {
     <div className="summary-table-container">
       <div className="formula-section" style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
         <Title level={5}>计算公式</Title>
-        <p><strong>基础排放量（不含电力和热力）</strong> = 化石燃料燃烧CO2排放 + 火炬燃烧排放 + 工业生产过程排放</p>
-        <p><strong>总排放量（含电力和热力）</strong> = 基础排放量（不含电力和热力） + 购入净电（化石）和净热隐含的CO2排放 - <span style={{ color: '#1890ff', fontWeight: 'bold' }}>企业CO2回收利用量</span></p>
+        <p><strong>基础排放量（不含电力和热力）</strong> = 化石燃料燃烧CO2排放 + 火炬燃烧排放 + 工业生产过程排放 - <span style={{ color: '#1890ff', fontWeight: 'bold' }}>企业CO2回收利用量</span></p>
+        <p><strong>总排放量（含电力和热力）</strong> = 基础排放量（不含电力和热力） + 购入净电（化石）和净热隐含的CO2排放</p>
         <p style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>* <span style={{ color: '#1890ff', fontWeight: 'bold' }}>蓝色文字</span> 表示需要扣除的回收利用量</p>
       </div>
       

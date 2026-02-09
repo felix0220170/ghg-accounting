@@ -188,7 +188,7 @@ const PaperIndustrySummary = ({ emissionData, industry, onDataChange }) => {
       </div>
       <div className="formula-section" style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
         <Title level={5}>计算公式</Title>
-        <p><strong>基础排放量（不含电力和热力）</strong> = 化石燃料燃烧排放 + 碳酸盐使用过程 CO₂ 排放 + 废水厌氧处理排放 - CH₄回收与销毁量 - CO₂回收利用量</p>
+        <p><strong>基础排放量（不含电力和热力）</strong> = 化石燃料燃烧排放 + 碳酸盐使用过程 CO₂ 排放 + 废水厌氧处理排放 - <strong style={{ color: '#1890ff' }}>CH₄回收与销毁量</strong> - <strong style={{ color: '#1890ff' }}>CO₂回收利用量</strong></p>
         <p><strong>总排放量（含电力和热力）</strong> = 基础排放量（不含电力和热力） + 净购入电力和热力隐含的CO₂排放</p>
       </div>
       

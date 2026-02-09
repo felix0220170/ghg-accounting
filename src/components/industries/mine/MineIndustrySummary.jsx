@@ -137,7 +137,7 @@ const MineIndustrySummary = ({ emissionData, industry, onDataChange }) => {
     <div className="summary-table-container">
       <div className="formula-section" style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
         <Title level={5}>计算公式</Title>
-        <p><strong>基础排放量（不含电力和热力）</strong> = 化石燃料燃烧排放 + 碳酸盐分解排放 - 碳化工艺吸收的CO₂量（扣除项）</p>
+        <p><strong>基础排放量（不含电力和热力）</strong> = 化石燃料燃烧排放 + 碳酸盐分解排放 - <strong style={{ color: '#1890ff' }}>碳化工艺吸收的CO₂量（扣除项）</strong></p>
         <p><strong>总排放量（含电力和热力）</strong> = 基础排放量（不含电力和热力） + 净购入电力和热力隐含的CO₂排放</p>
       </div>
       
