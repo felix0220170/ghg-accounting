@@ -793,7 +793,7 @@ function MachineryHFCsPFCsSF6Emission({ onEmissionChange }) {
           电气设备或制冷设备生产过程中有 SF6、HFCs 和 PFCs 的泄漏造成的排放
         </p>
         <p style={{ margin: '0 0 8px 0', lineHeight: '1.6' }}>
-          <strong>计算公式：</strong>排放量(tCO₂) = (期末库存 - 期初库存 + 购买量 - 销售量) × GWP值
+          <strong>计算公式：</strong>排放量(tCO₂) = (期初库存 - 期末库存 + 购买量 - 销售量) × GWP值
         </p>
         <p style={{ margin: '0 0 8px 0', lineHeight: '1.6' }}>
           <strong>库存管理：</strong>需要记录每月产品的期初库存、期末库存、购买量和销售量
